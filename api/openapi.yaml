@@ -1,0 +1,1120 @@
+openapi: 3.1.0
+info:
+  contact:
+    email: floTeam@gmail.com
+  description: api for flow learning
+  termsOfService: http://flowLearning.com/terms/
+  title: Flow Learning - OpenAPI 3.1
+  version: 1.0.0
+servers:
+- url: https://floLearning.com/api/v1
+tags:
+- description: Everything about topics
+  name: topic
+- description: details of the node map
+  name: map
+- description: Operations about user
+  name: user
+- description: "Operations about wiki page, which is all individual node data"
+  name: node
+paths:
+  /topic:
+    get:
+      description: get all topics
+      operationId: getTopics
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/getTopics_200_response_inner'
+                type: array
+          description: Successful operation
+        "404":
+          description: Topics not found
+      security:
+      - flow_auth:
+        - read:topics
+      summary: get all topics
+      tags:
+      - topic
+    post:
+      description: Add a new topic
+      operationId: addTopic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/getTopics_200_response_inner'
+        description: Create a new topic
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addTopic_200_response'
+          description: Successful operation
+        "405":
+          description: Invalid input
+      security:
+      - flow_auth:
+        - write:topics
+      summary: Add a new topic
+      tags:
+      - topic
+    put:
+      description: Update an existing topic by Id
+      operationId: updateTopic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/getTopics_200_response_inner'
+        description: Update an existent topic
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Topic not found
+        "405":
+          description: Validation exception
+      security:
+      - flow_auth:
+        - write:topic
+      summary: Update an existing topic
+      tags:
+      - topic
+  /topic/{topicId}:
+    delete:
+      description: Deletes a specific node.
+      operationId: deleteTopic
+      parameters:
+      - description: ID of the node to delete
+        explode: false
+        in: path
+        name: topicId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: topic deleted successfully
+        "400":
+          description: Invalid topic ID
+        "403":
+          description: Forbidden
+        "404":
+          description: topic not found
+      security:
+      - flow_auth:
+        - write:topic
+      summary: Delete a node
+      tags:
+      - topic
+  /map/{topicId}:
+    get:
+      description: Returns a single topic map
+      operationId: getMapById
+      parameters:
+      - description: ID of topic to return a map for
+        explode: false
+        in: path
+        name: topicId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getMapById_200_response'
+          description: successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Topic not found
+      security:
+      - flow_auth:
+        - read:map
+      summary: Find map by ID
+      tags:
+      - map
+  /map/{topicId}/edge:
+    post:
+      description: Add a new edge
+      operationId: addEdge
+      parameters:
+      - description: ID of topic to return a map for
+        explode: false
+        in: path
+        name: topicId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/getMapById_200_response_edges_inner'
+        description: Create a new edge
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+        "405":
+          description: Invalid input
+      security:
+      - flow_auth:
+        - write:edge
+      summary: Add a new edge
+      tags:
+      - map
+  /node:
+    delete:
+      description: Deletes a specific node.
+      operationId: deleteNode
+      parameters:
+      - explode: true
+        in: query
+        name: nodeId
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: tid
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "204":
+          description: Node deleted successfully
+        "400":
+          description: Invalid node ID
+        "403":
+          description: Forbidden
+        "404":
+          description: Node not found
+      security:
+      - flow_auth:
+        - write:node
+      summary: Delete a node
+      tags:
+      - node
+    get:
+      description: get wiki node
+      operationId: getNode
+      parameters:
+      - explode: true
+        in: query
+        name: nodeId
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: tid
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addTopic_200_response_nodeData'
+          description: Successful operation
+        "404":
+          description: Topics not found
+      security:
+      - flow_auth:
+        - read:node
+      summary: get wiki node
+      tags:
+      - node
+    post:
+      description: Add a new node
+      operationId: addNode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+        description: Create a new node
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/addNode_200_response'
+          description: Successful operation
+        "405":
+          description: Invalid input
+      security:
+      - flow_auth:
+        - write:node
+      summary: Add a new node
+      tags:
+      - node
+    put:
+      description: Update an existing node
+      operationId: updateNode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateNode_request'
+        description: Update an existent node
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+        "405":
+          description: Validation exception
+      security:
+      - flow_auth:
+        - write:node
+      summary: Update an node
+      tags:
+      - node
+  /user/login:
+    post:
+      description: Login using SSO
+      operationId: loginUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/loginUser_request'
+        description: Login request
+        required: true
+      responses:
+        "200":
+          description: Login successful
+          headers:
+            X-Auth-Token:
+              description: Authentication token
+              explode: false
+              schema:
+                type: string
+              style: simple
+        "400":
+          description: SSO provider
+        "401":
+          description: Authentication failed
+      security:
+      - flow_auth:
+        - write:user
+      summary: Login to the system or create account
+      tags:
+      - user
+  /user/logout:
+    post:
+      description: Revokes the current user's authentication session.
+      operationId: logoutUser
+      responses:
+        "200":
+          description: User logged out successfully
+        "401":
+          description: Unauthorized access
+      security:
+      - flow_auth:
+        - write:user
+      summary: Log the user out of the system
+      tags:
+      - user
+  /user:
+    put:
+      description: This can only be done by the logged in user.
+      operationId: updateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateUser_request'
+        description: Update an existent user in the store
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+      security:
+      - flow_auth:
+        - write:user
+      summary: Update user
+      tags:
+      - user
+  /user/{userId}:
+    delete:
+      description: This can only be done by the logged in user or admin.
+      operationId: deleteUser
+      parameters:
+      - description: The name that needs to be deleted
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: User Deleted
+        "400":
+          description: Invalid username supplied
+        "404":
+          description: User not found
+      security:
+      - flow_auth:
+        - write:user
+      summary: Delete user
+      tags:
+      - user
+    get:
+      description: ""
+      operationId: getUserByName
+      parameters:
+      - description: 'The name that needs to be fetched. Use user1 for testing. '
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/updateUser_request'
+          description: successful operation
+        "400":
+          description: Invalid username supplied
+        "404":
+          description: User not found
+      security:
+      - flow_auth:
+        - read:user
+      summary: Get user by user name
+      tags:
+      - user
+components:
+  schemas:
+    NodeData:
+      properties:
+        id:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        title:
+          example: a ninja attack
+          type: string
+        topic:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        battleTested:
+          example: 44
+          format: int32
+          type: integer
+        fresh:
+          example: 55
+          format: int32
+          type: integer
+        speed:
+          example: 55
+          format: int32
+          type: integer
+        description:
+          example: used to attack ninjas on Friday
+          type: string
+        isFlagged:
+          example: true
+          type: boolean
+        youtubeLinks:
+          items:
+            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
+          type: array
+        createdBy:
+          example: super1
+          type: string
+        editedBy:
+          example:
+          - super1
+          - super2
+          items:
+            type: string
+          type: array
+    LinkData:
+      properties:
+        link:
+          example: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+          format: url
+          type: string
+        votes:
+          example: 21
+          format: int32
+          type: integer
+        addedBy:
+          example: Mike21
+          type: string
+        dateAdded:
+          example: 2024-08-19T19:25:42.568Z
+          format: date-time
+          type: string
+    Edge:
+      properties:
+        id:
+          example: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
+          type: string
+        source:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        target:
+          example: 2024-12-09T04:10:00.352Z
+          format: date-time
+          type: string
+    FlowNode:
+      properties:
+        id:
+          example: 2024-12-09T04:10:00.350Z
+          type: string
+        position:
+          $ref: '#/components/schemas/getMapById_200_response_nodes_inner_position'
+        type:
+          example: flowNode
+          type: string
+        targetPosition:
+          example: Position.Left
+          type: string
+        SourcePosition:
+          example: Position.Right
+          type: string
+        data:
+          $ref: '#/components/schemas/getMapById_200_response_nodes_inner_data'
+    User:
+      properties:
+        username:
+          example: theUser
+          type: string
+        firstName:
+          example: John
+          type: string
+        lastName:
+          example: James
+          type: string
+        email:
+          example: john@email.com
+          type: string
+        role:
+          description: User Status
+          example: 1
+          format: int32
+          type: integer
+        reputation:
+          example: 34
+          type: integer
+        description:
+          example: engineer
+          type: string
+        location:
+          example: Austin TX
+          type: string
+        isFlagged:
+          type: boolean
+        battleTestedUp:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        battleTestedDown:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        freshUp:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        freshDown:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        edited:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        created:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        linked:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+    Topic:
+      properties:
+        id:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        title:
+          example: bjj
+          type: string
+      required:
+      - id
+      - title
+    RequestPostNode:
+      properties:
+        source:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        target:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        topic:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+      required:
+      - source
+      - target
+      - topic
+    ResponsePostNode:
+      properties:
+        targetId:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        sourceId:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+      required:
+      - sourceId
+      - targetId
+    ResponsePostTopic:
+      properties:
+        topic:
+          $ref: '#/components/schemas/getTopics_200_response_inner'
+        nodeData:
+          $ref: '#/components/schemas/addTopic_200_response_nodeData'
+      required:
+      - nodeData
+      - topic
+    ResponseUserInfo:
+      items:
+        $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+      type: array
+    MapData:
+      properties:
+        nodes:
+          items:
+            $ref: '#/components/schemas/getMapById_200_response_nodes_inner'
+          type: array
+        edges:
+          items:
+            $ref: '#/components/schemas/getMapById_200_response_edges_inner'
+          type: array
+    Login:
+      properties:
+        ssoProvider:
+          enum:
+          - google
+          - facebook
+          - microsoft
+          - x
+          - apple
+          - discord
+          type: string
+    getTopics_200_response_inner:
+      example:
+        id: 2024-12-09T04:10:00.350Z
+        title: bjj
+      properties:
+        id:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        title:
+          example: bjj
+          type: string
+      required:
+      - id
+      - title
+    addTopic_200_response_nodeData_youtubeLinks_inner:
+      example:
+        addedBy: Mike21
+        link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+        votes: 21
+        dateAdded: 2024-08-19T19:25:42.568Z
+      properties:
+        link:
+          example: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+          format: url
+          type: string
+        votes:
+          example: 21
+          format: int32
+          type: integer
+        addedBy:
+          example: Mike21
+          type: string
+        dateAdded:
+          example: 2024-08-19T19:25:42.568Z
+          format: date-time
+          type: string
+    addTopic_200_response_nodeData:
+      example:
+        editedBy:
+        - super1
+        - super2
+        createdBy: super1
+        topic: 2024-12-09T04:10:00.350Z
+        description: used to attack ninjas on Friday
+        battleTested: 44
+        id: 2024-12-09T04:10:00.350Z
+        title: a ninja attack
+        fresh: 55
+        speed: 55
+        isFlagged: true
+        youtubeLinks:
+        - addedBy: Mike21
+          link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+          votes: 21
+          dateAdded: 2024-08-19T19:25:42.568Z
+        - addedBy: Mike21
+          link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+          votes: 21
+          dateAdded: 2024-08-19T19:25:42.568Z
+      properties:
+        id:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        title:
+          example: a ninja attack
+          type: string
+        topic:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        battleTested:
+          example: 44
+          format: int32
+          type: integer
+        fresh:
+          example: 55
+          format: int32
+          type: integer
+        speed:
+          example: 55
+          format: int32
+          type: integer
+        description:
+          example: used to attack ninjas on Friday
+          type: string
+        isFlagged:
+          example: true
+          type: boolean
+        youtubeLinks:
+          items:
+            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
+          type: array
+        createdBy:
+          example: super1
+          type: string
+        editedBy:
+          example:
+          - super1
+          - super2
+          items:
+            type: string
+          type: array
+    addTopic_200_response:
+      example:
+        nodeData:
+          editedBy:
+          - super1
+          - super2
+          createdBy: super1
+          topic: 2024-12-09T04:10:00.350Z
+          description: used to attack ninjas on Friday
+          battleTested: 44
+          id: 2024-12-09T04:10:00.350Z
+          title: a ninja attack
+          fresh: 55
+          speed: 55
+          isFlagged: true
+          youtubeLinks:
+          - addedBy: Mike21
+            link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+            votes: 21
+            dateAdded: 2024-08-19T19:25:42.568Z
+          - addedBy: Mike21
+            link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+            votes: 21
+            dateAdded: 2024-08-19T19:25:42.568Z
+        topic:
+          id: 2024-12-09T04:10:00.350Z
+          title: bjj
+      properties:
+        topic:
+          $ref: '#/components/schemas/getTopics_200_response_inner'
+        nodeData:
+          $ref: '#/components/schemas/addTopic_200_response_nodeData'
+      required:
+      - nodeData
+      - topic
+    getMapById_200_response_nodes_inner_position:
+      example:
+        x: 100
+        "y": 100
+      properties:
+        x:
+          example: 100
+          format: int32
+          type: integer
+        "y":
+          example: 100
+          format: int32
+          type: integer
+    getMapById_200_response_nodes_inner_data:
+      example:
+        battleTested: 200
+        title: arm bar
+        fresh: 200
+        speed: 75
+      properties:
+        title:
+          example: arm bar
+          type: string
+        battleTested:
+          example: 200
+          format: int64
+          type: integer
+        fresh:
+          example: 200
+          format: int64
+          type: integer
+        speed:
+          example: 75
+          format: int32
+          type: integer
+    getMapById_200_response_nodes_inner:
+      example:
+        data:
+          battleTested: 200
+          title: arm bar
+          fresh: 200
+          speed: 75
+        targetPosition: Position.Left
+        SourcePosition: Position.Right
+        id: 2024-12-09T04:10:00.350Z
+        position:
+          x: 100
+          "y": 100
+        type: flowNode
+      properties:
+        id:
+          example: 2024-12-09T04:10:00.350Z
+          type: string
+        position:
+          $ref: '#/components/schemas/getMapById_200_response_nodes_inner_position'
+        type:
+          example: flowNode
+          type: string
+        targetPosition:
+          example: Position.Left
+          type: string
+        SourcePosition:
+          example: Position.Right
+          type: string
+        data:
+          $ref: '#/components/schemas/getMapById_200_response_nodes_inner_data'
+    getMapById_200_response_edges_inner:
+      example:
+        id: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
+        source: 2024-12-09T04:10:00.350Z
+        target: 2024-12-09T04:10:00.352Z
+      properties:
+        id:
+          example: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
+          type: string
+        source:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        target:
+          example: 2024-12-09T04:10:00.352Z
+          format: date-time
+          type: string
+    getMapById_200_response:
+      example:
+        nodes:
+        - data:
+            battleTested: 200
+            title: arm bar
+            fresh: 200
+            speed: 75
+          targetPosition: Position.Left
+          SourcePosition: Position.Right
+          id: 2024-12-09T04:10:00.350Z
+          position:
+            x: 100
+            "y": 100
+          type: flowNode
+        - data:
+            battleTested: 200
+            title: arm bar
+            fresh: 200
+            speed: 75
+          targetPosition: Position.Left
+          SourcePosition: Position.Right
+          id: 2024-12-09T04:10:00.350Z
+          position:
+            x: 100
+            "y": 100
+          type: flowNode
+        edges:
+        - id: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
+          source: 2024-12-09T04:10:00.350Z
+          target: 2024-12-09T04:10:00.352Z
+        - id: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
+          source: 2024-12-09T04:10:00.350Z
+          target: 2024-12-09T04:10:00.352Z
+      properties:
+        nodes:
+          items:
+            $ref: '#/components/schemas/getMapById_200_response_nodes_inner'
+          type: array
+        edges:
+          items:
+            $ref: '#/components/schemas/getMapById_200_response_edges_inner'
+          type: array
+    updateNode_request:
+      properties:
+        source:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        target:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        topic:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+      required:
+      - source
+      - target
+      - topic
+    addNode_200_response:
+      example:
+        sourceId: 2024-12-09T04:10:00.350Z
+        targetId: 2024-12-09T04:10:00.350Z
+      properties:
+        targetId:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        sourceId:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+      required:
+      - sourceId
+      - targetId
+    loginUser_request:
+      properties:
+        ssoProvider:
+          enum:
+          - google
+          - facebook
+          - microsoft
+          - x
+          - apple
+          - discord
+          type: string
+    updateUser_request_battleTestedUp_inner:
+      example:
+        topic: bjj
+        id: 2024-12-09T04:10:00.350Z
+        title: armbar
+        tid: 2024-12-09T04:10:00.350Z
+      properties:
+        topic:
+          example: bjj
+          type: string
+        title:
+          example: armbar
+          type: string
+        tid:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        id:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+    updateUser_request:
+      example:
+        freshUp:
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        lastName: James
+        role: 1
+        edited:
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        created:
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        freshDown:
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        reputation: 34
+        description: engineer
+        battleTestedUp:
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        isFlagged: true
+        firstName: John
+        battleTestedDown:
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        location: Austin TX
+        email: john@email.com
+        username: theUser
+        linked:
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+        - topic: bjj
+          id: 2024-12-09T04:10:00.350Z
+          title: armbar
+          tid: 2024-12-09T04:10:00.350Z
+      properties:
+        username:
+          example: theUser
+          type: string
+        firstName:
+          example: John
+          type: string
+        lastName:
+          example: James
+          type: string
+        email:
+          example: john@email.com
+          type: string
+        role:
+          description: User Status
+          example: 1
+          format: int32
+          type: integer
+        reputation:
+          example: 34
+          type: integer
+        description:
+          example: engineer
+          type: string
+        location:
+          example: Austin TX
+          type: string
+        isFlagged:
+          type: boolean
+        battleTestedUp:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        battleTestedDown:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        freshUp:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        freshDown:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        edited:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        created:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+        linked:
+          items:
+            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+          type: array
+  securitySchemes:
+    flow_auth:
+      flows:
+        implicit:
+          authorizationUrl: https://flowLearning.com/oauth/authorize
+          scopes:
+            write:user: modify user in your account
+      type: oauth2
