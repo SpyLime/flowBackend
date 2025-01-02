@@ -15,6 +15,7 @@ import (
 	"context"
 	"net/http"
 	"errors"
+  "time"
 )
 
 // MapAPIService is a service that implements the logic for the MapAPIServicer
@@ -34,7 +35,62 @@ func (s *MapAPIService) GetMapById(ctx context.Context, topicId string) (ImplRes
 	// Add api_map_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	// TODO: Uncomment the next line to return response Response(200, GetMapById200Response{}) or use other options such as http.Ok ...
-	// return Response(200, GetMapById200Response{}), nil
+	node1 := Node{
+		ID:              time.Date(2024, 12, 9, 4, 10, 0, 350*1000000, time.UTC),
+		Position:        Position{X: 100, Y: 100},
+		Type:            "flowNode",
+		TargetPosition: "Position.Right",
+		SourcePosition: "Position.Left",
+		Data:            NodeData{"Node 1", 200, 200, 75},
+  }
+  node2 := Node{
+      ID:              time.Date(2024, 12, 9, 4, 10, 0, 351*1000000, time.UTC),
+      Position:        Position{X: 250, Y: 100},
+      Type:            "flowNode",
+      TargetPosition: "Position.Right",
+      SourcePosition: "Position.Left",
+      Data:            NodeData{"Node 2", 150, 180, 80},
+  }
+  node3 := Node{
+      ID:              time.Date(2024, 12, 9, 4, 10, 0, 352*1000000, time.UTC),
+      Position:        Position{X: 400, Y: 100},
+      Type:            "flowNode",
+      TargetPosition: "Position.Right",
+      SourcePosition: "Position.Left",
+      Data:            NodeData{"Node 3", 120, 160, 85},
+  }
+  node4 := Node{
+      ID:              time.Date(2024, 12, 9, 4, 10, 0, 353*1000000, time.UTC),
+      Position:        Position{X: 550, Y: 100},
+      Type:            "flowNode",
+      TargetPosition: "Position.Right",
+      SourcePosition: "Position.Left",
+      Data:            NodeData{"Node 4", 100, 140, 90},
+  }
+
+  edge1 := Edge{
+      ID:     "edge1",
+      Source: node1.ID,
+      Target: node2.ID,
+  }
+  edge2 := Edge{
+      ID:     "edge2",
+      Source: node2.ID,
+      Target: node3.ID,
+  }
+  edge3 := Edge{
+      ID:     "edge3",
+      Source: node3.ID,
+      Target: node4.ID,
+  }
+
+  graph1 := GetMapById200Response{
+      Nodes: []Node{node1, node2, node3, node4},
+      Edges: []Edge{edge1, edge2, edge3},
+  }
+
+  items := []GetMapById200Response{graph1}
+	return Response(200, items), nil
 
 	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
 	// return Response(400, nil),nil
@@ -42,7 +98,7 @@ func (s *MapAPIService) GetMapById(ctx context.Context, topicId string) (ImplRes
 	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
 	// return Response(404, nil),nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("GetMapById method not implemented")
+	// return Response(http.StatusNotImplemented, nil), errors.New("GetMapById method not implemented")
 }
 
 // AddEdge - Add a new edge

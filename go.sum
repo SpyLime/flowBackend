@@ -16,6 +16,8 @@ github.com/go-oauth2/oauth2/v4 v4.5.2 h1:CuZhD3lhGuI6aNLyUbRHXsgG2RwGRBOuCBfd4WQ
 github.com/go-oauth2/oauth2/v4 v4.5.2/go.mod h1:wk/2uLImWIa9VVQDgxz99H2GDbhmfi/9/Xr+GvkSUSQ=
 github.com/go-pkgz/auth v1.24.2 h1:imMjUvTM0c8iOvP/GNGcuNcB/7gF3jFTF9dIPzlAOqI=
 github.com/go-pkgz/auth v1.24.2/go.mod h1:xmnzq6g8mhemW1nHnkuByXkBXsHrNf9/qkiVwJugWIs=
+github.com/go-pkgz/lgr v0.11.1 h1:hXFhZcznehI6imLhEa379oMOKFz7TQUmisAqb3oLOSM=
+github.com/go-pkgz/lgr v0.11.1/go.mod h1:tgDF4RXQnBfIgJqjgkv0yOeTQ3F1yewWIZkpUhHnAkU=
 github.com/go-pkgz/repeater v1.2.0 h1:oJFvjyKdTDd5RCzpzxlzYIZFFj6Zfl17rE1aUfu6UjQ=
 github.com/go-pkgz/repeater v1.2.0/go.mod h1:vypP6xamA53MFmafnGUucqOmALKk36xgKu2hSG73LHM=
 github.com/go-pkgz/rest v1.20.2 h1:6wYWo85H7xFU09FadVKKc5LKIfIpCStBXJj9F/P4COc=

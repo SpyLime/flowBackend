@@ -13,9 +13,11 @@ package openapi
 
 import (
 	"context"
-	"net/http"
 	"errors"
-	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/go-pkgz/lgr"
 )
 
 // TopicAPIService is a service that implements the logic for the TopicAPIServicer
@@ -35,8 +37,31 @@ func (s *TopicAPIService) GetTopics(ctx context.Context) (ImplResponse, error) {
 	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	// TODO: Uncomment the next line to return response Response(200, []GetTopics200ResponseInner{}) or use other options such as http.Ok ...
-	fmt.Printf("get topics")
-	return Response(200, []GetTopics200ResponseInner{}), nil
+	lgr.Printf("INFO get topics")
+	items := []GetTopics200ResponseInner{
+		{
+			Id: time.Now(),
+			Title: "bjj0",
+		},
+		{
+			Id: time.Now().Add(1),
+			Title: "bjj1",
+		},{
+			Id: time.Now().Add(2),
+			Title: "bjj2",
+		},{
+			Id: time.Now().Add(3),
+			Title: "bjj3",
+		},{
+			Id: time.Now().Add(4),
+			Title: "bjj4",
+		},{
+			Id: time.Now().Add(5),
+			Title: "bjj5",
+		},
+
+	}
+	return Response(200, items), nil
 
 	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
 	// return Response(404, nil),nil
