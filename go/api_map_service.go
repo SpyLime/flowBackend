@@ -35,62 +35,45 @@ func (s *MapAPIService) GetMapById(ctx context.Context, topicId string) (ImplRes
 	// Add api_map_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	// TODO: Uncomment the next line to return response Response(200, GetMapById200Response{}) or use other options such as http.Ok ...
-	node1 := Node{
-		ID:              time.Date(2024, 12, 9, 4, 10, 0, 350*1000000, time.UTC),
-		Position:        Position{X: 100, Y: 100},
-		Type:            "flowNode",
-		TargetPosition: "Position.Right",
-		SourcePosition: "Position.Left",
-		Data:            NodeData{"Node 1", 200, 200, 75},
+	node1 := GetMapById200ResponseNodesInner{
+		Id:              time.Date(2024, 12, 9, 4, 10, 0, 350*1000000, time.UTC),
+		Data:            GetMapById200ResponseNodesInnerData{"Node 1", 0, 10000, 100},
   }
-  node2 := Node{
-      ID:              time.Date(2024, 12, 9, 4, 10, 0, 351*1000000, time.UTC),
-      Position:        Position{X: 250, Y: 100},
-      Type:            "flowNode",
-      TargetPosition: "Position.Right",
-      SourcePosition: "Position.Left",
-      Data:            NodeData{"Node 2", 150, 180, 80},
+  node2 := GetMapById200ResponseNodesInner{
+      Id:              time.Date(2024, 12, 9, 4, 10, 0, 351*1000000, time.UTC),
+      Data:            GetMapById200ResponseNodesInnerData{"Node 2", 15, 100, 75},
   }
-  node3 := Node{
-      ID:              time.Date(2024, 12, 9, 4, 10, 0, 352*1000000, time.UTC),
-      Position:        Position{X: 400, Y: 100},
-      Type:            "flowNode",
-      TargetPosition: "Position.Right",
-      SourcePosition: "Position.Left",
-      Data:            NodeData{"Node 3", 120, 160, 85},
+  node3 := GetMapById200ResponseNodesInner{
+      Id:              time.Date(2024, 12, 9, 4, 10, 0, 352*1000000, time.UTC),
+      Data:            GetMapById200ResponseNodesInnerData{"Node 3", 30, 100, 60},
   }
-  node4 := Node{
-      ID:              time.Date(2024, 12, 9, 4, 10, 0, 353*1000000, time.UTC),
-      Position:        Position{X: 550, Y: 100},
-      Type:            "flowNode",
-      TargetPosition: "Position.Right",
-      SourcePosition: "Position.Left",
-      Data:            NodeData{"Node 4", 100, 140, 90},
+  node4 := GetMapById200ResponseNodesInner{
+      Id:              time.Date(2024, 12, 9, 4, 10, 0, 353*1000000, time.UTC),
+      Data:            GetMapById200ResponseNodesInnerData{"Node 4", 45, 100, 45},
   }
 
-  edge1 := Edge{
-      ID:     "edge1",
-      Source: node1.ID,
-      Target: node2.ID,
+  edge1 := GetMapById200ResponseEdgesInner{
+      Id:     "edge1",
+      Source: node1.Id,
+      Target: node2.Id,
   }
-  edge2 := Edge{
-      ID:     "edge2",
-      Source: node2.ID,
-      Target: node3.ID,
+  edge2 := GetMapById200ResponseEdgesInner{
+      Id:     "edge2",
+      Source: node2.Id,
+      Target: node3.Id,
   }
-  edge3 := Edge{
-      ID:     "edge3",
-      Source: node3.ID,
-      Target: node4.ID,
+  edge3 := GetMapById200ResponseEdgesInner{
+      Id:     "edge3",
+      Source: node3.Id,
+      Target: node4.Id,
   }
 
   graph1 := GetMapById200Response{
-      Nodes: []Node{node1, node2, node3, node4},
-      Edges: []Edge{edge1, edge2, edge3},
+      Nodes: []GetMapById200ResponseNodesInner{node1, node2, node3, node4},
+      Edges: []GetMapById200ResponseEdgesInner{edge1, edge2, edge3},
   }
 
-  items := []GetMapById200Response{graph1}
-	return Response(200, items), nil
+	return Response(200, graph1), nil
 
 	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
 	// return Response(400, nil),nil

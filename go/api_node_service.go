@@ -15,6 +15,7 @@ import (
 	"context"
 	"net/http"
 	"errors"
+	"time"
 )
 
 // NodeAPIService is a service that implements the logic for the NodeAPIServicer
@@ -34,12 +35,19 @@ func (s *NodeAPIService) GetNode(ctx context.Context, nodeId string, tid string)
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	// TODO: Uncomment the next line to return response Response(200, AddTopic200ResponseNodeData{}) or use other options such as http.Ok ...
-	// return Response(200, AddTopic200ResponseNodeData{}), nil
+	item := AddTopic200ResponseNodeData {
+		Id: time.Date(2024, 12, 9, 4, 10, 0, 350*1000000, time.UTC),
+		Title: "Armbar",
+		Topic: time.Date(2024, 12, 9, 4, 10, 0, 350*1000000, time.UTC),
+		Description: "super6",
+		CreatedBy: "tommyJ",
+	}
+	return Response(200, item), nil
 
 	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
 	// return Response(404, nil),nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("GetNode method not implemented")
+	// return Response(http.StatusNotImplemented, nil), errors.New("GetNode method not implemented")
 }
 
 // UpdateNode - Update an node

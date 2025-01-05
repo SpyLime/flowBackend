@@ -79,7 +79,17 @@ func (s *UserAPIService) GetUserByName(ctx context.Context, userId string) (Impl
 	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	// TODO: Uncomment the next line to return response Response(200, UpdateUserRequest{}) or use other options such as http.Ok ...
-	// return Response(200, UpdateUserRequest{}), nil
+	item := UpdateUserRequest {
+		Username: "tommyJ",
+		FirstName: "tom",
+		LastName: "JJ",
+		Email: "ww@ww.com",
+		Role: 1,
+		Reputation: 24,
+		Description: "super guy",
+		Location: "Home",
+	}
+	return Response(200, item), nil
 
 	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
 	// return Response(400, nil),nil

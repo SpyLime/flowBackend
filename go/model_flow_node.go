@@ -12,11 +12,15 @@
 package openapi
 
 
+import (
+	"time"
+)
+
 
 
 type FlowNode struct {
 
-	Id string `json:"id,omitempty"`
+	Id time.Time `json:"id,omitempty"`
 
 	Position GetMapById200ResponseNodesInnerPosition `json:"position,omitempty"`
 
