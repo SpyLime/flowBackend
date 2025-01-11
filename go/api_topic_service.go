@@ -18,17 +18,24 @@ import (
 	"time"
 
 	"github.com/go-pkgz/lgr"
+
+	bolt "go.etcd.io/bbolt"
 )
 
 // TopicAPIService is a service that implements the logic for the TopicAPIServicer
 // This service should implement the business logic for every endpoint for the TopicAPI API.
 // Include any external packages or services that will be required by this service.
 type TopicAPIService struct {
+	db    *bolt.DB
+	clock Clock
 }
 
 // NewTopicAPIService creates a default api service
-func NewTopicAPIService() *TopicAPIService {
-	return &TopicAPIService{}
+func NewTopicAPIService(db *bolt.DB, clock Clock) *TopicAPIService {
+	return &TopicAPIService{
+		db: db,
+        clock: clock,
+	}
 }
 
 // GetTopics - get all topics

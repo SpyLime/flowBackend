@@ -15,18 +15,25 @@ import (
 	"context"
 	"net/http"
 	"errors"
-  "time"
+    "time"
+
+    bolt "go.etcd.io/bbolt"
 )
 
 // MapAPIService is a service that implements the logic for the MapAPIServicer
 // This service should implement the business logic for every endpoint for the MapAPI API.
 // Include any external packages or services that will be required by this service.
 type MapAPIService struct {
+    db    *bolt.DB
+	clock Clock
 }
 
 // NewMapAPIService creates a default api service
-func NewMapAPIService() *MapAPIService {
-	return &MapAPIService{}
+func NewMapAPIService(db *bolt.DB, clock Clock) *MapAPIService {
+	return &MapAPIService{
+        db: db,
+        clock: clock,
+    }
 }
 
 // GetMapById - Find map by ID

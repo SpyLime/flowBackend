@@ -16,17 +16,24 @@ import (
 	"net/http"
 	"errors"
 	"time"
+
+	bolt "go.etcd.io/bbolt"
 )
 
 // NodeAPIService is a service that implements the logic for the NodeAPIServicer
 // This service should implement the business logic for every endpoint for the NodeAPI API.
 // Include any external packages or services that will be required by this service.
 type NodeAPIService struct {
+	db    *bolt.DB
+	clock Clock
 }
 
 // NewNodeAPIService creates a default api service
-func NewNodeAPIService() *NodeAPIService {
-	return &NodeAPIService{}
+func NewNodeAPIService(db *bolt.DB, clock Clock) *NodeAPIService {
+	return &NodeAPIService{
+		db: db,
+        clock: clock,
+	}
 }
 
 // GetNode - get wiki node
