@@ -34,3 +34,24 @@ Once image is built use
 ```
 docker run --rm -it openapi
 ```
+
+## DB Shape
+users
+    
+    user1
+    user2
+    ...
+topics
+    
+    topic1
+        map
+            nodes
+                node1
+                node2
+                ...
+            edges
+                edge1
+                edge2
+                ...
+    topic2
+    ...

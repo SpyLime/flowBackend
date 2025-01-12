@@ -9,7 +9,7 @@
  * Contact: floTeam@gmail.com
  */
 
-package openapi
+package main
 
 import (
 	"log"
@@ -17,18 +17,12 @@ import (
 	"os"
 	"fmt"
 	"time"
-	"strings"
-	"context"
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/SpyLime/flowBackend/clock"
 	openapi "github.com/SpyLime/flowBackend/go"
 	"github.com/go-pkgz/lgr"
-	"github.com/go-pkgz/auth"
-	"github.com/go-pkgz/auth/avatar"
-	"github.com/go-pkgz/auth/middleware"
-	"github.com/go-pkgz/auth/provider"
-	"github.com/go-pkgz/auth/token"
 	"github.com/gorilla/mux"
 	bolt "go.etcd.io/bbolt"
 )
@@ -45,10 +39,6 @@ type ServerConfig struct {
 	EmailSMTP     string
 	PasswordSMTP  string
 	Production    bool
-}
-
-type Clock interface {
-	Now() time.Time
 }
 
 type AppClock struct {
@@ -79,7 +69,7 @@ func main() {
 
 	config := loadConfig()
 
-	db, err := bolt.Open("al.db", 0666, nil)
+	db, err := bolt.Open("fl.db", 0666, nil)
 	if err != nil {
 		panic(fmt.Errorf("cannot open db %v", err))
 	}
@@ -90,14 +80,14 @@ func main() {
 
 	// ***
 
-	authService := initAuth(db, config)
-	authRoute, _ := authService.Handlers()
-	m := authService.Middleware()
+	// authService := initAuth(db, config)
+	// authRoute, _ := authService.Handlers()
+	// m := authService.Middleware()
 
 	// *** auth
-	router, _ := createRouter(db)
-	router.Handle("/auth/al/login", authRoute)
-	router.Handle("/auth/al/logout", authRoute)
+	router, clock := createRouter(db)
+	// router.Handle("/auth/al/login", authRoute)
+	// router.Handle("/auth/al/logout", authRoute)
 
 	// backup
 	router.Handle("/admin/backup", backUpHandler(db))
@@ -115,8 +105,8 @@ func main() {
 	// router.Handle("/admin/addEvents", addEventsHandler(db))
 	// //add admin
 	// router.Handle("/admin/addAdmin", addAdminHandler(db))
-	// //seed db, dev only
-	// router.Handle("/admin/seedDb", seedDbHandler(db, clock))
+	//seed db, dev only
+	router.Handle("/admin/seedDb", seedDbHandler(db, clock))
 	// //advance clock 15 days, dev only
 	// router.Handle("/admin/nextCollege", nextCollegeHandler(clock))
 	// //advance clock 5 days, dev only
@@ -130,7 +120,7 @@ func main() {
 	// //reset clock to current time
 	// router.Handle("/admin/resetClock", resetClockHandler(clock))
 
-	router.Use(buildAuthMiddleware(m))
+	// router.Use(buildAuthMiddleware(m))
 
 	addr := fmt.Sprintf(":%d", config.ServerPort)
 	log.Fatal(http.ListenAndServe(addr, router))
@@ -148,7 +138,7 @@ func createRouter(db *bolt.DB) (*mux.Router, *DemoClock) {
 	return createRouterClock(db, clock), clock
 }
 
-func createRouterClock(db *bolt.DB, clock Clock) *mux.Router {
+func createRouterClock(db *bolt.DB, clock clock.Clock) *mux.Router {
 
 	MapAPIService := openapi.NewMapAPIService(db, clock)
 	MapAPIController := openapi.NewMapAPIController(MapAPIService)
@@ -161,8 +151,6 @@ func createRouterClock(db *bolt.DB, clock Clock) *mux.Router {
 
 	UserAPIService := openapi.NewUserAPIService(db, clock)
 	UserAPIController := openapi.NewUserAPIController(UserAPIService)
-
-	// log.Fatal(http.ListenAndServe(":8080", router))
 
 	return openapi.NewRouter(MapAPIController,
 		NodeAPIController,
@@ -232,65 +220,65 @@ func createRouterClock(db *bolt.DB, clock Clock) *mux.Router {
 // 	return nil
 // }
 
-func initAuth(db *bolt.DB, config ServerConfig) *auth.Service {
-	options := auth.Opts{
-		SecretReader: token.SecretFunc(func(id string) (string, error) { // secret key for JWT
-			return config.SecretKey, nil
-		}),
-		DisableXSRF:    !config.EnableXSRF,
-		TokenDuration:  time.Minute * 5, // token expires in 5 minutes
-		CookieDuration: time.Hour * 24,  // cookie expires in 1 day and will enforce re-login
-		SecureCookies:  config.SecureCookies,
-		Issuer:         "AL",
-		//URL:            "http://127.0.0.1:8080",
-		AvatarStore: avatar.NewNoOp(),
-		Validator: token.ValidatorFunc(func(_ string, claims token.Claims) bool {
-			// allow only dev_* names
-			//return claims.User != nil && strings.HasPrefix(claims.User.Name, "dev_")
-			return true
-		}),
-		AdminPasswd: config.AdminPassword,
-	}
+// func initAuth(db *bolt.DB, config ServerConfig) *auth.Service {
+// 	options := auth.Opts{
+// 		SecretReader: token.SecretFunc(func(id string) (string, error) { // secret key for JWT
+// 			return config.SecretKey, nil
+// 		}),
+// 		DisableXSRF:    !config.EnableXSRF,
+// 		TokenDuration:  time.Minute * 5, // token expires in 5 minutes
+// 		CookieDuration: time.Hour * 24,  // cookie expires in 1 day and will enforce re-login
+// 		SecureCookies:  config.SecureCookies,
+// 		Issuer:         "FL",
+// 		//URL:            "http://127.0.0.1:8080",
+// 		AvatarStore: avatar.NewNoOp(),
+// 		Validator: token.ValidatorFunc(func(_ string, claims token.Claims) bool {
+// 			// allow only dev_* names
+// 			//return claims.User != nil && strings.HasPrefix(claims.User.Name, "dev_")
+// 			return true
+// 		}),
+// 		AdminPasswd: config.AdminPassword,
+// 	}
 
-	// create auth service with providers
-	service := auth.NewService(options)
-	service.AddDirectProvider("al", provider.CredCheckerFunc(func(user, password string) (ok bool, err error) {
-		// ok, err = checkUserInLocalStore(db, user, password)
-		// return
-		//the below line is temporary, it needs to check the user like above
-		return true, nil
-	}))
-	return service
-}
+// 	// create auth service with providers
+// 	service := auth.NewService(options)
+// 	service.AddDirectProvider("al", provider.CredCheckerFunc(func(user, password string) (ok bool, err error) {
+// 		// ok, err = checkUserInLocalStore(db, user, password)
+// 		// return
+// 		//the below line is temporary, it needs to check the user like above
+// 		return true, nil
+// 	}))
+// 	return service
+// }
 
-func buildAuthMiddleware(m middleware.Authenticator) func(http.Handler) http.Handler {
-	return func(handler http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// func buildAuthMiddleware(m middleware.Authenticator) func(http.Handler) http.Handler {
+// 	return func(handler http.Handler) http.Handler {
+// 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			// if not authentication related pass through auth
-			if strings.HasPrefix(r.URL.Path, "/auth") {
-				handler.ServeHTTP(w, r)
-			} else if r.URL.Path == "/api/users/register" || r.URL.Path == "/api/users/resetStaffPassword" {
-				// or auth-free
-				handler.ServeHTTP(w, r)
+// 			// if not authentication related pass through auth
+// 			if strings.HasPrefix(r.URL.Path, "/auth") {
+// 				handler.ServeHTTP(w, r)
+// 			} else if r.URL.Path == "/api/users/register" || r.URL.Path == "/api/users/resetStaffPassword" {
+// 				// or auth-free
+// 				handler.ServeHTTP(w, r)
 
-			} else {
-				h := m.Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					userInfo, err := token.GetUserInfo(r)
-					if err != nil {
-						lgr.Printf("failed to get user info, %s", err)
-						w.WriteHeader(http.StatusForbidden)
-						return
-					}
-					ctx := context.WithValue(r.Context(), "user", userInfo)
-					handler.ServeHTTP(w, r.WithContext(ctx))
-				}))
-				h.ServeHTTP(w, r)
-			}
-			return
-		})
-	}
-}
+// 			} else {
+// 				h := m.Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 					userInfo, err := token.GetUserInfo(r)
+// 					if err != nil {
+// 						lgr.Printf("failed to get user info, %s", err)
+// 						w.WriteHeader(http.StatusForbidden)
+// 						return
+// 					}
+// 					ctx := context.WithValue(r.Context(), "user", userInfo)
+// 					handler.ServeHTTP(w, r.WithContext(ctx))
+// 				}))
+// 				h.ServeHTTP(w, r)
+// 			}
+// 			return
+// 		})
+// 	}
+// }
 
 func ErrorHandler(w http.ResponseWriter, r *http.Request, err error, result *openapi.ImplResponse) {
 	lgr.Printf("ERROR %s", err)
@@ -307,7 +295,7 @@ func loadConfig() ServerConfig {
 		Production:    false,
 	}
 
-	yamlFile, err := os.ReadFile("./alcfg.yml")
+	yamlFile, err := os.ReadFile("./flcfg.yml")
 	if err != nil {
 		lgr.Printf("ERROR cannot load config %v", err)
 		return config
@@ -321,47 +309,39 @@ func loadConfig() ServerConfig {
 	return config
 }
 
-// func seedDb(db *bolt.DB, clock Clock, eventRequests []EventRequest, jobRequests []Job) (err error) {
+//dev only
+func seedDb(db *bolt.DB, clock clock.Clock) (err error) {
+	outerLoop:
+	for i := 0; i < 10; i++ {
+		user := openapi.UpdateUserRequest {
+			Username: "d",
+			FirstName: "d",
+			LastName: "d",
+			Email: "d",
+			Role: 2,
+			Reputation: 23,
+			Description: "d",
+		}
+		userId, err := openapi.postUser(db, user)
+		if err != nil {
+			break
+		}
+		topicId, err := postTopic()
+		if err != nil {
+			break
+		}
+		for i := 0; i < 10; i++ {
+			nodeId, err := postNode()
+			if err != nil {
+				break outerLoop
+			}
+			err = postEdge()
+			if err != nil {
+				break outerLoop
+			}
+		}
+	}
+	
+	return
 
-// 	config := loadConfig()
-
-// 	school := NewSchoolRequest{
-// 		School:    "JHS",
-// 		FirstName: "Tom",
-// 		LastName:  "Jones",
-// 		Email:     "aa@aa.com",
-// 		City:      "Tacoma",
-// 		Zip:       94558,
-// 	}
-
-// 	err = createNewSchool(db, clock, school, config.SeedPassword)
-// 	if err != nil {
-// 		lgr.Printf("ERROR school is not created: %v", err)
-// 		return err
-// 	}
-
-// 	admin, err := getUserInLocalStore(db, "aa@aa.com")
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	schoolId := admin.SchoolId
-
-// 	err = createJobs(db, jobRequests)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	err = createEvents(db, eventRequests)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	err = createTeachers(db, clock, schoolId, config.SeedPassword)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return
-
-// }
+}

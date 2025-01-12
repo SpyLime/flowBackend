@@ -17,6 +17,7 @@ import (
 	"errors"
 
 	bolt "go.etcd.io/bbolt"
+	"github.com/SpyLime/flowBackend/clock"
 )
 
 // UserAPIService is a service that implements the logic for the UserAPIServicer
@@ -24,11 +25,11 @@ import (
 // Include any external packages or services that will be required by this service.
 type UserAPIService struct {
 	db    *bolt.DB
-	clock Clock
+	clock clock.Clock
 }
 
 // NewUserAPIService creates a default api service
-func NewUserAPIService(db *bolt.DB, clock Clock) *UserAPIService {
+func NewUserAPIService(db *bolt.DB, clock clock.Clock) *UserAPIService {
 	return &UserAPIService{
 		db: db,
         clock: clock,
