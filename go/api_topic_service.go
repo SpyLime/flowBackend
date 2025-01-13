@@ -20,7 +20,7 @@ import (
 	"github.com/go-pkgz/lgr"
 
 	bolt "go.etcd.io/bbolt"
-	"github.com/SpyLime/flowBackend/clock"
+	"github.com/SpyLime/flowBackend/utility"
 )
 
 // TopicAPIService is a service that implements the logic for the TopicAPIServicer
@@ -28,11 +28,11 @@ import (
 // Include any external packages or services that will be required by this service.
 type TopicAPIService struct {
 	db    *bolt.DB
-	clock clock.Clock
+	clock utility.Clock
 }
 
 // NewTopicAPIService creates a default api service
-func NewTopicAPIService(db *bolt.DB, clock clock.Clock) *TopicAPIService {
+func NewTopicAPIService(db *bolt.DB, clock utility.Clock) *TopicAPIService {
 	return &TopicAPIService{
 		db: db,
         clock: clock,

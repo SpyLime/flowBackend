@@ -18,7 +18,7 @@ import (
     "time"
 
     bolt "go.etcd.io/bbolt"
-    "github.com/SpyLime/flowBackend/clock"
+    "github.com/SpyLime/flowBackend/utility"
 )
 
 // MapAPIService is a service that implements the logic for the MapAPIServicer
@@ -26,11 +26,11 @@ import (
 // Include any external packages or services that will be required by this service.
 type MapAPIService struct {
     db    *bolt.DB
-	clock clock.Clock
+	clock utility.Clock
 }
 
 // NewMapAPIService creates a default api service
-func NewMapAPIService(db *bolt.DB, clock clock.Clock) *MapAPIService {
+func NewMapAPIService(db *bolt.DB, clock utility.Clock) *MapAPIService {
 	return &MapAPIService{
         db: db,
         clock: clock,

@@ -20,7 +20,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/SpyLime/flowBackend/clock"
+	"github.com/SpyLime/flowBackend/utility"
 	openapi "github.com/SpyLime/flowBackend/go"
 	"github.com/go-pkgz/lgr"
 	"github.com/gorilla/mux"
@@ -138,7 +138,7 @@ func createRouter(db *bolt.DB) (*mux.Router, *DemoClock) {
 	return createRouterClock(db, clock), clock
 }
 
-func createRouterClock(db *bolt.DB, clock clock.Clock) *mux.Router {
+func createRouterClock(db *bolt.DB, clock utility.Clock) *mux.Router {
 
 	MapAPIService := openapi.NewMapAPIService(db, clock)
 	MapAPIController := openapi.NewMapAPIController(MapAPIService)
@@ -310,23 +310,27 @@ func loadConfig() ServerConfig {
 }
 
 //dev only
-func seedDb(db *bolt.DB, clock clock.Clock) (err error) {
+func seedDb(db *bolt.DB, clock utility.Clock) (err error) {
 	outerLoop:
 	for i := 0; i < 10; i++ {
 		user := openapi.UpdateUserRequest {
-			Username: "d",
+			Username: utility.RandomString(2),
 			FirstName: "d",
 			LastName: "d",
-			Email: "d",
-			Role: 2,
+			Email: "d@d.com",
+			Role: 0,
 			Reputation: 23,
 			Description: "d",
 		}
-		userId, err := openapi.postUser(db, user)
+		userId, err := openapi.PostUser(db, user)
 		if err != nil {
 			break
 		}
-		topicId, err := postTopic()
+
+		topic := openapi.GetTopics200ResponseInner {
+			Title: utility.RandomString(3),
+		}
+		topicId, err := openapi.PostTopic(db, topic)
 		if err != nil {
 			break
 		}

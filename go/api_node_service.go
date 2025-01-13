@@ -18,7 +18,7 @@ import (
 	"time"
 
 	bolt "go.etcd.io/bbolt"
-	"github.com/SpyLime/flowBackend/clock"
+	"github.com/SpyLime/flowBackend/utility"
 )
 
 // NodeAPIService is a service that implements the logic for the NodeAPIServicer
@@ -26,11 +26,11 @@ import (
 // Include any external packages or services that will be required by this service.
 type NodeAPIService struct {
 	db    *bolt.DB
-	clock clock.Clock
+	clock utility.Clock
 }
 
 // NewNodeAPIService creates a default api service
-func NewNodeAPIService(db *bolt.DB, clock clock.Clock) *NodeAPIService {
+func NewNodeAPIService(db *bolt.DB, clock utility.Clock) *NodeAPIService {
 	return &NodeAPIService{
 		db: db,
         clock: clock,
