@@ -15,7 +15,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/go-pkgz/lgr"
 
@@ -48,23 +47,17 @@ func (s *TopicAPIService) GetTopics(ctx context.Context) (ImplResponse, error) {
 	lgr.Printf("INFO get topics")
 	items := []GetTopics200ResponseInner{
 		{
-			Id: time.Now(),
 			Title: "bjj0",
 		},
 		{
-			Id: time.Now().Add(1),
 			Title: "bjj1",
 		},{
-			Id: time.Now().Add(2),
 			Title: "bjj2",
 		},{
-			Id: time.Now().Add(3),
 			Title: "bjj3",
 		},{
-			Id: time.Now().Add(4),
 			Title: "bjj4",
 		},{
-			Id: time.Now().Add(5),
 			Title: "bjj5",
 		},
 

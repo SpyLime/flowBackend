@@ -41,4 +41,3 @@ go/model_update_user_request.go
 go/model_update_user_request_battle_tested_up_inner.go
 go/model_user.go
 go/routers.go
-main.go

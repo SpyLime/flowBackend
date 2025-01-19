@@ -12,15 +12,9 @@
 package openapi
 
 
-import (
-	"time"
-)
-
 
 
 type Topic struct {
-
-	Id time.Time `json:"id"`
 
 	Title string `json:"title"`
 }
@@ -28,7 +22,6 @@ type Topic struct {
 // AssertTopicRequired checks if the required fields are not zero-ed
 func AssertTopicRequired(obj Topic) error {
 	elements := map[string]interface{}{
-		"id": obj.Id,
 		"title": obj.Title,
 	}
 	for name, el := range elements {

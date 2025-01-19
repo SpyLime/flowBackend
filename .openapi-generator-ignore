@@ -21,5 +21,13 @@
 #docs/*.md
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
-
+main.go
+utility.go
+maintenance.go
 api_user_service.go
+api_topic_service.go
+api_node_service.go
+api_map_service.go
+api_topic_impl.go
+go.mod
+README.md

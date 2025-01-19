@@ -529,15 +529,10 @@ components:
           type: array
     Topic:
       properties:
-        id:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
         title:
           example: bjj
           type: string
       required:
-      - id
       - title
     RequestPostNode:
       properties:
@@ -606,18 +601,12 @@ components:
           type: string
     getTopics_200_response_inner:
       example:
-        id: 2024-12-09T04:10:00.350Z
         title: bjj
       properties:
-        id:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
         title:
           example: bjj
           type: string
       required:
-      - id
       - title
     addTopic_200_response_nodeData_youtubeLinks_inner:
       example:
@@ -733,7 +722,6 @@ components:
             votes: 21
             dateAdded: 2024-08-19T19:25:42.568Z
         topic:
-          id: 2024-12-09T04:10:00.350Z
           title: bjj
       properties:
         topic:
