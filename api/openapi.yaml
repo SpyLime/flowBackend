@@ -385,8 +385,7 @@ components:
           example: a ninja attack
           type: string
         topic:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
+          example: bjj
           type: string
         battleTested:
           example: 44
@@ -636,7 +635,7 @@ components:
         - super1
         - super2
         createdBy: super1
-        topic: 2024-12-09T04:10:00.350Z
+        topic: bjj
         description: used to attack ninjas on Friday
         battleTested: 44
         id: 2024-12-09T04:10:00.350Z
@@ -662,8 +661,7 @@ components:
           example: a ninja attack
           type: string
         topic:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
+          example: bjj
           type: string
         battleTested:
           example: 44
@@ -704,7 +702,7 @@ components:
           - super1
           - super2
           createdBy: super1
-          topic: 2024-12-09T04:10:00.350Z
+          topic: bjj
           description: used to attack ninjas on Friday
           battleTested: 44
           id: 2024-12-09T04:10:00.350Z

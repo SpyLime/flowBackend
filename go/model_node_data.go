@@ -24,7 +24,7 @@ type NodeData struct {
 
 	Title string `json:"title,omitempty"`
 
-	Topic time.Time `json:"topic,omitempty"`
+	Topic string `json:"topic,omitempty"`
 
 	BattleTested int32 `json:"battleTested,omitempty"`
 

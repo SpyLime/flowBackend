@@ -24,10 +24,10 @@
 main.go
 utility.go
 maintenance.go
-api_user_service.go
-api_topic_service.go
-api_node_service.go
-api_map_service.go
-api_topic_impl.go
+go/api_user_service.go
+go/api_topic_service.go
+go/api_node_service.go
+go/api_map_service.go
+go/api_topic_impl.go
 go.mod
 README.md

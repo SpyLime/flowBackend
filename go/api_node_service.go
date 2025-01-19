@@ -46,7 +46,7 @@ func (s *NodeAPIService) GetNode(ctx context.Context, nodeId string, tid string)
 	item := AddTopic200ResponseNodeData {
 		Id: time.Date(2024, 12, 9, 4, 10, 0, 350*1000000, time.UTC),
 		Title: "Armbar",
-		Topic: time.Date(2024, 12, 9, 4, 10, 0, 350*1000000, time.UTC),
+		Topic: "test topic",
 		Description: "super6",
 		CreatedBy: "tommyJ",
 	}
