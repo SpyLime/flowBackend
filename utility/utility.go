@@ -14,6 +14,8 @@ type Clock interface {
 const (
 	KeyUsers  = "users"
 	KeyTopics = "topics"
+	KeyNodes  = "nodes"
+	KeyEdges  = "edges"
 )
 
 func RandomString(n int) string {

@@ -312,7 +312,7 @@ func loadConfig() ServerConfig {
 //dev only
 func seedDb(db *bolt.DB, clock utility.Clock) (err error) {
 	outerLoop:
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		user := openapi.UpdateUserRequest {
 			Username: utility.RandomString(2),
 			FirstName: "d",
@@ -322,7 +322,7 @@ func seedDb(db *bolt.DB, clock utility.Clock) (err error) {
 			Reputation: 23,
 			Description: "d",
 		}
-		userId, err := openapi.PostUser(db, user)
+		_, err := openapi.PostUser(db, user)
 		if err != nil {
 			break
 		}
@@ -330,19 +330,23 @@ func seedDb(db *bolt.DB, clock utility.Clock) (err error) {
 		topic := openapi.GetTopics200ResponseInner {
 			Title: utility.RandomString(3),
 		}
-		topicId, err := openapi.PostTopic(db, topic)
+
+		response, err := openapi.PostTopic(db, clock, topic)
 		if err != nil {
 			break
 		}
+
+		lastNodeId := response.NodeData.Id
 		for i := 0; i < 10; i++ {
-			nodeId, err := postNode()
+			node := openapi.AddTopic200ResponseNodeData {
+				Id: lastNodeId,
+			}
+			nodeIds, err := openapi.PostNode(db, clock, node)
 			if err != nil {
 				break outerLoop
 			}
-			err = postEdge()
-			if err != nil {
-				break outerLoop
-			}
+
+			lastNodeId = nodeIds.TargetId
 		}
 	}
 	
