@@ -26,10 +26,8 @@ func getTopicsRx(tx *bolt.Tx) (response []GetTopics200ResponseInner, err error) 
 
 	c := topicsBucket.Cursor()
 	for k, _ := c.First(); k != nil; k, _ = c.Next() {
-		var newTopic string
-		err = json.Unmarshal(k, &newTopic)
 		response = append(response, GetTopics200ResponseInner{
-			Title: newTopic,
+			Title: string(k),
 		})
 	}
 

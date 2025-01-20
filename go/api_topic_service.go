@@ -16,8 +16,8 @@ import (
 	"errors"
 	"net/http"
 
-	bolt "go.etcd.io/bbolt"
 	"github.com/SpyLime/flowBackend/utility"
+	bolt "go.etcd.io/bbolt"
 )
 
 // TopicAPIService is a service that implements the logic for the TopicAPIServicer

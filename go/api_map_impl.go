@@ -53,7 +53,7 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response GetMapById200Response, 
 		}
 
 		var id time.Time
-		err = json.Unmarshal(k, &id)
+		err = id.UnmarshalText(k)
 		if err != nil {
 			return
 		}
@@ -84,11 +84,7 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response GetMapById200Response, 
 			return
 		}
 
-		var id string
-		err = json.Unmarshal(k, &id)
-		if err != nil {
-			return
-		}
+		newEdge.Id = string(k)
 
 		edges = append(edges, newEdge)
 	}
