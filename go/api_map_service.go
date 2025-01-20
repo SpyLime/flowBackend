@@ -13,8 +13,6 @@ package openapi
 
 import (
 	"context"
-	"net/http"
-	"errors"
     "time"
 
     bolt "go.etcd.io/bbolt"
@@ -39,69 +37,62 @@ func NewMapAPIService(db *bolt.DB, clock utility.Clock) *MapAPIService {
 
 // GetMapById - Find map by ID
 func (s *MapAPIService) GetMapById(ctx context.Context, topicId string) (ImplResponse, error) {
-	// TODO - update GetMapById with the required logic for this service method.
-	// Add api_map_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// TODO: Uncomment the next line to return response Response(200, GetMapById200Response{}) or use other options such as http.Ok ...
-	node1 := GetMapById200ResponseNodesInner{
-		Id:              time.Date(2024, 12, 9, 4, 10, 0, 350*1000000, time.UTC),
-		Data:            GetMapById200ResponseNodesInnerData{"Node 1", 0, 10000, 100},
-  }
-  node2 := GetMapById200ResponseNodesInner{
-      Id:              time.Date(2024, 12, 9, 4, 10, 0, 351*1000000, time.UTC),
-      Data:            GetMapById200ResponseNodesInnerData{"Node 2", 15, 100, 75},
-  }
-  node3 := GetMapById200ResponseNodesInner{
-      Id:              time.Date(2024, 12, 9, 4, 10, 0, 352*1000000, time.UTC),
-      Data:            GetMapById200ResponseNodesInnerData{"Node 3", 30, 100, 60},
-  }
-  node4 := GetMapById200ResponseNodesInner{
-      Id:              time.Date(2024, 12, 9, 4, 10, 0, 353*1000000, time.UTC),
-      Data:            GetMapById200ResponseNodesInnerData{"Node 4", 45, 100, 45},
-  }
+    response, err := getMapById(s.db, topicId)
+    if err != nil {
+        return Response(400, nil),err
+    }
 
-  edge1 := GetMapById200ResponseEdgesInner{
-      Id:     "edge1",
-      Source: node1.Id,
-      Target: node2.Id,
-  }
-  edge2 := GetMapById200ResponseEdgesInner{
-      Id:     "edge2",
-      Source: node2.Id,
-      Target: node3.Id,
-  }
-  edge3 := GetMapById200ResponseEdgesInner{
-      Id:     "edge3",
-      Source: node3.Id,
-      Target: node4.Id,
-  }
+    return Response(200, response), nil
 
-  graph1 := GetMapById200Response{
-      Nodes: []GetMapById200ResponseNodesInner{node1, node2, node3, node4},
-      Edges: []GetMapById200ResponseEdgesInner{edge1, edge2, edge3},
-  }
+	// node1 := GetMapById200ResponseNodesInner{
+	// 	Id:              time.Date(2024, 12, 9, 4, 10, 0, 350*1000000, time.UTC),
+	// 	Data:            GetMapById200ResponseNodesInnerData{"Node 1", 0, 10000, 100},
+    // }
+    // node2 := GetMapById200ResponseNodesInner{
+    //     Id:              time.Date(2024, 12, 9, 4, 10, 0, 351*1000000, time.UTC),
+    //     Data:            GetMapById200ResponseNodesInnerData{"Node 2", 15, 100, 75},
+    // }
+    // node3 := GetMapById200ResponseNodesInner{
+    //     Id:              time.Date(2024, 12, 9, 4, 10, 0, 352*1000000, time.UTC),
+    //     Data:            GetMapById200ResponseNodesInnerData{"Node 3", 30, 100, 60},
+    // }
+    // node4 := GetMapById200ResponseNodesInner{
+    //     Id:              time.Date(2024, 12, 9, 4, 10, 0, 353*1000000, time.UTC),
+    //     Data:            GetMapById200ResponseNodesInnerData{"Node 4", 45, 100, 45},
+    // }
 
-	return Response(200, graph1), nil
+    // edge1 := GetMapById200ResponseEdgesInner{
+    //     Id:     "edge1",
+    //     Source: node1.Id,
+    //     Target: node2.Id,
+    // }
+    // edge2 := GetMapById200ResponseEdgesInner{
+    //     Id:     "edge2",
+    //     Source: node2.Id,
+    //     Target: node3.Id,
+    // }
+    // edge3 := GetMapById200ResponseEdgesInner{
+    //     Id:     "edge3",
+    //     Source: node3.Id,
+    //     Target: node4.Id,
+    // }
 
-	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	// return Response(400, nil),nil
+    // graph1 := GetMapById200Response{
+    //     Nodes: []GetMapById200ResponseNodesInner{node1, node2, node3, node4},
+    //     Edges: []GetMapById200ResponseEdgesInner{edge1, edge2, edge3},
+    // }
 
-	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	// return Response(404, nil),nil
-
-	// return Response(http.StatusNotImplemented, nil), errors.New("GetMapById method not implemented")
 }
 
 // AddEdge - Add a new edge
 func (s *MapAPIService) AddEdge(ctx context.Context, topicId string, getMapById200ResponseEdgesInner GetMapById200ResponseEdgesInner) (ImplResponse, error) {
-	// TODO - update AddEdge with the required logic for this service method.
-	// Add api_map_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	
+	_, err := PostEdge(s.db, topicId, getMapById200ResponseEdgesInner)
+    if err != nil {
+        return Response(405, nil),err
+    }
 
-	// TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	// return Response(200, nil),nil
+    return Response(200, nil),nil
 
-	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
-	// return Response(405, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("AddEdge method not implemented")
 }

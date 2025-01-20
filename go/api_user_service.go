@@ -69,20 +69,22 @@ func (s *UserAPIService) LogoutUser(ctx context.Context) (ImplResponse, error) {
 
 // UpdateUser - Update user
 func (s *UserAPIService) UpdateUser(ctx context.Context, updateUserRequest UpdateUserRequest) (ImplResponse, error) {
-	err := updateUserResponse(updateUserRequest)
+	// err := updateUserResponse(updateUserRequest)
 
-	if err == nil {
-		return Response(200, nil), nil
-	}
+	// if err == nil {
+	// 	return Response(200, nil), nil
+	// }
 
-	return Response(400, nil), err
+	// return Response(400, nil), err
+
+	return Response(http.StatusNotImplemented, nil), errors.New("updateUser method not implemented")
 
 }
 
 // GetUserByName - Get user by user name
 func (s *UserAPIService) GetUserByName(ctx context.Context, userId string) (ImplResponse, error) {
 
-	userData, err := getUserResponse(userId)
+	// userData, err := getUserResponse(userId)
 
 	
 
@@ -97,22 +99,26 @@ func (s *UserAPIService) GetUserByName(ctx context.Context, userId string) (Impl
 	// 	Location: "Home",
 	// }
 
-	if err == nil {
-		return Response(200, userData), nil
-	}
+	// if err == nil {
+	// 	return Response(200, userData), nil
+	// }
 
-	return Response(400, nil), err
+	// return Response(400, nil), err
+
+	return Response(http.StatusNotImplemented, nil), errors.New("getUserBy name method not implemented")
 
 }
 
 // DeleteUser - Delete user
 func (s *UserAPIService) DeleteUser(ctx context.Context, userId string) (ImplResponse, error) {
-	err := deleteUserResponse(userId)
+	// err := deleteUserResponse(userId)
 
-	if err == nil {
-		return Response(204, nil),nil
-	}
+	// if err == nil {
+	// 	return Response(204, nil),nil
+	// }
 
-	return Response(400, nil), err
+	// return Response(400, nil), err
+
+	return Response(http.StatusNotImplemented, nil), errors.New("deleteUser method not implemented")
 
 }
