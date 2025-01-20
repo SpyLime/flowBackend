@@ -40,9 +40,8 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response GetMapById200Response, 
 	}
 
 	nodes := make([]GetMapById200ResponseNodesInner, 0)
-	edges := make([]GetMapById200ResponseEdgesInner, 0)
 	c := nodesBucket.Cursor()
-	for k, v := c.First(); k != nil; k, v = c.Next() { //iterate the teachers
+	for k, v := c.First(); k != nil; k, v = c.Next() {
 		if v == nil {
 			continue
 		}
@@ -54,17 +53,48 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response GetMapById200Response, 
 		}
 
 		var id time.Time
-		idB, err := json.Unmarshal(k, &id)
+		err = json.Unmarshal(k, &id)
 		if err != nil {
 			return
 		}
 
 		newNode := GetMapById200ResponseNodesInner{
-			Id: k,
+			Id: id,
+			Data: GetMapById200ResponseNodesInnerData{
+				Title:        retrievedNode.Title,
+				BattleTested: retrievedNode.BattleTested,
+				Fresh:        retrievedNode.Fresh,
+				Speed:        retrievedNode.Speed,
+			},
 		}
 
 		nodes = append(nodes, newNode)
 	}
+
+	edges := make([]GetMapById200ResponseEdgesInner, 0)
+	c = edgesBucket.Cursor()
+	for k, v := c.First(); k != nil; k, v = c.Next() {
+		if v == nil {
+			continue
+		}
+
+		var newEdge GetMapById200ResponseEdgesInner
+		err = json.Unmarshal(v, &newEdge)
+		if err != nil {
+			return
+		}
+
+		var id string
+		err = json.Unmarshal(k, &id)
+		if err != nil {
+			return
+		}
+
+		edges = append(edges, newEdge)
+	}
+
+	response.Nodes = nodes
+	response.Edges = edges
 
 	return
 }
@@ -80,7 +110,7 @@ func PostEdge(db *bolt.DB, topic string, edge GetMapById200ResponseEdgesInner) (
 			return fmt.Errorf("can't find topic bucket")
 		}
 
-		newId, err = postEdgeTx(tx, topicBucket, edge)
+		newId, err = postEdgeTx(topicBucket, edge)
 		if err != nil {
 			return err
 		}
@@ -91,7 +121,7 @@ func PostEdge(db *bolt.DB, topic string, edge GetMapById200ResponseEdgesInner) (
 	return
 }
 
-func postEdgeTx(tx *bolt.Tx, topicBucket *bolt.Bucket, edge GetMapById200ResponseEdgesInner) (newId string, err error) {
+func postEdgeTx(topicBucket *bolt.Bucket, edge GetMapById200ResponseEdgesInner) (newId string, err error) {
 	edgesBucket, err := topicBucket.CreateBucketIfNotExists([]byte(utility.KeyEdges))
 	if err != nil {
 		return

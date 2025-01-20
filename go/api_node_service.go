@@ -15,7 +15,6 @@ import (
 	"context"
 	"net/http"
 	"errors"
-	"time"
 
 	bolt "go.etcd.io/bbolt"
 	"github.com/SpyLime/flowBackend/utility"
@@ -39,23 +38,14 @@ func NewNodeAPIService(db *bolt.DB, clock utility.Clock) *NodeAPIService {
 
 // GetNode - get wiki node
 func (s *NodeAPIService) GetNode(ctx context.Context, nodeId string, tid string) (ImplResponse, error) {
-	// TODO - update GetNode with the required logic for this service method.
-	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// TODO: Uncomment the next line to return response Response(200, AddTopic200ResponseNodeData{}) or use other options such as http.Ok ...
-	item := AddTopic200ResponseNodeData {
-		Id: time.Date(2024, 12, 9, 4, 10, 0, 350*1000000, time.UTC),
-		Title: "Armbar",
-		Topic: "test topic",
-		Description: "super6",
-		CreatedBy: "tommyJ",
+	node, err := getNode(s.db, nodeId, tid)
+	if err != nil {
+		return Response(404, nil),err
 	}
-	return Response(200, item), nil
 
-	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	// return Response(404, nil),nil
+	return Response(200, node), nil
 
-	// return Response(http.StatusNotImplemented, nil), errors.New("GetNode method not implemented")
 }
 
 // UpdateNode - Update an node
@@ -80,16 +70,15 @@ func (s *NodeAPIService) UpdateNode(ctx context.Context, updateNodeRequest Updat
 
 // AddNode - Add a new node
 func (s *NodeAPIService) AddNode(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
-	// TODO - update AddNode with the required logic for this service method.
-	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	response, err := PostNode(s.db, s.clock, addTopic200ResponseNodeData)
+	if err != nil {
+		return Response(405, nil),err
+	}
 
-	// TODO: Uncomment the next line to return response Response(200, AddNode200Response{}) or use other options such as http.Ok ...
-	// return Response(200, AddNode200Response{}), nil
+	return Response(200, response), nil
 
-	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
-	// return Response(405, nil),nil
+	
 
-	return Response(http.StatusNotImplemented, nil), errors.New("AddNode method not implemented")
 }
 
 // DeleteNode - Delete a node

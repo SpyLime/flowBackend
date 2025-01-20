@@ -18,9 +18,9 @@ type GetMapById200ResponseNodesInnerData struct {
 
 	Title string `json:"title,omitempty"`
 
-	BattleTested int64 `json:"battleTested,omitempty"`
+	BattleTested int32 `json:"battleTested,omitempty"`
 
-	Fresh int64 `json:"fresh,omitempty"`
+	Fresh int32 `json:"fresh,omitempty"`
 
 	Speed int32 `json:"speed,omitempty"`
 }

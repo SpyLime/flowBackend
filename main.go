@@ -288,7 +288,7 @@ func loadConfig() ServerConfig {
 	config := ServerConfig{
 		SecretKey:     "secret",
 		AdminPassword: "admin",
-		ServerPort:    5000,
+		ServerPort:    8080,
 		SeedPassword:  "123qwe",
 		EmailSMTP:     "qq@qq.com",
 		PasswordSMTP:  "123qwe",
@@ -311,7 +311,6 @@ func loadConfig() ServerConfig {
 
 //dev only
 func seedDb(db *bolt.DB, clock utility.Clock) (err error) {
-	outerLoop:
 	for i := 0; i < 5; i++ {
 		user := openapi.UpdateUserRequest {
 			Username: utility.RandomString(2),
@@ -324,7 +323,7 @@ func seedDb(db *bolt.DB, clock utility.Clock) (err error) {
 		}
 		_, err := openapi.PostUser(db, user)
 		if err != nil {
-			break
+			return err
 		}
 
 		topic := openapi.GetTopics200ResponseInner {
@@ -333,17 +332,18 @@ func seedDb(db *bolt.DB, clock utility.Clock) (err error) {
 
 		response, err := openapi.PostTopic(db, clock, topic)
 		if err != nil {
-			break
+			return err
 		}
 
 		lastNodeId := response.NodeData.Id
 		for i := 0; i < 10; i++ {
 			node := openapi.AddTopic200ResponseNodeData {
 				Id: lastNodeId,
+				Topic: topic.Title,
 			}
 			nodeIds, err := openapi.PostNode(db, clock, node)
 			if err != nil {
-				break outerLoop
+				return err
 			}
 
 			lastNodeId = nodeIds.TargetId

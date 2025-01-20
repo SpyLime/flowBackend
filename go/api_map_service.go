@@ -13,7 +13,6 @@ package openapi
 
 import (
 	"context"
-    "time"
 
     bolt "go.etcd.io/bbolt"
     "github.com/SpyLime/flowBackend/utility"
@@ -44,44 +43,6 @@ func (s *MapAPIService) GetMapById(ctx context.Context, topicId string) (ImplRes
     }
 
     return Response(200, response), nil
-
-	// node1 := GetMapById200ResponseNodesInner{
-	// 	Id:              time.Date(2024, 12, 9, 4, 10, 0, 350*1000000, time.UTC),
-	// 	Data:            GetMapById200ResponseNodesInnerData{"Node 1", 0, 10000, 100},
-    // }
-    // node2 := GetMapById200ResponseNodesInner{
-    //     Id:              time.Date(2024, 12, 9, 4, 10, 0, 351*1000000, time.UTC),
-    //     Data:            GetMapById200ResponseNodesInnerData{"Node 2", 15, 100, 75},
-    // }
-    // node3 := GetMapById200ResponseNodesInner{
-    //     Id:              time.Date(2024, 12, 9, 4, 10, 0, 352*1000000, time.UTC),
-    //     Data:            GetMapById200ResponseNodesInnerData{"Node 3", 30, 100, 60},
-    // }
-    // node4 := GetMapById200ResponseNodesInner{
-    //     Id:              time.Date(2024, 12, 9, 4, 10, 0, 353*1000000, time.UTC),
-    //     Data:            GetMapById200ResponseNodesInnerData{"Node 4", 45, 100, 45},
-    // }
-
-    // edge1 := GetMapById200ResponseEdgesInner{
-    //     Id:     "edge1",
-    //     Source: node1.Id,
-    //     Target: node2.Id,
-    // }
-    // edge2 := GetMapById200ResponseEdgesInner{
-    //     Id:     "edge2",
-    //     Source: node2.Id,
-    //     Target: node3.Id,
-    // }
-    // edge3 := GetMapById200ResponseEdgesInner{
-    //     Id:     "edge3",
-    //     Source: node3.Id,
-    //     Target: node4.Id,
-    // }
-
-    // graph1 := GetMapById200Response{
-    //     Nodes: []GetMapById200ResponseNodesInner{node1, node2, node3, node4},
-    //     Edges: []GetMapById200ResponseEdgesInner{edge1, edge2, edge3},
-    // }
 
 }
 

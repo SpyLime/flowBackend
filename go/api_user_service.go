@@ -84,29 +84,13 @@ func (s *UserAPIService) UpdateUser(ctx context.Context, updateUserRequest Updat
 // GetUserByName - Get user by user name
 func (s *UserAPIService) GetUserByName(ctx context.Context, userId string) (ImplResponse, error) {
 
-	// userData, err := getUserResponse(userId)
+	response, err := getUser(s.db, userId)
+	if err != nil {
+		return Response(400, nil), err
+	}
 
+	return Response(200, response), nil
 	
-
-	// item := UpdateUserRequest {
-	// 	Username: "tommyJ",
-	// 	FirstName: "tom",
-	// 	LastName: "JJ",
-	// 	Email: "ww@ww.com",
-	// 	Role: 1,
-	// 	Reputation: 24,
-	// 	Description: "super guy",
-	// 	Location: "Home",
-	// }
-
-	// if err == nil {
-	// 	return Response(200, userData), nil
-	// }
-
-	// return Response(400, nil), err
-
-	return Response(http.StatusNotImplemented, nil), errors.New("getUserBy name method not implemented")
-
 }
 
 // DeleteUser - Delete user

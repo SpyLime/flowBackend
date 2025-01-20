@@ -61,13 +61,23 @@ func seedDbHandler(db *bolt.DB, clock *DemoClock) http.Handler {
 		lgr.Printf("INFO new seedDb request")
 		defer r.Body.Close()
 
-		lgr.Printf("seedDB successful")
-
 		w.Header().Set("Content-Type", "application/json")
 		encoder := json.NewEncoder(w)
-		err := encoder.Encode("")
+
+		err := seedDb(db, clock)
 		if err != nil {
-			lgr.Printf("ERROR failed to send")
+			lgr.Printf("%s", err.Error())
+			err = encoder.Encode(err.Error())
+			if err != nil {
+				lgr.Printf("ERROR failed to send")
+			}
+		} else {
+			lgr.Printf("seedDB successful")
+
+			err = encoder.Encode("success")
+			if err != nil {
+				lgr.Printf("ERROR failed to send")
+			}
 		}
 	})
 }

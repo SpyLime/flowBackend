@@ -754,11 +754,11 @@ components:
           type: string
         battleTested:
           example: 200
-          format: int64
+          format: int32
           type: integer
         fresh:
           example: 200
-          format: int64
+          format: int32
           type: integer
         speed:
           example: 75

@@ -16,8 +16,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/go-pkgz/lgr"
-
 	bolt "go.etcd.io/bbolt"
 	"github.com/SpyLime/flowBackend/utility"
 )
@@ -40,34 +38,14 @@ func NewTopicAPIService(db *bolt.DB, clock utility.Clock) *TopicAPIService {
 
 // GetTopics - get all topics
 func (s *TopicAPIService) GetTopics(ctx context.Context) (ImplResponse, error) {
-	// TODO - update GetTopics with the required logic for this service method.
-	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// TODO: Uncomment the next line to return response Response(200, []GetTopics200ResponseInner{}) or use other options such as http.Ok ...
-	lgr.Printf("INFO get topics")
-	items := []GetTopics200ResponseInner{
-		{
-			Title: "bjj0",
-		},
-		{
-			Title: "bjj1",
-		},{
-			Title: "bjj2",
-		},{
-			Title: "bjj3",
-		},{
-			Title: "bjj4",
-		},{
-			Title: "bjj5",
-		},
-
+	response, err := getTopics(s.db)
+	if err != nil {
+		return Response(404, nil),err
 	}
-	return Response(200, items), nil
 
-	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	// return Response(404, nil),nil
+	return Response(200, response), nil
 
-	// return Response(http.StatusNotImplemented, nil), errors.New("GetTopics method not implemented")
 }
 
 // UpdateTopic - Update an existing topic
@@ -92,16 +70,17 @@ func (s *TopicAPIService) UpdateTopic(ctx context.Context, getTopics200ResponseI
 
 // AddTopic - Add a new topic
 func (s *TopicAPIService) AddTopic(ctx context.Context, getTopics200ResponseInner GetTopics200ResponseInner) (ImplResponse, error) {
-	// TODO - update AddTopic with the required logic for this service method.
-	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	responsePostTopic, err := PostTopic(s.db, s.clock, getTopics200ResponseInner)
+	if err != nil {
+		return Response(405, nil),err
+	}
 
-	// TODO: Uncomment the next line to return response Response(200, AddTopic200Response{}) or use other options such as http.Ok ...
-	// return Response(200, AddTopic200Response{}), nil
+	var response AddTopic200Response
+	response = AddTopic200Response(responsePostTopic)
+	return Response(200, response), nil
 
-	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
-	// return Response(405, nil),nil
+	
 
-	return Response(http.StatusNotImplemented, nil), errors.New("AddTopic method not implemented")
 }
 
 // DeleteTopic - Delete a node
