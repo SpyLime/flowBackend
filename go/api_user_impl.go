@@ -41,14 +41,14 @@ func getUserRx(tx *bolt.Tx, userId string) (response User, err error) {
 
 func PostUser(db *bolt.DB, user UpdateUserRequest) (userId string, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
-		userId, err = postUserTx(tx, user)
+		userId, err = PostUserTx(tx, user)
 		return err
 	})
 
 	return
 }
 
-func postUserTx(tx *bolt.Tx, user UpdateUserRequest) (userId string, err error) {
+func PostUserTx(tx *bolt.Tx, user UpdateUserRequest) (userId string, err error) {
 
 	usersBucket, err := tx.CreateBucketIfNotExists([]byte(utility.KeyUsers))
 	if err != nil {

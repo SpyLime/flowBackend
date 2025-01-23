@@ -44,14 +44,13 @@ users
 topics
     
     topic1
-        map
-            nodes
-                node1
-                node2
-                ...
-            edges
-                edge1
-                edge2
-                ...
+        nodes
+            node1
+            node2
+            ...
+        edges
+            edge1
+            edge2
+            ...
     topic2
     ...
