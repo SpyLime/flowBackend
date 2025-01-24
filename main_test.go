@@ -107,7 +107,7 @@ func InitDB(db *bolt.DB, clock utility.Clock) {
 }
 
 // creates test data
-func CreateTestAccounts(db *bolt.DB, numUsers, numTopics, numNodes int) (users, topics, nodes, edges []string, err error) {
+func CreateTestData(db *bolt.DB, clock utility.Clock, numUsers, numTopics, numNodes int) (users, topics []string, nodesAndEdges []openapi.ResponsePostNode, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 
 		for i := 0; i < numUsers; i++ {
@@ -126,6 +126,33 @@ func CreateTestAccounts(db *bolt.DB, numUsers, numTopics, numNodes int) (users, 
 				return err
 			}
 			users = append(users, userId)
+		}
+
+		for i := 0; i < numTopics; i++ {
+			topic := openapi.GetTopics200ResponseInner{
+				Title: utility.RandomString(6),
+			}
+
+			response, err := openapi.PostTopic(db, clock, topic)
+			if err != nil {
+				return err
+			}
+
+			topics = append(topics, response.Topic.Title)
+
+			for j := 0; j < numNodes; j++ {
+				node := openapi.AddTopic200ResponseNodeData{
+					Id:        response.NodeData.Id,
+					Topic:     topic.Title,
+					CreatedBy: users[0],
+				}
+				nodeIds, err := openapi.PostNode(db, clock, node)
+				if err != nil {
+					return err
+				}
+
+				nodesAndEdges = append(nodesAndEdges, nodeIds)
+			}
 		}
 
 		return err
