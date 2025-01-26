@@ -13,47 +13,48 @@ package openapi
 
 import (
 	"context"
-
-    bolt "go.etcd.io/bbolt"
-    "github.com/SpyLime/flowBackend/utility"
+	"net/http"
+	"errors"
 )
 
 // MapAPIService is a service that implements the logic for the MapAPIServicer
 // This service should implement the business logic for every endpoint for the MapAPI API.
 // Include any external packages or services that will be required by this service.
 type MapAPIService struct {
-    db    *bolt.DB
-	clock utility.Clock
 }
 
 // NewMapAPIService creates a default api service
-func NewMapAPIService(db *bolt.DB, clock utility.Clock) *MapAPIService {
-	return &MapAPIService{
-        db: db,
-        clock: clock,
-    }
+func NewMapAPIService() *MapAPIService {
+	return &MapAPIService{}
 }
 
 // GetMapById - Find map by ID
 func (s *MapAPIService) GetMapById(ctx context.Context, topicId string) (ImplResponse, error) {
+	// TODO - update GetMapById with the required logic for this service method.
+	// Add api_map_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-    response, err := getMapById(s.db, topicId)
-    if err != nil {
-        return Response(400, nil),err
-    }
+	// TODO: Uncomment the next line to return response Response(200, GetMapById200Response{}) or use other options such as http.Ok ...
+	// return Response(200, GetMapById200Response{}), nil
 
-    return Response(200, response), nil
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
 
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("GetMapById method not implemented")
 }
 
 // AddEdge - Add a new edge
 func (s *MapAPIService) AddEdge(ctx context.Context, topicId string, getMapById200ResponseEdgesInner GetMapById200ResponseEdgesInner) (ImplResponse, error) {
-	
-	_, err := PostEdge(s.db, topicId, getMapById200ResponseEdgesInner)
-    if err != nil {
-        return Response(405, nil),err
-    }
+	// TODO - update AddEdge with the required logic for this service method.
+	// Add api_map_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-    return Response(200, nil),nil
+	// TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
+	// return Response(200, nil),nil
 
+	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
+	// return Response(405, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("AddEdge method not implemented")
 }

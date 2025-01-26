@@ -13,39 +13,33 @@ package openapi
 
 import (
 	"context"
-	"errors"
 	"net/http"
-
-	"github.com/SpyLime/flowBackend/utility"
-	bolt "go.etcd.io/bbolt"
+	"errors"
 )
 
 // TopicAPIService is a service that implements the logic for the TopicAPIServicer
 // This service should implement the business logic for every endpoint for the TopicAPI API.
 // Include any external packages or services that will be required by this service.
 type TopicAPIService struct {
-	db    *bolt.DB
-	clock utility.Clock
 }
 
 // NewTopicAPIService creates a default api service
-func NewTopicAPIService(db *bolt.DB, clock utility.Clock) *TopicAPIService {
-	return &TopicAPIService{
-		db: db,
-        clock: clock,
-	}
+func NewTopicAPIService() *TopicAPIService {
+	return &TopicAPIService{}
 }
 
 // GetTopics - get all topics
 func (s *TopicAPIService) GetTopics(ctx context.Context) (ImplResponse, error) {
+	// TODO - update GetTopics with the required logic for this service method.
+	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	response, err := GetTopics(s.db)
-	if err != nil {
-		return Response(404, nil),err
-	}
+	// TODO: Uncomment the next line to return response Response(200, []GetTopics200ResponseInner{}) or use other options such as http.Ok ...
+	// return Response(200, []GetTopics200ResponseInner{}), nil
 
-	return Response(200, response), nil
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
 
+	return Response(http.StatusNotImplemented, nil), errors.New("GetTopics method not implemented")
 }
 
 // UpdateTopic - Update an existing topic
@@ -70,17 +64,16 @@ func (s *TopicAPIService) UpdateTopic(ctx context.Context, getTopics200ResponseI
 
 // AddTopic - Add a new topic
 func (s *TopicAPIService) AddTopic(ctx context.Context, getTopics200ResponseInner GetTopics200ResponseInner) (ImplResponse, error) {
-	responsePostTopic, err := PostTopic(s.db, s.clock, getTopics200ResponseInner)
-	if err != nil {
-		return Response(405, nil),err
-	}
+	// TODO - update AddTopic with the required logic for this service method.
+	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	var response AddTopic200Response
-	response = AddTopic200Response(responsePostTopic)
-	return Response(200, response), nil
+	// TODO: Uncomment the next line to return response Response(200, AddTopic200Response{}) or use other options such as http.Ok ...
+	// return Response(200, AddTopic200Response{}), nil
 
-	
+	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
+	// return Response(405, nil),nil
 
+	return Response(http.StatusNotImplemented, nil), errors.New("AddTopic method not implemented")
 }
 
 // DeleteTopic - Delete a node

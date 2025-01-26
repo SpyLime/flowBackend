@@ -9,24 +9,24 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// UserAPIService is a service that implements the logic for the UserAPIServicer
+// UserAPIServiceImpl is a service that implements the logic for the UserAPIServicer
 // This service should implement the business logic for every endpoint for the UserAPI API.
 // Include any external packages or services that will be required by this service.
-type UserAPIService struct {
+type UserAPIServiceImpl struct {
 	db    *bolt.DB
 	clock Clock
 }
 
 // NewUserAPIService creates a default api service
-func NewUserAPIService(db *bolt.DB, clock Clock) *UserAPIService {
-	return &UserAPIService{
+func NewUserAPIServiceImpl(db *bolt.DB, clock Clock) openapi.UserAPIServicer {
+	return &UserAPIServiceImpl{
 		db:    db,
 		clock: clock,
 	}
 }
 
 // LoginUser - Login to the system or create account
-func (s *UserAPIService) LoginUser(ctx context.Context, loginUserRequest openapi.LoginUserRequest) (openapi.ImplResponse, error) {
+func (s *UserAPIServiceImpl) LoginUser(ctx context.Context, loginUserRequest openapi.LoginUserRequest) (openapi.ImplResponse, error) {
 	// TODO - update LoginUser with the required logic for this service method.
 	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -43,7 +43,7 @@ func (s *UserAPIService) LoginUser(ctx context.Context, loginUserRequest openapi
 }
 
 // LogoutUser - Log the user out of the system
-func (s *UserAPIService) LogoutUser(ctx context.Context) (openapi.ImplResponse, error) {
+func (s *UserAPIServiceImpl) LogoutUser(ctx context.Context) (openapi.ImplResponse, error) {
 	// TODO - update LogoutUser with the required logic for this service method.
 	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -57,7 +57,7 @@ func (s *UserAPIService) LogoutUser(ctx context.Context) (openapi.ImplResponse, 
 }
 
 // UpdateUser - Update user
-func (s *UserAPIService) UpdateUser(ctx context.Context, updateUserRequest openapi.UpdateUserRequest) (openapi.ImplResponse, error) {
+func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest openapi.UpdateUserRequest) (openapi.ImplResponse, error) {
 	// err := updateUserResponse(updateUserRequest)
 
 	// if err == nil {
@@ -71,7 +71,7 @@ func (s *UserAPIService) UpdateUser(ctx context.Context, updateUserRequest opena
 }
 
 // GetUserByName - Get user by user name
-func (s *UserAPIService) GetUserByName(ctx context.Context, userId string) (openapi.ImplResponse, error) {
+func (s *UserAPIServiceImpl) GetUserByName(ctx context.Context, userId string) (openapi.ImplResponse, error) {
 
 	response, err := getUser(s.db, userId)
 	if err != nil {
@@ -83,7 +83,7 @@ func (s *UserAPIService) GetUserByName(ctx context.Context, userId string) (open
 }
 
 // DeleteUser - Delete user
-func (s *UserAPIService) DeleteUser(ctx context.Context, userId string) (openapi.ImplResponse, error) {
+func (s *UserAPIServiceImpl) DeleteUser(ctx context.Context, userId string) (openapi.ImplResponse, error) {
 	// err := deleteUserResponse(userId)
 
 	// if err == nil {

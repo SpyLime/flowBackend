@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	openapi "github.com/SpyLime/flowBackend/go"
 	"github.com/stretchr/testify/require"
 )
 
@@ -41,26 +42,28 @@ func TestGetUserByName(t *testing.T) {
 	db, tearDown := FullStartTestServer("getUserByName", 8088, "")
 	defer tearDown()
 
-	CreateTestData(db, &clock)
+	users, _, _, err := CreateTestData(db, &clock, 2, 0, 0)
+	require.Nil(t, err)
 
 	// SetTestLoginUser(teachers[0])
 
 	client := &http.Client{}
+	userID := url.QueryEscape(users[0])
 
 	req, _ := http.NewRequest(http.MethodGet,
-		"http://127.0.0.1:8088/api/users",
+		"http://127.0.0.1:8088/api/v1/user/"+userID,
 		nil)
 
 	resp, err := client.Do(req)
 	require.Nil(t, err)
 	defer resp.Body.Close()
 	require.NotNil(t, resp)
-	assert.Equal(t, 200, resp.StatusCode)
+	require.Equal(t, 200, resp.StatusCode)
 
-	var data []openapi.UserNoHistory
+	var data openapi.User
 	decoder := json.NewDecoder(resp.Body)
 	_ = decoder.Decode(&data)
 
-	require.Equal(t, 1, len(data))
-	require.NotZero(t, data[0].NetWorth)
+	require.Equal(t, int32(0), data.Role)
+	require.Equal(t, users[0], data.Username)
 }

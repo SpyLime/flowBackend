@@ -2,9 +2,13 @@ Dockerfile
 api/openapi.yaml
 go/api.go
 go/api_map.go
+go/api_map_service.go
 go/api_node.go
+go/api_node_service.go
 go/api_topic.go
+go/api_topic_service.go
 go/api_user.go
+go/api_user_service.go
 go/error.go
 go/helpers.go
 go/impl.go

@@ -15,37 +15,31 @@ import (
 	"context"
 	"net/http"
 	"errors"
-
-	bolt "go.etcd.io/bbolt"
-	"github.com/SpyLime/flowBackend/utility"
 )
 
 // NodeAPIService is a service that implements the logic for the NodeAPIServicer
 // This service should implement the business logic for every endpoint for the NodeAPI API.
 // Include any external packages or services that will be required by this service.
 type NodeAPIService struct {
-	db    *bolt.DB
-	clock utility.Clock
 }
 
 // NewNodeAPIService creates a default api service
-func NewNodeAPIService(db *bolt.DB, clock utility.Clock) *NodeAPIService {
-	return &NodeAPIService{
-		db: db,
-        clock: clock,
-	}
+func NewNodeAPIService() *NodeAPIService {
+	return &NodeAPIService{}
 }
 
 // GetNode - get wiki node
 func (s *NodeAPIService) GetNode(ctx context.Context, nodeId string, tid string) (ImplResponse, error) {
+	// TODO - update GetNode with the required logic for this service method.
+	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	node, err := getNode(s.db, nodeId, tid)
-	if err != nil {
-		return Response(404, nil),err
-	}
+	// TODO: Uncomment the next line to return response Response(200, AddTopic200ResponseNodeData{}) or use other options such as http.Ok ...
+	// return Response(200, AddTopic200ResponseNodeData{}), nil
 
-	return Response(200, node), nil
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
 
+	return Response(http.StatusNotImplemented, nil), errors.New("GetNode method not implemented")
 }
 
 // UpdateNode - Update an node
@@ -70,15 +64,16 @@ func (s *NodeAPIService) UpdateNode(ctx context.Context, updateNodeRequest Updat
 
 // AddNode - Add a new node
 func (s *NodeAPIService) AddNode(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
-	response, err := PostNode(s.db, s.clock, addTopic200ResponseNodeData)
-	if err != nil {
-		return Response(405, nil),err
-	}
+	// TODO - update AddNode with the required logic for this service method.
+	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	return Response(200, response), nil
+	// TODO: Uncomment the next line to return response Response(200, AddNode200Response{}) or use other options such as http.Ok ...
+	// return Response(200, AddNode200Response{}), nil
 
-	
+	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
+	// return Response(405, nil),nil
 
+	return Response(http.StatusNotImplemented, nil), errors.New("AddNode method not implemented")
 }
 
 // DeleteNode - Delete a node

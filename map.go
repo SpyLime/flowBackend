@@ -7,21 +7,20 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-type MapAPIService struct {
+type MapAPIServiceImpl struct {
 	db    *bolt.DB
 	clock Clock
 }
 
-// NewMapAPIService creates a default api service
-func NewMapAPIService(db *bolt.DB, clock Clock) *MapAPIService {
-	return &MapAPIService{
+func NewMapAPIServiceImpl(db *bolt.DB, clock Clock) openapi.MapAPIServicer {
+	return &MapAPIServiceImpl{
 		db:    db,
 		clock: clock,
 	}
 }
 
 // GetMapById - Find map by ID
-func (s *MapAPIService) GetMapById(ctx context.Context, topicId string) (openapi.ImplResponse, error) {
+func (s *MapAPIServiceImpl) GetMapById(ctx context.Context, topicId string) (openapi.ImplResponse, error) {
 
 	response, err := getMapById(s.db, topicId)
 	if err != nil {
@@ -33,7 +32,7 @@ func (s *MapAPIService) GetMapById(ctx context.Context, topicId string) (openapi
 }
 
 // AddEdge - Add a new edge
-func (s *MapAPIService) AddEdge(ctx context.Context, topicId string, getMapById200ResponseEdgesInner openapi.GetMapById200ResponseEdgesInner) (openapi.ImplResponse, error) {
+func (s *MapAPIServiceImpl) AddEdge(ctx context.Context, topicId string, getMapById200ResponseEdgesInner openapi.GetMapById200ResponseEdgesInner) (openapi.ImplResponse, error) {
 
 	_, err := postEdge(s.db, topicId, getMapById200ResponseEdgesInner)
 	if err != nil {

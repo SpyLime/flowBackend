@@ -9,24 +9,24 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// TopicAPIService is a service that implements the logic for the TopicAPIServicer
+// TopicAPIServiceImpl is a service that implements the logic for the TopicAPIServicer
 // This service should implement the business logic for every endpoint for the TopicAPI API.
 // Include any external packages or services that will be required by this service.
-type TopicAPIService struct {
+type TopicAPIServiceImpl struct {
 	db    *bolt.DB
 	clock Clock
 }
 
 // NewTopicAPIService creates a default api service
-func NewTopicAPIService(db *bolt.DB, clock Clock) *TopicAPIService {
-	return &TopicAPIService{
+func NewTopicAPIServiceImpl(db *bolt.DB, clock Clock) openapi.TopicAPIServicer {
+	return &TopicAPIServiceImpl{
 		db:    db,
 		clock: clock,
 	}
 }
 
 // GetTopics - get all topics
-func (s *TopicAPIService) GetTopics(ctx context.Context) (openapi.ImplResponse, error) {
+func (s *TopicAPIServiceImpl) GetTopics(ctx context.Context) (openapi.ImplResponse, error) {
 
 	response, err := getTopics(s.db)
 	if err != nil {
@@ -38,7 +38,7 @@ func (s *TopicAPIService) GetTopics(ctx context.Context) (openapi.ImplResponse, 
 }
 
 // UpdateTopic - Update an existing topic
-func (s *TopicAPIService) UpdateTopic(ctx context.Context, getTopics200ResponseInner openapi.GetTopics200ResponseInner) (openapi.ImplResponse, error) {
+func (s *TopicAPIServiceImpl) UpdateTopic(ctx context.Context, getTopics200ResponseInner openapi.GetTopics200ResponseInner) (openapi.ImplResponse, error) {
 	// TODO - update UpdateTopic with the required logic for this service method.
 	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -58,20 +58,19 @@ func (s *TopicAPIService) UpdateTopic(ctx context.Context, getTopics200ResponseI
 }
 
 // AddTopic - Add a new topic
-func (s *TopicAPIService) AddTopic(ctx context.Context, getTopics200ResponseInner openapi.GetTopics200ResponseInner) (openapi.ImplResponse, error) {
+func (s *TopicAPIServiceImpl) AddTopic(ctx context.Context, getTopics200ResponseInner openapi.GetTopics200ResponseInner) (openapi.ImplResponse, error) {
 	responsePostTopic, err := postTopic(s.db, s.clock, getTopics200ResponseInner)
 	if err != nil {
 		return openapi.Response(405, nil), err
 	}
 
-	var response openapi.AddTopic200Response
-	response = openapi.AddTopic200Response(responsePostTopic)
+	response := openapi.AddTopic200Response(responsePostTopic)
 	return openapi.Response(200, response), nil
 
 }
 
 // DeleteTopic - Delete a node
-func (s *TopicAPIService) DeleteTopic(ctx context.Context, topicId string) (openapi.ImplResponse, error) {
+func (s *TopicAPIServiceImpl) DeleteTopic(ctx context.Context, topicId string) (openapi.ImplResponse, error) {
 	// TODO - update DeleteTopic with the required logic for this service method.
 	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 

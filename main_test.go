@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -159,6 +160,9 @@ func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int)
 
 		return err
 	})
+
+	sort.Strings(users)
+	sort.Strings(topics)
 
 	return
 

@@ -9,24 +9,24 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// NodeAPIService is a service that implements the logic for the NodeAPIServicer
+// NodeAPIServiceImpl is a service that implements the logic for the NodeAPIServicer
 // This service should implement the business logic for every endpoint for the NodeAPI API.
 // Include any external packages or services that will be required by this service.
-type NodeAPIService struct {
+type NodeAPIServiceImpl struct {
 	db    *bolt.DB
 	clock Clock
 }
 
 // NewNodeAPIService creates a default api service
-func NewNodeAPIService(db *bolt.DB, clock Clock) *NodeAPIService {
-	return &NodeAPIService{
+func NewNodeAPIServiceImpl(db *bolt.DB, clock Clock) openapi.NodeAPIServicer {
+	return &NodeAPIServiceImpl{
 		db:    db,
 		clock: clock,
 	}
 }
 
 // GetNode - get wiki node
-func (s *NodeAPIService) GetNode(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
+func (s *NodeAPIServiceImpl) GetNode(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
 
 	node, err := getNode(s.db, nodeId, tid)
 	if err != nil {
@@ -38,7 +38,7 @@ func (s *NodeAPIService) GetNode(ctx context.Context, nodeId string, tid string)
 }
 
 // UpdateNode - Update an node
-func (s *NodeAPIService) UpdateNode(ctx context.Context, updateNodeRequest openapi.UpdateNodeRequest) (openapi.ImplResponse, error) {
+func (s *NodeAPIServiceImpl) UpdateNode(ctx context.Context, updateNodeRequest openapi.UpdateNodeRequest) (openapi.ImplResponse, error) {
 	// TODO - update UpdateNode with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -58,7 +58,7 @@ func (s *NodeAPIService) UpdateNode(ctx context.Context, updateNodeRequest opena
 }
 
 // AddNode - Add a new node
-func (s *NodeAPIService) AddNode(ctx context.Context, addTopic200ResponseNodeData openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+func (s *NodeAPIServiceImpl) AddNode(ctx context.Context, addTopic200ResponseNodeData openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
 	response, err := postNode(s.db, s.clock, addTopic200ResponseNodeData)
 	if err != nil {
 		return openapi.Response(405, nil), err
@@ -69,7 +69,7 @@ func (s *NodeAPIService) AddNode(ctx context.Context, addTopic200ResponseNodeDat
 }
 
 // DeleteNode - Delete a node
-func (s *NodeAPIService) DeleteNode(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
+func (s *NodeAPIServiceImpl) DeleteNode(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
 	// TODO - update DeleteNode with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 

@@ -15,25 +15,17 @@ import (
 	"context"
 	"net/http"
 	"errors"
-
-	bolt "go.etcd.io/bbolt"
-	"github.com/SpyLime/flowBackend/utility"
 )
 
 // UserAPIService is a service that implements the logic for the UserAPIServicer
 // This service should implement the business logic for every endpoint for the UserAPI API.
 // Include any external packages or services that will be required by this service.
 type UserAPIService struct {
-	db    *bolt.DB
-	clock utility.Clock
 }
 
 // NewUserAPIService creates a default api service
-func NewUserAPIService(db *bolt.DB, clock utility.Clock) *UserAPIService {
-	return &UserAPIService{
-		db: db,
-        clock: clock,
-	}
+func NewUserAPIService() *UserAPIService {
+	return &UserAPIService{}
 }
 
 // LoginUser - Login to the system or create account
@@ -69,40 +61,48 @@ func (s *UserAPIService) LogoutUser(ctx context.Context) (ImplResponse, error) {
 
 // UpdateUser - Update user
 func (s *UserAPIService) UpdateUser(ctx context.Context, updateUserRequest UpdateUserRequest) (ImplResponse, error) {
-	// err := updateUserResponse(updateUserRequest)
+	// TODO - update UpdateUser with the required logic for this service method.
+	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// if err == nil {
-	// 	return Response(200, nil), nil
-	// }
+	// TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
+	// return Response(200, nil),nil
 
-	// return Response(400, nil), err
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("updateUser method not implemented")
-
+	return Response(http.StatusNotImplemented, nil), errors.New("UpdateUser method not implemented")
 }
 
 // GetUserByName - Get user by user name
 func (s *UserAPIService) GetUserByName(ctx context.Context, userId string) (ImplResponse, error) {
+	// TODO - update GetUserByName with the required logic for this service method.
+	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	response, err := GetUser(s.db, userId)
-	if err != nil {
-		return Response(400, nil), err
-	}
+	// TODO: Uncomment the next line to return response Response(200, UpdateUserRequest{}) or use other options such as http.Ok ...
+	// return Response(200, UpdateUserRequest{}), nil
 
-	return Response(200, response), nil
-	
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("GetUserByName method not implemented")
 }
 
 // DeleteUser - Delete user
 func (s *UserAPIService) DeleteUser(ctx context.Context, userId string) (ImplResponse, error) {
-	// err := deleteUserResponse(userId)
+	// TODO - update DeleteUser with the required logic for this service method.
+	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// if err == nil {
-	// 	return Response(204, nil),nil
-	// }
+	// TODO: Uncomment the next line to return response Response(204, {}) or use other options such as http.Ok ...
+	// return Response(204, nil),nil
 
-	// return Response(400, nil), err
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("deleteUser method not implemented")
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
 
+	return Response(http.StatusNotImplemented, nil), errors.New("DeleteUser method not implemented")
 }
