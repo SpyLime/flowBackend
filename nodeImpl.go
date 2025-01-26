@@ -85,7 +85,11 @@ func postNodeTx(tx *bolt.Tx, clock Clock, node openapi.AddTopic200ResponseNodeDa
 	newNode := openapi.NodeData{
 		Topic:     node.Topic,
 		Title:     node.Title,
-		CreatedBy: "change hard code",
+		CreatedBy: node.CreatedBy,
+	}
+
+	if newNode.CreatedBy == "" {
+		newNode.CreatedBy = "change hardcode"
 	}
 
 	marshal, err := json.Marshal(newNode)

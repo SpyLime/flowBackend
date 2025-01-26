@@ -111,6 +111,14 @@ func InitDB(db *bolt.DB, clock Clock) {
 
 // creates test data
 func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int) (users, topics []string, nodesAndEdges []openapi.ResponsePostNode, err error) {
+	if numUsers == 0 && numNodes > 0 {
+		return users, topics, nodesAndEdges, fmt.Errorf("You can't create nodes without a user")
+	}
+
+	if numTopics == 0 && numNodes > 0 {
+		return users, topics, nodesAndEdges, fmt.Errorf("You can't create nodes without a topic")
+	}
+
 	err = db.Update(func(tx *bolt.Tx) error {
 
 		for i := 0; i < numUsers; i++ {
