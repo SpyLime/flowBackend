@@ -1,15 +1,15 @@
-package openapi
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/SpyLime/flowBackend/utility"
+	openapi "github.com/SpyLime/flowBackend/go"
 	bolt "go.etcd.io/bbolt"
 )
 
-func getTopics(db *bolt.DB) (response []GetTopics200ResponseInner, err error) {
+func getTopics(db *bolt.DB) (response []openapi.GetTopics200ResponseInner, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		response, err = getTopicsRx(tx)
 		return err
@@ -18,15 +18,15 @@ func getTopics(db *bolt.DB) (response []GetTopics200ResponseInner, err error) {
 	return
 }
 
-func getTopicsRx(tx *bolt.Tx) (response []GetTopics200ResponseInner, err error) {
-	topicsBucket := tx.Bucket([]byte(utility.KeyTopics))
+func getTopicsRx(tx *bolt.Tx) (response []openapi.GetTopics200ResponseInner, err error) {
+	topicsBucket := tx.Bucket([]byte(KeyTopics))
 	if topicsBucket == nil {
 		return response, fmt.Errorf("cannot find topics bucket")
 	}
 
 	c := topicsBucket.Cursor()
 	for k, _ := c.First(); k != nil; k, _ = c.Next() {
-		response = append(response, GetTopics200ResponseInner{
+		response = append(response, openapi.GetTopics200ResponseInner{
 			Title: string(k),
 		})
 	}
@@ -34,7 +34,7 @@ func getTopicsRx(tx *bolt.Tx) (response []GetTopics200ResponseInner, err error) 
 	return
 }
 
-func PostTopic(db *bolt.DB, clock utility.Clock, topic GetTopics200ResponseInner) (response ResponsePostTopic, err error) {
+func postTopic(db *bolt.DB, clock Clock, topic openapi.GetTopics200ResponseInner) (response openapi.ResponsePostTopic, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		response, err = postTopicTx(tx, clock, topic)
 		return err
@@ -43,9 +43,9 @@ func PostTopic(db *bolt.DB, clock utility.Clock, topic GetTopics200ResponseInner
 	return
 }
 
-func postTopicTx(tx *bolt.Tx, clock utility.Clock, topic GetTopics200ResponseInner) (response ResponsePostTopic, err error) {
+func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInner) (response openapi.ResponsePostTopic, err error) {
 
-	topicsBucket, err := tx.CreateBucketIfNotExists([]byte(utility.KeyTopics))
+	topicsBucket, err := tx.CreateBucketIfNotExists([]byte(KeyTopics))
 	if err != nil {
 		return
 	}
@@ -55,14 +55,14 @@ func postTopicTx(tx *bolt.Tx, clock utility.Clock, topic GetTopics200ResponseInn
 		return response, err
 	}
 
-	nodesBucket, err := topicBucket.CreateBucket([]byte(utility.KeyNodes))
+	nodesBucket, err := topicBucket.CreateBucket([]byte(KeyNodes))
 	if err != nil {
 		return
 	}
 
 	response.Topic.Title = topic.Title
 
-	newNode := NodeData{
+	newNode := openapi.NodeData{
 		Topic:     topic.Title,
 		CreatedBy: "change hard code",
 	}
@@ -75,7 +75,7 @@ func postTopicTx(tx *bolt.Tx, clock utility.Clock, topic GetTopics200ResponseInn
 	id := clock.Now().Truncate(time.Millisecond)
 	newNode.Id = id
 
-	response.NodeData = AddTopic200ResponseNodeData(newNode)
+	response.NodeData = openapi.AddTopic200ResponseNodeData(newNode)
 
 	idB, err := id.MarshalText()
 	if err != nil {

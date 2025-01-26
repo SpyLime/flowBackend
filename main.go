@@ -20,7 +20,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/SpyLime/flowBackend/utility"
 	openapi "github.com/SpyLime/flowBackend/go"
 	"github.com/go-pkgz/lgr"
 	"github.com/gorilla/mux"
@@ -74,11 +73,6 @@ func main() {
 		panic(fmt.Errorf("cannot open db %v", err))
 	}
 	defer db.Close()
-
-	// runEveryMinute(db)
-	// runEveryDay(db)
-
-	// ***
 
 	// authService := initAuth(db, config)
 	// authRoute, _ := authService.Handlers()
@@ -138,7 +132,7 @@ func createRouter(db *bolt.DB) (*mux.Router, *DemoClock) {
 	return createRouterClock(db, clock), clock
 }
 
-func createRouterClock(db *bolt.DB, clock utility.Clock) *mux.Router {
+func createRouterClock(db *bolt.DB, clock Clock) *mux.Router {
 
 	MapAPIService := openapi.NewMapAPIService(db, clock)
 	MapAPIController := openapi.NewMapAPIController(MapAPIService)
@@ -310,10 +304,10 @@ func loadConfig() ServerConfig {
 }
 
 //dev only
-func seedDb(db *bolt.DB, clock utility.Clock) (err error) {
+func seedDb(db *bolt.DB, clock Clock) (err error) {
 	for i := 0; i < 5; i++ {
 		user := openapi.UpdateUserRequest {
-			Username: utility.RandomString(2),
+			Username: RandomString(2),
 			FirstName: "d",
 			LastName: "d",
 			Email: "d@d.com",
@@ -321,16 +315,16 @@ func seedDb(db *bolt.DB, clock utility.Clock) (err error) {
 			Reputation: 23,
 			Description: "d",
 		}
-		_, err := openapi.PostUser(db, user)
+		_, err := postUser(db, user)
 		if err != nil {
 			return err
 		}
 
 		topic := openapi.GetTopics200ResponseInner {
-			Title: utility.RandomString(3),
+			Title: RandomString(3),
 		}
 
-		response, err := openapi.PostTopic(db, clock, topic)
+		response, err := postTopic(db, clock, topic)
 		if err != nil {
 			return err
 		}
@@ -341,7 +335,7 @@ func seedDb(db *bolt.DB, clock utility.Clock) (err error) {
 				Id: lastNodeId,
 				Topic: topic.Title,
 			}
-			nodeIds, err := openapi.PostNode(db, clock, node)
+			nodeIds, err := postNode(db, clock, node)
 			if err != nil {
 				return err
 			}

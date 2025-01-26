@@ -1,14 +1,14 @@
-package openapi
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/SpyLime/flowBackend/utility"
+	openapi "github.com/SpyLime/flowBackend/go"
 	bolt "go.etcd.io/bbolt"
 )
 
-func getUser(db *bolt.DB, userId string) (response User, err error) {
+func getUser(db *bolt.DB, userId string) (response openapi.User, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		response, err = getUserRx(tx, userId)
 		return err
@@ -17,8 +17,8 @@ func getUser(db *bolt.DB, userId string) (response User, err error) {
 	return
 }
 
-func getUserRx(tx *bolt.Tx, userId string) (response User, err error) {
-	usersBucket := tx.Bucket([]byte(utility.KeyUsers))
+func getUserRx(tx *bolt.Tx, userId string) (response openapi.User, err error) {
+	usersBucket := tx.Bucket([]byte(KeyUsers))
 	if usersBucket == nil {
 		return response, fmt.Errorf("cannot find users bucket")
 	}
@@ -28,37 +28,37 @@ func getUserRx(tx *bolt.Tx, userId string) (response User, err error) {
 		return response, fmt.Errorf("cannot find user data")
 	}
 
-	var user UpdateUserRequest
+	var user openapi.UpdateUserRequest
 	err = json.Unmarshal(userData, &user)
 	if err != nil {
 		return
 	}
 
-	response = User(user)
+	response = openapi.User(user)
 
 	return
 }
 
-func PostUser(db *bolt.DB, user UpdateUserRequest) (userId string, err error) {
+func postUser(db *bolt.DB, user openapi.UpdateUserRequest) (userId string, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
-		userId, err = PostUserTx(tx, user)
+		userId, err = postUserTx(tx, user)
 		return err
 	})
 
 	return
 }
 
-func PostUserTx(tx *bolt.Tx, user UpdateUserRequest) (userId string, err error) {
+func postUserTx(tx *bolt.Tx, user openapi.UpdateUserRequest) (userId string, err error) {
 
-	usersBucket, err := tx.CreateBucketIfNotExists([]byte(utility.KeyUsers))
+	usersBucket, err := tx.CreateBucketIfNotExists([]byte(KeyUsers))
 	if err != nil {
 		return
 	}
 
-	userId = user.Username + "#" + utility.RandomString(4)
+	userId = user.Username + "#" + RandomString(4)
 	foundUser := usersBucket.Get([]byte(userId))
 	for foundUser != nil {
-		userId = user.Username + "#" + utility.RandomString(4)
+		userId = user.Username + "#" + RandomString(4)
 		foundUser = usersBucket.Get([]byte(userId))
 	}
 

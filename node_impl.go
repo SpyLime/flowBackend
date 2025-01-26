@@ -1,15 +1,15 @@
-package openapi
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/SpyLime/flowBackend/utility"
+	openapi "github.com/SpyLime/flowBackend/go"
 	bolt "go.etcd.io/bbolt"
 )
 
-func getNode(db *bolt.DB, nodeId, topicId string) (response AddTopic200ResponseNodeData, err error) {
+func getNode(db *bolt.DB, nodeId, topicId string) (response openapi.AddTopic200ResponseNodeData, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		response, err = getNodeRx(tx, nodeId, topicId)
 		return err
@@ -18,8 +18,8 @@ func getNode(db *bolt.DB, nodeId, topicId string) (response AddTopic200ResponseN
 	return
 }
 
-func getNodeRx(tx *bolt.Tx, nodeId, topicId string) (response AddTopic200ResponseNodeData, err error) {
-	topicsBucket := tx.Bucket([]byte(utility.KeyTopics))
+func getNodeRx(tx *bolt.Tx, nodeId, topicId string) (response openapi.AddTopic200ResponseNodeData, err error) {
+	topicsBucket := tx.Bucket([]byte(KeyTopics))
 	if topicsBucket == nil {
 		return response, fmt.Errorf("can't find topics bucket")
 	}
@@ -29,7 +29,7 @@ func getNodeRx(tx *bolt.Tx, nodeId, topicId string) (response AddTopic200Respons
 		return response, fmt.Errorf("can't find topic bucket")
 	}
 
-	nodesBucket := topicBucket.Bucket([]byte(utility.KeyNodes))
+	nodesBucket := topicBucket.Bucket([]byte(KeyNodes))
 	if nodesBucket == nil {
 		return response, fmt.Errorf("can't find nodes bucket")
 	}
@@ -56,7 +56,7 @@ func getNodeRx(tx *bolt.Tx, nodeId, topicId string) (response AddTopic200Respons
 	return
 }
 
-func PostNode(db *bolt.DB, clock utility.Clock, node AddTopic200ResponseNodeData) (response ResponsePostNode, err error) {
+func postNode(db *bolt.DB, clock Clock, node openapi.AddTopic200ResponseNodeData) (response openapi.ResponsePostNode, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		response, err = postNodeTx(tx, clock, node)
 		return err
@@ -65,9 +65,9 @@ func PostNode(db *bolt.DB, clock utility.Clock, node AddTopic200ResponseNodeData
 	return
 }
 
-func postNodeTx(tx *bolt.Tx, clock utility.Clock, node AddTopic200ResponseNodeData) (response ResponsePostNode, err error) {
+func postNodeTx(tx *bolt.Tx, clock Clock, node openapi.AddTopic200ResponseNodeData) (response openapi.ResponsePostNode, err error) {
 
-	topicsBucket := tx.Bucket([]byte(utility.KeyTopics))
+	topicsBucket := tx.Bucket([]byte(KeyTopics))
 	if topicsBucket == nil {
 		return response, fmt.Errorf("can't find topics bucket")
 	}
@@ -77,12 +77,12 @@ func postNodeTx(tx *bolt.Tx, clock utility.Clock, node AddTopic200ResponseNodeDa
 		return response, fmt.Errorf("can't find topic bucket")
 	}
 
-	nodesBucket := topicBucket.Bucket([]byte(utility.KeyNodes))
+	nodesBucket := topicBucket.Bucket([]byte(KeyNodes))
 	if nodesBucket == nil {
 		return response, fmt.Errorf("can't find nodes bucket")
 	}
 
-	newNode := NodeData{
+	newNode := openapi.NodeData{
 		Topic:     node.Topic,
 		Title:     node.Title,
 		CreatedBy: "change hard code",
@@ -109,7 +109,7 @@ func postNodeTx(tx *bolt.Tx, clock utility.Clock, node AddTopic200ResponseNodeDa
 	response.SourceId = node.Id
 	response.TargetId = id
 
-	edge := GetMapById200ResponseEdgesInner{
+	edge := openapi.GetMapById200ResponseEdgesInner{
 		Id:     response.SourceId.String() + "-" + response.TargetId.String(),
 		Source: response.SourceId,
 		Target: response.TargetId,

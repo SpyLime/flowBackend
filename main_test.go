@@ -8,12 +8,14 @@ import (
 	"net/http/httptest"
 	"os"
 	"strconv"
+	"testing"
 	"time"
 
 	openapi "github.com/SpyLime/flowBackend/go"
-	"github.com/SpyLime/flowBackend/utility"
 	"github.com/go-pkgz/auth/token"
 	"github.com/go-pkgz/lgr"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -54,7 +56,7 @@ func SetTestLoginUser(username string) {
 	testLoginUser = username
 }
 
-func InitTestServer(port int, db *bolt.DB, userName string, clock utility.Clock) (teardown func()) {
+func InitTestServer(port int, db *bolt.DB, userName string, clock Clock) (teardown func()) {
 	SetTestLoginUser(userName)
 	mux := createRouterClock(db, clock)
 	mux.Use(func(handler http.Handler) http.Handler {
@@ -82,7 +84,7 @@ func FullStartTestServer(dbSuffix string, port int, userName string) (db *bolt.D
 	return FullStartTestServerClock(dbSuffix, port, userName, &TestClock{})
 }
 
-func FullStartTestServerClock(dbSuffix string, port int, userName string, clock utility.Clock) (db *bolt.DB, teardown func()) {
+func FullStartTestServerClock(dbSuffix string, port int, userName string, clock Clock) (db *bolt.DB, teardown func()) {
 	db, dbTearDown := OpenTestDB(dbSuffix)
 	InitDB(db, clock)
 	netTearDown := InitTestServer(port, db, userName, clock)
@@ -94,26 +96,26 @@ func FullStartTestServerClock(dbSuffix string, port int, userName string, clock 
 
 }
 
-func InitDB(db *bolt.DB, clock utility.Clock) {
+func InitDB(db *bolt.DB, clock Clock) {
 	db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucket([]byte(utility.KeyUsers))
+		_, err := tx.CreateBucket([]byte(KeyUsers))
 		if err != nil {
 			return err
 		}
-		_, err = tx.CreateBucket([]byte(utility.KeyTopics))
+		_, err = tx.CreateBucket([]byte(KeyTopics))
 
 		return err
 	})
 }
 
 // creates test data
-func CreateTestData(db *bolt.DB, clock utility.Clock, numUsers, numTopics, numNodes int) (users, topics []string, nodesAndEdges []openapi.ResponsePostNode, err error) {
+func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int) (users, topics []string, nodesAndEdges []openapi.ResponsePostNode, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 
 		for i := 0; i < numUsers; i++ {
-			rep, _ := strconv.Atoi(utility.RandomString(3))
+			rep, _ := strconv.Atoi(RandomString(3))
 			user := openapi.UpdateUserRequest{
-				Username:    utility.RandomString(2),
+				Username:    RandomString(2),
 				FirstName:   "d",
 				LastName:    "d",
 				Email:       "d@d.com",
@@ -121,7 +123,7 @@ func CreateTestData(db *bolt.DB, clock utility.Clock, numUsers, numTopics, numNo
 				Reputation:  int32(rep),
 				Description: "d",
 			}
-			userId, err := openapi.PostUserTx(tx, user)
+			userId, err := postUserTx(tx, user)
 			if err != nil {
 				return err
 			}
@@ -130,10 +132,10 @@ func CreateTestData(db *bolt.DB, clock utility.Clock, numUsers, numTopics, numNo
 
 		for i := 0; i < numTopics; i++ {
 			topic := openapi.GetTopics200ResponseInner{
-				Title: utility.RandomString(6),
+				Title: RandomString(6),
 			}
 
-			response, err := openapi.PostTopic(db, clock, topic)
+			response, err := postTopicTx(tx, clock, topic)
 			if err != nil {
 				return err
 			}
@@ -146,7 +148,7 @@ func CreateTestData(db *bolt.DB, clock utility.Clock, numUsers, numTopics, numNo
 					Topic:     topic.Title,
 					CreatedBy: users[0],
 				}
-				nodeIds, err := openapi.PostNode(db, clock, node)
+				nodeIds, err := postNodeTx(tx, clock, node)
 				if err != nil {
 					return err
 				}
@@ -159,5 +161,88 @@ func CreateTestData(db *bolt.DB, clock utility.Clock, numUsers, numTopics, numNo
 	})
 
 	return
+
+}
+
+func TestFirst(t *testing.T) {
+
+	db, teardown := OpenTestDB("")
+	defer teardown()
+
+	if db == nil {
+		t.Fatalf("db not opened")
+	}
+}
+
+func TestSchema(t *testing.T) {
+	db, teardown := OpenTestDB("")
+	defer teardown()
+	clock := TestClock{}
+	InitDB(db, &clock)
+	users, _, _, err := CreateTestData(db, &clock, 3, 2, 2)
+	assert.Nil(t, err)
+
+	response, err := getUser(db, users[0])
+	assert.Nil(t, err)
+
+	assert.NotNil(t, response.Username)
+}
+
+func TestCreateTestData(t *testing.T) {
+	db, teardown := OpenTestDB("createTestData")
+	clock := TestClock{}
+	defer teardown()
+
+	numUsers := 2
+	numTopics := 3
+	numNodes := 4
+
+	users, topics, nodes, err := CreateTestData(db, &clock, numUsers, numTopics, numNodes)
+	require.Nil(t, err)
+
+	require.Equal(t, len(users), numUsers)
+	require.Equal(t, len(topics), numTopics)
+	require.Equal(t, len(nodes), numNodes*numTopics) //3 topics each get 4 nodes
+}
+
+func TestSeedDbSecured(t *testing.T) {
+
+	db, teardown := OpenTestDB("-integration")
+	defer teardown()
+
+	// InitDefaultAccounts(db, &clock)
+	// auth := initAuth(db, ServerConfig{
+	// 	AdminPassword: "test1",
+	// })
+	mux, clock := createRouter(db)
+
+	// m := auth.Middleware()
+	// mux.Use(buildAuthMiddleware(m))
+	mux.Handle("/admin/seedDb", seedDbHandler(db, clock))
+
+	l, _ := net.Listen("tcp", "127.0.0.1:8088")
+
+	ts := httptest.NewUnstartedServer(mux)
+	assert.NoError(t, ts.Listener.Close())
+	ts.Listener = l
+	ts.Start()
+	defer func() {
+		ts.Close()
+	}()
+
+	client := &http.Client{}
+
+	req, _ := http.NewRequest(http.MethodPost,
+		"http://localhost:8088/admin/seedDb",
+		nil)
+	// req.Header.Add("Authorization", "Basic YWRtaW46dGVzdDE=")
+	resp, err := client.Do(req)
+	require.Nil(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	topics, err := getTopics(db)
+	require.Nil(t, err)
+
+	require.NotEmpty(t, topics)
 
 }

@@ -22,20 +22,5 @@
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
 main.go
-utility.go
-maintenance.go
-
-go/api_user_service.go
-go/api_user_impl.go
-
-go/api_topic_service.go
-go/api_topic_impl.go
-
-go/api_node_service.go
-go/api_node_impl.go
-
-go/api_map_service.go
-go/api_map_impl.go
-
 go.mod
 README.md

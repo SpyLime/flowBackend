@@ -1,15 +1,15 @@
-package openapi
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/SpyLime/flowBackend/utility"
+	openapi "github.com/SpyLime/flowBackend/go"
 	bolt "go.etcd.io/bbolt"
 )
 
-func getMapById(db *bolt.DB, topicId string) (response GetMapById200Response, err error) {
+func getMapById(db *bolt.DB, topicId string) (response openapi.GetMapById200Response, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		response, err = getMapByIdRx(tx, topicId)
 		return err
@@ -18,8 +18,8 @@ func getMapById(db *bolt.DB, topicId string) (response GetMapById200Response, er
 	return
 }
 
-func getMapByIdRx(tx *bolt.Tx, topicId string) (response GetMapById200Response, err error) {
-	topicsBucket := tx.Bucket([]byte(utility.KeyTopics))
+func getMapByIdRx(tx *bolt.Tx, topicId string) (response openapi.GetMapById200Response, err error) {
+	topicsBucket := tx.Bucket([]byte(KeyTopics))
 	if topicsBucket == nil {
 		return response, fmt.Errorf("can't find topics bucket")
 	}
@@ -29,24 +29,24 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response GetMapById200Response, 
 		return response, fmt.Errorf("can't find topics bucket")
 	}
 
-	nodesBucket := topicBucket.Bucket([]byte(utility.KeyNodes))
+	nodesBucket := topicBucket.Bucket([]byte(KeyNodes))
 	if nodesBucket == nil {
 		return response, fmt.Errorf("can't find nodes bucket")
 	}
 
-	edgesBucket := topicBucket.Bucket([]byte(utility.KeyEdges))
+	edgesBucket := topicBucket.Bucket([]byte(KeyEdges))
 	if edgesBucket == nil {
 		return response, fmt.Errorf("can't find edges bucket")
 	}
 
-	nodes := make([]GetMapById200ResponseNodesInner, 0)
+	nodes := make([]openapi.GetMapById200ResponseNodesInner, 0)
 	c := nodesBucket.Cursor()
 	for k, v := c.First(); k != nil; k, v = c.Next() {
 		if v == nil {
 			continue
 		}
 
-		var retrievedNode AddTopic200ResponseNodeData
+		var retrievedNode openapi.AddTopic200ResponseNodeData
 		err = json.Unmarshal(v, &retrievedNode)
 		if err != nil {
 			return
@@ -58,9 +58,9 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response GetMapById200Response, 
 			return
 		}
 
-		newNode := GetMapById200ResponseNodesInner{
+		newNode := openapi.GetMapById200ResponseNodesInner{
 			Id: id,
-			Data: GetMapById200ResponseNodesInnerData{
+			Data: openapi.GetMapById200ResponseNodesInnerData{
 				Title:        retrievedNode.Title,
 				BattleTested: retrievedNode.BattleTested,
 				Fresh:        retrievedNode.Fresh,
@@ -71,14 +71,14 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response GetMapById200Response, 
 		nodes = append(nodes, newNode)
 	}
 
-	edges := make([]GetMapById200ResponseEdgesInner, 0)
+	edges := make([]openapi.GetMapById200ResponseEdgesInner, 0)
 	c = edgesBucket.Cursor()
 	for k, v := c.First(); k != nil; k, v = c.Next() {
 		if v == nil {
 			continue
 		}
 
-		var newEdge GetMapById200ResponseEdgesInner
+		var newEdge openapi.GetMapById200ResponseEdgesInner
 		err = json.Unmarshal(v, &newEdge)
 		if err != nil {
 			return
@@ -95,9 +95,9 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response GetMapById200Response, 
 	return
 }
 
-func PostEdge(db *bolt.DB, topic string, edge GetMapById200ResponseEdgesInner) (newId string, err error) {
+func postEdge(db *bolt.DB, topic string, edge openapi.GetMapById200ResponseEdgesInner) (newId string, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
-		topicsBucket := tx.Bucket([]byte(utility.KeyTopics))
+		topicsBucket := tx.Bucket([]byte(KeyTopics))
 		if topicsBucket == nil {
 			return fmt.Errorf("can't find topics bucket")
 		}
@@ -117,8 +117,8 @@ func PostEdge(db *bolt.DB, topic string, edge GetMapById200ResponseEdgesInner) (
 	return
 }
 
-func postEdgeTx(topicBucket *bolt.Bucket, edge GetMapById200ResponseEdgesInner) (newId string, err error) {
-	edgesBucket, err := topicBucket.CreateBucketIfNotExists([]byte(utility.KeyEdges))
+func postEdgeTx(topicBucket *bolt.Bucket, edge openapi.GetMapById200ResponseEdgesInner) (newId string, err error) {
+	edgesBucket, err := topicBucket.CreateBucketIfNotExists([]byte(KeyEdges))
 	if err != nil {
 		return
 	}
