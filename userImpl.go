@@ -8,6 +8,65 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+// this needs a test
+func updateUser(db *bolt.DB, request openapi.UpdateUserRequest) (err error) {
+	err = db.Update(func(tx *bolt.Tx) error {
+		err = updateUserTx(tx, request)
+		return err
+	})
+
+	return
+}
+
+func updateUserTx(tx *bolt.Tx, request openapi.UpdateUserRequest) (err error) {
+	usersBucket := tx.Bucket([]byte(KeyUsers))
+	if usersBucket == nil {
+		return fmt.Errorf("can't find users bucket")
+	}
+
+	userData := usersBucket.Get([]byte(request.Username))
+	if userData == nil {
+		return fmt.Errorf("can't find user")
+	}
+
+	var user openapi.UpdateUserRequest
+	err = json.Unmarshal(userData, &user)
+	if err != nil {
+		return
+	}
+
+	updateUserHelper(&user, request)
+
+	marshal, err := json.Marshal(user)
+	if err != nil {
+		return
+	}
+
+	err = usersBucket.Put([]byte(request.Username), marshal)
+
+	return
+}
+
+func updateUserHelper(user *openapi.UpdateUserRequest, request openapi.UpdateUserRequest) {
+	if request.FirstName != "" {
+		user.FirstName = request.FirstName
+	}
+	if request.LastName != "" {
+		user.LastName = request.LastName
+	}
+	if request.Email != "" {
+		user.Email = request.Email
+	}
+	if request.Description != "" {
+		user.Description = request.Description
+	}
+	if request.Location != "" {
+		user.Location = request.Location
+	}
+
+	user.IsFlagged = request.IsFlagged
+}
+
 func getUser(db *bolt.DB, userId string) (response openapi.User, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		response, err = getUserRx(tx, userId)

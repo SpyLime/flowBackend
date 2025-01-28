@@ -58,15 +58,15 @@ func (s *UserAPIServiceImpl) LogoutUser(ctx context.Context) (openapi.ImplRespon
 
 // UpdateUser - Update user
 func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest openapi.UpdateUserRequest) (openapi.ImplResponse, error) {
-	// err := updateUserResponse(updateUserRequest)
 
-	// if err == nil {
-	// 	return Response(200, nil), nil
-	// }
+	err := updateUser(s.db, updateUserRequest)
+	if err != nil {
+		return openapi.Response(400, nil), err
+	}
 
-	// return Response(400, nil), err
+	return openapi.Response(200, nil), nil
 
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("updateUser method not implemented")
+	//this needs a test
 
 }
 
