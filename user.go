@@ -66,8 +66,6 @@ func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest o
 
 	return openapi.Response(200, nil), nil
 
-	//this needs a test
-
 }
 
 // GetUserByName - Get user by user name

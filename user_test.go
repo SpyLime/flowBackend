@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -66,4 +67,41 @@ func TestGetUserByName(t *testing.T) {
 
 	require.Equal(t, int32(0), data.Role)
 	require.Equal(t, users[0], data.Username)
+}
+
+func TestUpdateUser(t *testing.T) {
+	clock := TestClock{}
+	db, tearDown := FullStartTestServer("udpateUser", 8088, "")
+	defer tearDown()
+
+	users, _, _, err := CreateTestData(db, &clock, 1, 0, 0)
+	require.Nil(t, err)
+
+	originalUser, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	modUser := originalUser
+
+	modUser.FirstName = "Jack"
+	modUser.Email = "jack@jack.com"
+
+	client := &http.Client{}
+
+	marshal, err := json.Marshal(modUser)
+	require.Nil(t, err)
+
+	req, _ := http.NewRequest(http.MethodPut,
+		"http://127.0.0.1:8088/api/v1/user",
+		bytes.NewBuffer(marshal))
+
+	resp, err := client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.Equal(t, 200, resp.StatusCode)
+
+	updatedUser, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	require.Equal(t, modUser.FirstName, updatedUser.FirstName)
+	require.NotEqual(t, originalUser.Email, updatedUser.Email)
 }

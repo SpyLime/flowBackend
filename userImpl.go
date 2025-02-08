@@ -8,7 +8,6 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// this needs a test
 func updateUser(db *bolt.DB, request openapi.UpdateUserRequest) (err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		err = updateUserTx(tx, request)
