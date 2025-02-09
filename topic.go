@@ -54,6 +54,11 @@ func (s *TopicAPIServiceImpl) UpdateTopic(ctx context.Context, getTopics200Respo
 	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
 	// return Response(405, nil),nil
 
+	//this endpoint can't be right in the spec. The only way to update a topic is to change its title. there is no way to easily change a bucket name.
+	//You must make a new bucket with the name you want and then copy all the contents into the new bucket and then delete the old one.
+	//I don't see any reason to implement this. SysAdmin is the only one that can create topics and if you name it incorrectly then just delete and make a correct one.
+	//Make sure you do it quickly before users add items to the bucket.
+
 	return openapi.Response(http.StatusNotImplemented, nil), errors.New("UpdateTopic method not implemented")
 }
 
@@ -71,20 +76,10 @@ func (s *TopicAPIServiceImpl) AddTopic(ctx context.Context, getTopics200Response
 
 // DeleteTopic - Delete a node
 func (s *TopicAPIServiceImpl) DeleteTopic(ctx context.Context, topicId string) (openapi.ImplResponse, error) {
-	// TODO - update DeleteTopic with the required logic for this service method.
-	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	err := deleteTopic(s.db, topicId)
+	if err != nil {
+		return openapi.Response(400, nil), err
+	}
 
-	// TODO: Uncomment the next line to return response Response(204, {}) or use other options such as http.Ok ...
-	// return Response(204, nil),nil
-
-	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	// return Response(400, nil),nil
-
-	// TODO: Uncomment the next line to return response Response(403, {}) or use other options such as http.Ok ...
-	// return Response(403, nil),nil
-
-	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	// return Response(404, nil),nil
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("DeleteTopic method not implemented")
+	return openapi.Response(204, nil), nil
 }

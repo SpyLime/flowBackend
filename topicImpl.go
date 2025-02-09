@@ -86,3 +86,25 @@ func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInn
 
 	return
 }
+
+func deleteTopic(db *bolt.DB, topicId string) (err error) {
+	err = db.Update(func(tx *bolt.Tx) error {
+		err = deleteTopicTx(tx, topicId)
+		return err
+	})
+
+	return
+}
+
+func deleteTopicTx(tx *bolt.Tx, topicId string) (err error) {
+
+	topicsBucket := tx.Bucket([]byte(KeyTopics))
+	if topicsBucket == nil {
+		return fmt.Errorf("can't find topics bucket")
+	}
+
+	err = topicsBucket.DeleteBucket([]byte(topicId))
+
+	return
+
+}
