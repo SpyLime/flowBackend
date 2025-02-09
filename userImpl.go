@@ -131,3 +131,25 @@ func postUserTx(tx *bolt.Tx, user openapi.UpdateUserRequest) (userId string, err
 
 	return
 }
+
+func deleteUser(db *bolt.DB, userId string) (err error) {
+	err = db.Update(func(tx *bolt.Tx) error {
+		err = deleteUserTx(tx, userId)
+		return err
+	})
+
+	return
+}
+
+func deleteUserTx(tx *bolt.Tx, userId string) (err error) {
+
+	usersBucket := tx.Bucket([]byte(KeyUsers))
+	if usersBucket == nil {
+		return fmt.Errorf("can't find users bucket")
+	}
+
+	err = usersBucket.Delete([]byte(userId))
+
+	return
+
+}

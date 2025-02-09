@@ -82,14 +82,12 @@ func (s *UserAPIServiceImpl) GetUserByName(ctx context.Context, userId string) (
 
 // DeleteUser - Delete user
 func (s *UserAPIServiceImpl) DeleteUser(ctx context.Context, userId string) (openapi.ImplResponse, error) {
-	// err := deleteUserResponse(userId)
+	err := deleteUser(s.db, userId)
 
-	// if err == nil {
-	// 	return Response(204, nil),nil
-	// }
+	if err == nil {
+		return openapi.Response(204, nil), nil
+	}
 
-	// return Response(400, nil), err
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("deleteUser method not implemented")
+	return openapi.Response(400, nil), err
 
 }

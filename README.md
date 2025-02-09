@@ -1,5 +1,15 @@
 # Go API Server for openapi
 
+## to build locally
+go build
+
+## test & coverage
+go test -coverprofile cover.out
+go tool cover -html cover.out
+
+# to run spec 
+java -jar .\Downloads\openapi-generator-cli-7.9.0.jar generate -i .\Downloads\flow.json -g go-server -o .\Documents\flowBackend
+
 api for flow learning
 
 ## Overview
@@ -14,7 +24,6 @@ To see how to make this your own, look here:
 - API version: 1.0.0
 - Build date: 2025-01-16T08:52:10.794618800-08:00[America/Los_Angeles]
 - Generator version: 7.9.0
-
 
 ### Running the server
 To run the server, follow these simple steps:

@@ -105,3 +105,28 @@ func TestUpdateUser(t *testing.T) {
 	require.Equal(t, modUser.FirstName, updatedUser.FirstName)
 	require.NotEqual(t, originalUser.Email, updatedUser.Email)
 }
+
+func TestDeleteUser(t *testing.T) {
+	clock := TestClock{}
+	db, tearDown := FullStartTestServer("DeleteUser", 8088, "")
+	defer tearDown()
+
+	users, _, _, err := CreateTestData(db, &clock, 1, 0, 0)
+	require.Nil(t, err)
+
+	client := &http.Client{}
+
+	userID := url.QueryEscape(users[0])
+
+	req, _ := http.NewRequest(http.MethodDelete, "http://127.0.0.1:8088/api/v1/user/"+userID, nil)
+
+	resp, err := client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.NotNil(t, resp)
+	require.Equal(t, 204, resp.StatusCode)
+
+	_, err = getUser(db, users[0])
+	require.NotNil(t, err)
+
+}

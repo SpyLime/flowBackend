@@ -56,3 +56,25 @@ func TestUpdateUserImpl(t *testing.T) {
 	require.NotEqual(t, originalUser.LastName, updatedUser.LastName)
 	require.Equal(t, modUser.LastName, updatedUser.LastName)
 }
+
+func TestDeleteUserImpl(t *testing.T) {
+
+	lgr.Printf("INFO TestDeleteUserImpl")
+	t.Log("INFO TestDeleteUserImpl")
+	clock := TestClock{}
+	db, dbTearDown := OpenTestDB("DeleteUserImpl")
+	defer dbTearDown()
+
+	users, _, _, err := CreateTestData(db, &clock, 1, 0, 0)
+	require.Nil(t, err)
+
+	_, err = getUser(db, users[0])
+	require.Nil(t, err)
+
+	err = deleteUser(db, users[0])
+	require.Nil(t, err)
+
+	_, err = getUser(db, users[0])
+	require.NotNil(t, err)
+
+}
