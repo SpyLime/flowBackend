@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -65,5 +66,39 @@ func TestDeleteTopic(t *testing.T) {
 	emptyTopics, err := getTopics(db)
 	require.Nil(t, err)
 	require.Equal(t, 0, len(emptyTopics))
+
+}
+
+func TestAddTopic(t *testing.T) {
+
+	db, tearDown := FullStartTestServer("AddTopic", 8088, "")
+	defer tearDown()
+
+	emptyTopics, err := getTopics(db)
+	require.Nil(t, err)
+	require.Equal(t, 0, len(emptyTopics))
+
+	require.Nil(t, err)
+
+	client := &http.Client{}
+
+	newTopic := openapi.Topic{
+		Title: "test1",
+	}
+
+	marshal, err := json.Marshal(newTopic)
+	require.Nil(t, err)
+
+	req, _ := http.NewRequest(http.MethodPost, "http://127.0.0.1:8088/api/v1/topic", bytes.NewBuffer(marshal))
+
+	resp, err := client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.NotNil(t, resp)
+	require.Equal(t, 200, resp.StatusCode)
+
+	nonEmptyTopics, err := getTopics(db)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(nonEmptyTopics))
 
 }
