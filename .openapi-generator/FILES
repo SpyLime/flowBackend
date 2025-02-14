@@ -34,7 +34,6 @@ go/model_request_post_node.go
 go/model_response_post_node.go
 go/model_response_post_topic.go
 go/model_topic.go
-go/model_update_node_request.go
 go/model_update_user_request.go
 go/model_update_user_request_battle_tested_up_inner.go
 go/model_user.go

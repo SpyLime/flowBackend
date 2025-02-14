@@ -123,6 +123,11 @@ func postEdgeTx(topicBucket *bolt.Bucket, edge openapi.GetMapById200ResponseEdge
 		return
 	}
 
+	foundEdge := edgesBucket.Get([]byte(edge.Id))
+	if foundEdge != nil {
+		return newId, fmt.Errorf("your trying to make an edge that is already there")
+	}
+
 	id := edge.Id
 	edge.Id = "" //I hope this is considered empty and is omitted
 

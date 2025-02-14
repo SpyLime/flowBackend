@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	openapi "github.com/SpyLime/flowBackend/go"
 	bolt "go.etcd.io/bbolt"
@@ -72,7 +71,7 @@ func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInn
 		return
 	}
 
-	id := clock.Now().Truncate(time.Millisecond)
+	id := clock.Now()
 	newNode.Id = id
 
 	response.NodeData = openapi.AddTopic200ResponseNodeData(newNode)

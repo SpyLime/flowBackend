@@ -43,7 +43,7 @@ func (s *NodeAPIService) GetNode(ctx context.Context, nodeId string, tid string)
 }
 
 // UpdateNode - Update an node
-func (s *NodeAPIService) UpdateNode(ctx context.Context, updateNodeRequest UpdateNodeRequest) (ImplResponse, error) {
+func (s *NodeAPIService) UpdateNode(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
 	// TODO - update UpdateNode with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 

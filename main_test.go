@@ -110,6 +110,12 @@ func InitDB(db *bolt.DB, clock Clock) {
 }
 
 // creates test data
+//
+// when a topic is made a root node is made, if numNodes > 0 then all new nodes will be connected to the root node
+//
+// the root nodes is included in nodesAndEdges and that is why there is 1 element that has a source but no target
+//
+// nodesAndEdges[0].targetId is invalid
 func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int) (users, topics []string, nodesAndEdges []openapi.ResponsePostNode, err error) {
 	if numUsers == 0 && numNodes > 0 {
 		return users, topics, nodesAndEdges, fmt.Errorf("You can't create nodes without a user")
@@ -148,6 +154,8 @@ func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int)
 			if err != nil {
 				return err
 			}
+
+			nodesAndEdges = append(nodesAndEdges, openapi.ResponsePostNode{SourceId: response.NodeData.Id})
 
 			topics = append(topics, response.Topic.Title)
 
@@ -214,7 +222,7 @@ func TestCreateTestData(t *testing.T) {
 
 	require.Equal(t, len(users), numUsers)
 	require.Equal(t, len(topics), numTopics)
-	require.Equal(t, len(nodes), numNodes*numTopics) //3 topics each get 4 nodes
+	require.Equal(t, len(nodes), (numNodes*numTopics)+numTopics) //3 topics each get 4 nodes then add the root node for each topic
 }
 
 func TestSeedDbSecured(t *testing.T) {

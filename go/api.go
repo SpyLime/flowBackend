@@ -71,7 +71,7 @@ type MapAPIServicer interface {
 // and updated with the logic required for the API.
 type NodeAPIServicer interface { 
 	GetNode(context.Context, string, string) (ImplResponse, error)
-	UpdateNode(context.Context, UpdateNodeRequest) (ImplResponse, error)
+	UpdateNode(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
 	AddNode(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
 	DeleteNode(context.Context, string, string) (ImplResponse, error)
 }

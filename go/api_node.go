@@ -110,22 +110,22 @@ func (c *NodeAPIController) GetNode(w http.ResponseWriter, r *http.Request) {
 
 // UpdateNode - Update an node
 func (c *NodeAPIController) UpdateNode(w http.ResponseWriter, r *http.Request) {
-	updateNodeRequestParam := UpdateNodeRequest{}
+	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&updateNodeRequestParam); err != nil {
+	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertUpdateNodeRequestRequired(updateNodeRequestParam); err != nil {
+	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertUpdateNodeRequestConstraints(updateNodeRequestParam); err != nil {
+	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.UpdateNode(r.Context(), updateNodeRequestParam)
+	result, err := c.service.UpdateNode(r.Context(), addTopic200ResponseNodeDataParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

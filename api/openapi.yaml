@@ -250,7 +250,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/updateNode_request'
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
         description: Update an existent node
         required: true
       responses:
@@ -544,8 +544,7 @@ components:
           format: date-time
           type: string
         topic:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
+          example: bjj
           type: string
       required:
       - source
@@ -856,24 +855,6 @@ components:
           items:
             $ref: '#/components/schemas/getMapById_200_response_edges_inner'
           type: array
-    updateNode_request:
-      properties:
-        source:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        target:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        topic:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-      required:
-      - source
-      - target
-      - topic
     addNode_200_response:
       example:
         sourceId: 2024-12-09T04:10:00.350Z
