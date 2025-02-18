@@ -18,18 +18,7 @@ func updateUser(db *bolt.DB, request openapi.UpdateUserRequest) (err error) {
 }
 
 func updateUserTx(tx *bolt.Tx, request openapi.UpdateUserRequest) (err error) {
-	usersBucket := tx.Bucket([]byte(KeyUsers))
-	if usersBucket == nil {
-		return fmt.Errorf("can't find users bucket")
-	}
-
-	userData := usersBucket.Get([]byte(request.Username))
-	if userData == nil {
-		return fmt.Errorf("can't find user")
-	}
-
-	var user openapi.UpdateUserRequest
-	err = json.Unmarshal(userData, &user)
+	usersBucket, user, err := getUserAndBucketRx(tx, request.Username)
 	if err != nil {
 		return
 	}
@@ -42,6 +31,22 @@ func updateUserTx(tx *bolt.Tx, request openapi.UpdateUserRequest) (err error) {
 	}
 
 	err = usersBucket.Put([]byte(request.Username), marshal)
+
+	return
+}
+
+func getUserAndBucketRx(tx *bolt.Tx, userId string) (usersBucket *bolt.Bucket, user openapi.UpdateUserRequest, err error) {
+	usersBucket = tx.Bucket([]byte(KeyUsers))
+	if usersBucket == nil {
+		return nil, user, fmt.Errorf("can't find users bucket")
+	}
+
+	userData := usersBucket.Get([]byte(userId))
+	if userData == nil {
+		return nil, user, fmt.Errorf("can't find user")
+	}
+
+	err = json.Unmarshal(userData, &user)
 
 	return
 }

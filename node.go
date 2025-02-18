@@ -23,6 +23,70 @@ func NewNodeAPIServiceImpl(db *bolt.DB, clock Clock) openapi.NodeAPIServicer {
 	}
 }
 
+// UpdateNode - Update an node
+func (s *NodeAPIServiceImpl) UpdateNodeBattleVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+	user := "tempUser"
+	err := updateNodeBattleVote(s.db, updateNodeRequest, user)
+	if err != nil {
+		return openapi.Response(400, nil), err
+	}
+
+	return openapi.Response(200, nil), nil
+}
+
+// UpdateNode - Update an node
+func (s *NodeAPIServiceImpl) UpdateNodeTitle(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+	err := updateNodeTitle(s.db, updateNodeRequest)
+	if err != nil {
+		return openapi.Response(400, nil), err
+	}
+
+	return openapi.Response(200, nil), nil
+}
+
+// UpdateNode - Update an node
+func (s *NodeAPIServiceImpl) UpdateNodeVideoEdit(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+	user := "tempUser"
+	err := updateNodeVideoEdit(s.db, s.clock, updateNodeRequest, user)
+	if err != nil {
+		return openapi.Response(400, nil), err
+	}
+
+	return openapi.Response(200, nil), nil
+}
+
+// UpdateNode - Update an node
+func (s *NodeAPIServiceImpl) UpdateNodeVideoVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+	user := "tempUser"
+	err := updateNodeVideoVote(s.db, updateNodeRequest, user)
+	if err != nil {
+		return openapi.Response(400, nil), err
+	}
+
+	return openapi.Response(200, nil), nil
+}
+
+// UpdateNode - Update an node
+func (s *NodeAPIServiceImpl) UpdateNodeFlag(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+	err := updateNodeFlag(s.db, updateNodeRequest)
+	if err != nil {
+		return openapi.Response(400, nil), err
+	}
+
+	return openapi.Response(200, nil), nil
+}
+
+// UpdateNode - Update an node
+func (s *NodeAPIServiceImpl) UpdateNodeFreshVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+	user := "tempUser"
+	err := updateNodeFreshVote(s.db, updateNodeRequest, user)
+	if err != nil {
+		return openapi.Response(400, nil), err
+	}
+
+	return openapi.Response(200, nil), nil
+}
+
 // GetNode - get wiki node
 func (s *NodeAPIServiceImpl) GetNode(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
 
@@ -33,16 +97,6 @@ func (s *NodeAPIServiceImpl) GetNode(ctx context.Context, nodeId string, tid str
 
 	return openapi.Response(200, node), nil
 
-}
-
-// UpdateNode - Update an node
-func (s *NodeAPIServiceImpl) UpdateNode(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	err := updateNode(s.db, updateNodeRequest)
-	if err != nil {
-		return openapi.Response(400, nil), err
-	}
-
-	return openapi.Response(200, nil), nil
 }
 
 // AddNode - Add a new node

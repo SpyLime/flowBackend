@@ -141,7 +141,7 @@ func TestUpdateNode(t *testing.T) {
 	require.Nil(t, err)
 
 	req, _ := http.NewRequest(http.MethodPut,
-		"http://127.0.0.1:8088/api/v1/node",
+		"http://127.0.0.1:8088/api/v1/node/title",
 		bytes.NewBuffer(marshal))
 
 	resp, err := client.Do(req)

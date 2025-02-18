@@ -55,11 +55,6 @@ func (c *NodeAPIController) Routes() Routes {
 			"/api/v1/node",
 			c.GetNode,
 		},
-		"UpdateNode": Route{
-			strings.ToUpper("Put"),
-			"/api/v1/node",
-			c.UpdateNode,
-		},
 		"AddNode": Route{
 			strings.ToUpper("Post"),
 			"/api/v1/node",
@@ -69,6 +64,36 @@ func (c *NodeAPIController) Routes() Routes {
 			strings.ToUpper("Delete"),
 			"/api/v1/node",
 			c.DeleteNode,
+		},
+		"UpdateNodeTitle": Route{
+			strings.ToUpper("Put"),
+			"/api/v1/node/title",
+			c.UpdateNodeTitle,
+		},
+		"UpdateNodeVideoVote": Route{
+			strings.ToUpper("Put"),
+			"/api/v1/node/videoVote",
+			c.UpdateNodeVideoVote,
+		},
+		"UpdateNodeVideoEdit": Route{
+			strings.ToUpper("Put"),
+			"/api/v1/node/videoEdit",
+			c.UpdateNodeVideoEdit,
+		},
+		"UpdateNodeBattleVote": Route{
+			strings.ToUpper("Put"),
+			"/api/v1/node/battleVote",
+			c.UpdateNodeBattleVote,
+		},
+		"UpdateNodeFreshVote": Route{
+			strings.ToUpper("Put"),
+			"/api/v1/node/freshVote",
+			c.UpdateNodeFreshVote,
+		},
+		"UpdateNodeFlag": Route{
+			strings.ToUpper("Put"),
+			"/api/v1/node/flag",
+			c.UpdateNodeFlag,
 		},
 	}
 }
@@ -99,33 +124,6 @@ func (c *NodeAPIController) GetNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result, err := c.service.GetNode(r.Context(), nodeIdParam, tidParam)
-	// If an error occurred, encode the error with the status code
-	if err != nil {
-		c.errorHandler(w, r, err, &result)
-		return
-	}
-	// If no error, encode the body and the result code
-	_ = EncodeJSONResponse(result.Body, &result.Code, w)
-}
-
-// UpdateNode - Update an node
-func (c *NodeAPIController) UpdateNode(w http.ResponseWriter, r *http.Request) {
-	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
-	d := json.NewDecoder(r.Body)
-	d.DisallowUnknownFields()
-	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
-		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
-		return
-	}
-	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
-		c.errorHandler(w, r, err, nil)
-		return
-	}
-	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
-		c.errorHandler(w, r, err, nil)
-		return
-	}
-	result, err := c.service.UpdateNode(r.Context(), addTopic200ResponseNodeDataParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -188,6 +186,168 @@ func (c *NodeAPIController) DeleteNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result, err := c.service.DeleteNode(r.Context(), nodeIdParam, tidParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// UpdateNodeTitle - Update a nodes title and description
+func (c *NodeAPIController) UpdateNodeTitle(w http.ResponseWriter, r *http.Request) {
+	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.UpdateNodeTitle(r.Context(), addTopic200ResponseNodeDataParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// UpdateNodeVideoVote - Update a nodes video votes
+func (c *NodeAPIController) UpdateNodeVideoVote(w http.ResponseWriter, r *http.Request) {
+	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.UpdateNodeVideoVote(r.Context(), addTopic200ResponseNodeDataParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// UpdateNodeVideoEdit - add or remove videos from a node
+func (c *NodeAPIController) UpdateNodeVideoEdit(w http.ResponseWriter, r *http.Request) {
+	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.UpdateNodeVideoEdit(r.Context(), addTopic200ResponseNodeDataParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// UpdateNodeBattleVote - battle vote a node
+func (c *NodeAPIController) UpdateNodeBattleVote(w http.ResponseWriter, r *http.Request) {
+	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.UpdateNodeBattleVote(r.Context(), addTopic200ResponseNodeDataParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// UpdateNodeFreshVote - fresh vote a node
+func (c *NodeAPIController) UpdateNodeFreshVote(w http.ResponseWriter, r *http.Request) {
+	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.UpdateNodeFreshVote(r.Context(), addTopic200ResponseNodeDataParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// UpdateNodeFlag - fresh vote a node
+func (c *NodeAPIController) UpdateNodeFlag(w http.ResponseWriter, r *http.Request) {
+	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.UpdateNodeFlag(r.Context(), addTopic200ResponseNodeDataParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

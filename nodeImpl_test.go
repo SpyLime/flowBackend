@@ -98,7 +98,7 @@ func TestUpdateNodeImpl(t *testing.T) {
 	modNode.Title = "Jack"
 	modNode.Description = "turbo"
 
-	err = updateNode(db, modNode)
+	err = updateNodeTitle(db, modNode)
 	require.Nil(t, err)
 
 	updatedNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])

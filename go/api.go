@@ -30,9 +30,14 @@ type MapAPIRouter interface {
 // pass the data to a NodeAPIServicer to perform the required actions, then write the service results to the http response.
 type NodeAPIRouter interface { 
 	GetNode(http.ResponseWriter, *http.Request)
-	UpdateNode(http.ResponseWriter, *http.Request)
 	AddNode(http.ResponseWriter, *http.Request)
 	DeleteNode(http.ResponseWriter, *http.Request)
+	UpdateNodeTitle(http.ResponseWriter, *http.Request)
+	UpdateNodeVideoVote(http.ResponseWriter, *http.Request)
+	UpdateNodeVideoEdit(http.ResponseWriter, *http.Request)
+	UpdateNodeBattleVote(http.ResponseWriter, *http.Request)
+	UpdateNodeFreshVote(http.ResponseWriter, *http.Request)
+	UpdateNodeFlag(http.ResponseWriter, *http.Request)
 }
 // TopicAPIRouter defines the required methods for binding the api requests to a responses for the TopicAPI
 // The TopicAPIRouter implementation should parse necessary information from the http request,
@@ -71,9 +76,14 @@ type MapAPIServicer interface {
 // and updated with the logic required for the API.
 type NodeAPIServicer interface { 
 	GetNode(context.Context, string, string) (ImplResponse, error)
-	UpdateNode(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
 	AddNode(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
 	DeleteNode(context.Context, string, string) (ImplResponse, error)
+	UpdateNodeTitle(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	UpdateNodeVideoVote(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	UpdateNodeVideoEdit(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	UpdateNodeBattleVote(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	UpdateNodeFreshVote(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	UpdateNodeFlag(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
 }
 
 

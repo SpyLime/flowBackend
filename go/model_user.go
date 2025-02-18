@@ -47,7 +47,11 @@ type User struct {
 
 	Created []UpdateUserRequestBattleTestedUpInner `json:"created,omitempty"`
 
-	Linked []UpdateUserRequestBattleTestedUpInner `json:"linked,omitempty"`
+	Linked []AddTopic200ResponseNodeDataYoutubeLinksInner `json:"linked,omitempty"`
+
+	VideoUp []string `json:"videoUp,omitempty"`
+
+	VideoDown []string `json:"videoDown,omitempty"`
 }
 
 // AssertUserRequired checks if the required fields are not zero-ed
@@ -83,7 +87,7 @@ func AssertUserRequired(obj User) error {
 		}
 	}
 	for _, el := range obj.Linked {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerRequired(el); err != nil {
+		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerRequired(el); err != nil {
 			return err
 		}
 	}
@@ -123,7 +127,7 @@ func AssertUserConstraints(obj User) error {
 		}
 	}
 	for _, el := range obj.Linked {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerConstraints(el); err != nil {
+		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerConstraints(el); err != nil {
 			return err
 		}
 	}

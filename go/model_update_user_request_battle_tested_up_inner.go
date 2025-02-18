@@ -24,9 +24,7 @@ type UpdateUserRequestBattleTestedUpInner struct {
 
 	Title string `json:"title,omitempty"`
 
-	Tid time.Time `json:"tid,omitempty"`
-
-	Id time.Time `json:"id,omitempty"`
+	NodeId time.Time `json:"nodeId,omitempty"`
 }
 
 // AssertUpdateUserRequestBattleTestedUpInnerRequired checks if the required fields are not zero-ed

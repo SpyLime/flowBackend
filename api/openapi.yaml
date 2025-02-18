@@ -243,9 +243,10 @@ paths:
       summary: Add a new node
       tags:
       - node
+  /node/title:
     put:
       description: Update an existing node
-      operationId: updateNode
+      operationId: updateNodeTitle
       requestBody:
         content:
           application/json:
@@ -262,7 +263,122 @@ paths:
           description: Node not found
         "405":
           description: Validation exception
-      summary: Update an node
+      summary: Update a nodes title and description
+      tags:
+      - node
+  /node/videoVote:
+    put:
+      description: Update an existing node
+      operationId: updateNodeVideoVote
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+        description: Update an existent node
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+        "405":
+          description: Validation exception
+      summary: Update a nodes video votes
+      tags:
+      - node
+  /node/videoEdit:
+    put:
+      description: Update an existing node
+      operationId: updateNodeVideoEdit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+        description: Update an existent node
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+        "405":
+          description: Validation exception
+      summary: add or remove videos from a node
+      tags:
+      - node
+  /node/battleVote:
+    put:
+      description: Update an existing node
+      operationId: updateNodeBattleVote
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+        description: Update an existent node
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+        "405":
+          description: Validation exception
+      summary: battle vote a node
+      tags:
+      - node
+  /node/freshVote:
+    put:
+      description: Update an existing node
+      operationId: updateNodeFreshVote
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+        description: Update an existent node
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+        "405":
+          description: Validation exception
+      summary: fresh vote a node
+      tags:
+      - node
+  /node/flag:
+    put:
+      description: Update an existing node
+      operationId: updateNodeFlag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+        description: Update an existent node
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+        "405":
+          description: Validation exception
+      summary: fresh vote a node
       tags:
       - node
   /user/login:
@@ -524,7 +640,17 @@ components:
           type: array
         linked:
           items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
+          type: array
+        videoUp:
+          items:
+            example: www.youtube.com
+            type: string
+          type: array
+        videoDown:
+          items:
+            example: www.youtube.com
+            type: string
           type: array
     Topic:
       properties:
@@ -885,9 +1011,8 @@ components:
     updateUser_request_battleTestedUp_inner:
       example:
         topic: bjj
-        id: 2024-12-09T04:10:00.350Z
         title: armbar
-        tid: 2024-12-09T04:10:00.350Z
+        nodeId: 2024-12-09T04:10:00.350Z
       properties:
         topic:
           example: bjj
@@ -895,11 +1020,7 @@ components:
         title:
           example: armbar
           type: string
-        tid:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        id:
+        nodeId:
           example: 2024-12-09T04:10:00.350Z
           format: date-time
           type: string
@@ -907,76 +1028,70 @@ components:
       example:
         freshUp:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         lastName: James
         role: 1
         edited:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         created:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         freshDown:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         reputation: 34
         description: engineer
+        videoUp:
+        - www.youtube.com
+        - www.youtube.com
         battleTestedUp:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         isFlagged: true
         firstName: John
+        videoDown:
+        - www.youtube.com
+        - www.youtube.com
         battleTestedDown:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         location: Austin TX
         email: john@email.com
         username: theUser
         linked:
-        - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
-          title: armbar
-          tid: 2024-12-09T04:10:00.350Z
-        - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
-          title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+        - addedBy: Mike21
+          link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+          votes: 21
+          dateAdded: 2024-08-19T19:25:42.568Z
+        - addedBy: Mike21
+          link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+          votes: 21
+          dateAdded: 2024-08-19T19:25:42.568Z
       properties:
         username:
           example: theUser
@@ -1032,5 +1147,15 @@ components:
           type: array
         linked:
           items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
+          type: array
+        videoUp:
+          items:
+            example: www.youtube.com
+            type: string
+          type: array
+        videoDown:
+          items:
+            example: www.youtube.com
+            type: string
           type: array
