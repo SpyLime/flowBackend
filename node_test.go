@@ -155,3 +155,34 @@ func TestUpdateNode(t *testing.T) {
 	require.Equal(t, modNode.Title, updatedNode.Title)
 	require.NotEqual(t, originalNode.Description, updatedNode.Description)
 }
+
+//I can't test all these endpoints until SSO is complete because I currently have no way to grab the user
+// func TestUpdateBattleVote(t *testing.T) {
+// 	clock := TestClock{}
+// 	db, tearDown := FullStartTestServer("udpateNode", 8088, "")
+// 	defer tearDown()
+
+// 	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
+// 	require.Nil(t, err)
+
+// 	client := &http.Client{}
+
+// 	modNode := openapi.NodeData{
+// 		BattleTested: 1,
+// 		Topic:        topics[0],
+// 		Id:           nodesAndEdges[0].SourceId,
+// 	}
+
+// 	marshal, err := json.Marshal(modNode)
+// 	require.Nil(t, err)
+
+// 	req, _ := http.NewRequest(http.MethodPut,
+// 		"http://127.0.0.1:8088/api/v1/node/battleVote",
+// 		bytes.NewBuffer(marshal))
+
+// 	resp, err := client.Do(req)
+// 	require.Nil(t, err)
+// 	defer resp.Body.Close()
+// 	require.Equal(t, 200, resp.StatusCode)
+
+// }

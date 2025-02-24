@@ -341,9 +341,9 @@ func userBattleVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Res
 
 		vote--
 
-		for i, item := range user.BattleTestedDown {
+		for i, item := range user.BattleTestedUp {
 			if item.NodeId.Equal(request.Id) { // Check if ID matches
-				user.BattleTestedDown = append(user.BattleTestedDown[:i], user.BattleTestedDown[i+1:]...) //already voted down so add 1 to unvote
+				user.BattleTestedUp = append(user.BattleTestedUp[:i], user.BattleTestedUp[i+1:]...) //already voted down so add 1 to unvote
 				vote--
 				break
 			}

@@ -116,6 +116,8 @@ func InitDB(db *bolt.DB, clock Clock) {
 // the root nodes is included in nodesAndEdges and that is why there is 1 element that has a source but no target
 //
 // nodesAndEdges[0].targetId is invalid
+//
+// nodesAndEdges[x].sourceId is the id of the current node while targetId is the id of the node its forward point is connecting to
 func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int) (users, topics []string, nodesAndEdges []openapi.ResponsePostNode, err error) {
 	if numUsers == 0 && numNodes > 0 {
 		return users, topics, nodesAndEdges, fmt.Errorf("You can't create nodes without a user")
