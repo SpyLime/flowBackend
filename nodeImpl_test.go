@@ -529,8 +529,6 @@ func TestUpdateNodeVideoVoteUpImpl(t *testing.T) {
 	require.Zero(t, len(upUser.VideoUp))
 }
 
-// above works, now copy to the next 3
-// needs to be rewritten for node video
 func TestUpdateNodeVideoVoteDownImpl(t *testing.T) {
 	clock := TestClock{}
 	lgr.Printf("INFO TestUpdateNodeVideohVoteDownImpl")
@@ -541,40 +539,54 @@ func TestUpdateNodeVideoVoteDownImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	freshDown := openapi.AddTopic200ResponseNodeData{
+	vidUp := openapi.AddTopic200ResponseNodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		Fresh: -1,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "www.youtube.com",
+			Votes: 1,
+		}},
 	}
 
-	err = updateNodeFreshVote(db, freshDown, users[0])
+	err = updateNodeVideoEdit(db, &clock, vidUp, users[0])
 	require.Nil(t, err)
 
-	downNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
+	vidDown := openapi.AddTopic200ResponseNodeData{
+		Topic: topics[0],
+		Id:    nodesAndEdges[0].SourceId,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "www.youtube.com",
+			Votes: -1,
+		}},
+	}
+
+	err = updateNodeVideoVote(db, vidDown, users[0])
 	require.Nil(t, err)
 
-	require.Equal(t, downNode.Fresh, int32(-1))
-
-	DownUser, err := getUser(db, users[0])
+	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
 	require.Nil(t, err)
 
-	require.Equal(t, len(DownUser.FreshDown), 1)
+	require.Equal(t, upNode.YoutubeLinks[0].Votes, int32(-1))
 
-	err = updateNodeFreshVote(db, freshDown, users[0])
+	upUser, err := getUser(db, users[0])
 	require.Nil(t, err)
 
-	downNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
+	require.Equal(t, len(upUser.VideoDown), 1)
+
+	err = updateNodeVideoVote(db, vidDown, users[0]) // should cause -1
 	require.Nil(t, err)
 
-	require.Equal(t, downNode.Fresh, int32(0))
-
-	DownUser, err = getUser(db, users[0])
+	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
 	require.Nil(t, err)
 
-	require.Zero(t, len(DownUser.FreshDown))
+	require.Zero(t, upNode.YoutubeLinks[0].Votes)
+
+	upUser, err = getUser(db, users[0])
+	require.Nil(t, err)
+
+	require.Zero(t, len(upUser.VideoDown))
 }
 
-// needs to be rewritten for node video
 func TestUpdateNodeVideoVoteUpDownImpl(t *testing.T) {
 	clock := TestClock{}
 	lgr.Printf("INFO TestUpdateNodeVideoVoteUpDownImpl")
@@ -585,47 +597,55 @@ func TestUpdateNodeVideoVoteUpDownImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	freshUp := openapi.AddTopic200ResponseNodeData{
+	vidUp := openapi.AddTopic200ResponseNodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		Fresh: 1,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "www.youtube.com",
+			Votes: 1,
+		}},
 	}
 
-	err = updateNodeFreshVote(db, freshUp, users[0])
+	err = updateNodeVideoEdit(db, &clock, vidUp, users[0])
+	require.Nil(t, err)
+
+	vidDown := openapi.AddTopic200ResponseNodeData{
+		Topic: topics[0],
+		Id:    nodesAndEdges[0].SourceId,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "www.youtube.com",
+			Votes: -1,
+		}},
+	}
+
+	err = updateNodeVideoVote(db, vidUp, users[0])
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
 	require.Nil(t, err)
 
-	require.Equal(t, upNode.Fresh, int32(1))
+	require.Equal(t, upNode.YoutubeLinks[0].Votes, int32(1))
 
-	DownUser, err := getUser(db, users[0])
+	upUser, err := getUser(db, users[0])
 	require.Nil(t, err)
 
-	require.Equal(t, len(DownUser.FreshUp), 1)
+	require.Equal(t, len(upUser.VideoUp), 1)
 
-	freshDown := openapi.AddTopic200ResponseNodeData{
-		Topic: topics[0],
-		Id:    nodesAndEdges[0].SourceId,
-		Fresh: -1,
-	}
-
-	err = updateNodeFreshVote(db, freshDown, users[0])
+	err = updateNodeVideoVote(db, vidDown, users[0]) // should cause -1
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
 	require.Nil(t, err)
 
-	require.Equal(t, upNode.Fresh, int32(-1))
+	require.Equal(t, upNode.YoutubeLinks[0].Votes, int32(-1))
 
-	DownUser, err = getUser(db, users[0])
+	upUser, err = getUser(db, users[0])
 	require.Nil(t, err)
 
-	require.Equal(t, len(DownUser.FreshDown), 1)
-	require.Zero(t, len(DownUser.FreshUp))
+	require.Zero(t, len(upUser.VideoUp))
+	require.Equal(t, len(upUser.VideoDown), 1)
 }
 
-// needs to be rewritten for node video
 func TestUpdateNodeVideoVoteDownUpImpl(t *testing.T) {
 	clock := TestClock{}
 	lgr.Printf("INFO TestUpdateNodeVideoVoteDownUpImpl")
@@ -636,45 +656,146 @@ func TestUpdateNodeVideoVoteDownUpImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	freshUp := openapi.AddTopic200ResponseNodeData{
+	vidUp := openapi.AddTopic200ResponseNodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		Fresh: -1,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "www.youtube.com",
+			Votes: 1,
+		}},
 	}
 
-	err = updateNodeFreshVote(db, freshUp, users[0])
+	err = updateNodeVideoEdit(db, &clock, vidUp, users[0])
+	require.Nil(t, err)
+
+	vidDown := openapi.AddTopic200ResponseNodeData{
+		Topic: topics[0],
+		Id:    nodesAndEdges[0].SourceId,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "www.youtube.com",
+			Votes: -1,
+		}},
+	}
+
+	err = updateNodeVideoVote(db, vidDown, users[0])
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
 	require.Nil(t, err)
 
-	require.Equal(t, upNode.Fresh, int32(-1))
+	require.Equal(t, upNode.YoutubeLinks[0].Votes, int32(-1))
 
-	DownUser, err := getUser(db, users[0])
+	upUser, err := getUser(db, users[0])
 	require.Nil(t, err)
 
-	require.Equal(t, len(DownUser.FreshDown), 1)
+	require.Equal(t, len(upUser.VideoDown), 1)
 
-	freshDown := openapi.AddTopic200ResponseNodeData{
-		Topic: topics[0],
-		Id:    nodesAndEdges[0].SourceId,
-		Fresh: 1,
-	}
-
-	err = updateNodeFreshVote(db, freshDown, users[0])
+	err = updateNodeVideoVote(db, vidUp, users[0]) // should cause -1
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
 	require.Nil(t, err)
 
-	require.Equal(t, upNode.Fresh, int32(1))
+	require.Equal(t, upNode.YoutubeLinks[0].Votes, int32(1))
 
-	DownUser, err = getUser(db, users[0])
+	upUser, err = getUser(db, users[0])
 	require.Nil(t, err)
 
-	require.Zero(t, len(DownUser.FreshDown))
-	require.Equal(t, len(DownUser.FreshUp), 1)
+	require.Zero(t, len(upUser.VideoDown))
+	require.Equal(t, len(upUser.VideoUp), 1)
 }
 
-//need series of test to add and subtract video link to node
-//need to test node flag
+func TestUpdateNodeFlagImpl(t *testing.T) {
+	clock := TestClock{}
+	lgr.Printf("INFO TestUpdateNodeFlagImpl")
+	t.Log("INFO TestUpdateNodeFlagImpl")
+	db, dbTearDown := OpenTestDB("UpdateNodeFlagImpl")
+	defer dbTearDown()
+
+	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
+	require.Nil(t, err)
+
+	vidUp := openapi.AddTopic200ResponseNodeData{
+		Topic:     topics[0],
+		Id:        nodesAndEdges[0].SourceId,
+		IsFlagged: true,
+	}
+
+	err = updateNodeFlag(db, vidUp)
+	require.Nil(t, err)
+
+	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
+	require.Nil(t, err)
+
+	require.True(t, upNode.IsFlagged)
+
+	err = updateNodeFlag(db, vidUp)
+	require.Nil(t, err)
+
+	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
+	require.Nil(t, err)
+
+	require.False(t, upNode.IsFlagged)
+}
+
+func TestUpdateNodeVideoEditImpl(t *testing.T) {
+	clock := TestClock{}
+	lgr.Printf("INFO TestUpdateNodeVideoEditImpl")
+	t.Log("INFO TestUpdateNodeVideoEditImpl")
+	db, dbTearDown := OpenTestDB("UpdateNodeVideoEditImpl")
+	defer dbTearDown()
+
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
+	require.Nil(t, err)
+
+	vidAdd := openapi.AddTopic200ResponseNodeData{
+		Topic: topics[0],
+		Id:    nodesAndEdges[0].SourceId,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "www.youtube.com",
+			Votes: 1,
+		}},
+	}
+
+	err = updateNodeVideoEdit(db, &clock, vidAdd, users[0])
+	require.Nil(t, err)
+
+	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
+	require.Nil(t, err)
+
+	require.Equal(t, upNode.YoutubeLinks[0].Link, vidAdd.YoutubeLinks[0].Link)
+
+	err = updateNodeVideoEdit(db, &clock, vidAdd, users[0])
+	require.NotNil(t, err)
+
+	upUser, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	require.Equal(t, upUser.Linked[0].Link, vidAdd.YoutubeLinks[0].Link)
+
+	vidSub := openapi.AddTopic200ResponseNodeData{
+		Topic: topics[0],
+		Id:    nodesAndEdges[0].SourceId,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "www.youtube.com",
+			Votes: -1,
+		}},
+	}
+
+	err = updateNodeVideoEdit(db, &clock, vidSub, users[0])
+	require.Nil(t, err)
+
+	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
+	require.Nil(t, err)
+
+	require.Zero(t, len(upNode.YoutubeLinks))
+
+	upUser, err = getUser(db, users[0])
+	require.Nil(t, err)
+
+	require.Zero(t, len(upUser.VideoDown))
+
+	err = updateNodeVideoEdit(db, &clock, vidSub, users[0])
+	require.NotNil(t, err)
+
+}

@@ -399,7 +399,7 @@ func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200
 
 			err = nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
 
-			//userupdate here
+			err = userVideoEditTx(tx, clock, userId, request)
 
 			return err
 		}
@@ -633,6 +633,7 @@ func updateNodeFlagTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData) 
 	}
 
 	node.IsFlagged = !node.IsFlagged
+	//I might need to add this to the user
 
 	marshal, err := json.Marshal(node)
 	if err != nil {
