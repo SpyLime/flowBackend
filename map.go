@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	openapi "github.com/SpyLime/flowBackend/go"
 	bolt "go.etcd.io/bbolt"
@@ -40,5 +41,18 @@ func (s *MapAPIServiceImpl) AddEdge(ctx context.Context, topicId string, getMapB
 	}
 
 	return openapi.Response(200, nil), nil
+
+}
+
+// AddEdge - Add a new edge
+func (s *MapAPIServiceImpl) DeleteEdge(ctx context.Context, topicId string, edgeId time.Time) (openapi.ImplResponse, error) {
+
+	// _, err := deleteEdge(s.db, topicId, edgeId)
+	// if err != nil {
+	// return openapi.Response(405, nil), err
+	return openapi.Response(405, nil), nil
+	// }
+
+	return openapi.Response(204, nil), nil
 
 }

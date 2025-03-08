@@ -14,6 +14,7 @@ package openapi
 import (
 	"context"
 	"net/http"
+	"time"
 )
 
 
@@ -24,6 +25,7 @@ import (
 type MapAPIRouter interface { 
 	GetMapById(http.ResponseWriter, *http.Request)
 	AddEdge(http.ResponseWriter, *http.Request)
+	DeleteEdge(http.ResponseWriter, *http.Request)
 }
 // NodeAPIRouter defines the required methods for binding the api requests to a responses for the NodeAPI
 // The NodeAPIRouter implementation should parse necessary information from the http request,
@@ -67,6 +69,7 @@ type UserAPIRouter interface {
 type MapAPIServicer interface { 
 	GetMapById(context.Context, string) (ImplResponse, error)
 	AddEdge(context.Context, string, GetMapById200ResponseEdgesInner) (ImplResponse, error)
+	DeleteEdge(context.Context, string, time.Time) (ImplResponse, error)
 }
 
 

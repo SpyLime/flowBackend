@@ -133,6 +133,34 @@ paths:
       tags:
       - map
   /map/{topicId}/edge:
+    delete:
+      description: delete edge
+      operationId: deleteEdge
+      parameters:
+      - description: ID of topic to return a map for
+        explode: false
+        in: path
+        name: topicId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: edgeId
+        required: true
+        schema:
+          format: date-time
+          type: string
+        style: form
+      responses:
+        "204":
+          description: Successful operation
+        "405":
+          description: Invalid input
+      summary: delete edge
+      tags:
+      - map
     post:
       description: Add a new edge
       operationId: addEdge
