@@ -712,6 +712,9 @@ components:
           items:
             $ref: '#/components/schemas/getMapById_200_response_edges_inner'
           type: array
+      required:
+      - edges
+      - nodes
     Login:
       properties:
         ssoProvider:
@@ -981,6 +984,9 @@ components:
           items:
             $ref: '#/components/schemas/getMapById_200_response_edges_inner'
           type: array
+      required:
+      - edges
+      - nodes
     addNode_200_response:
       example:
         sourceId: 2024-12-09T04:10:00.350Z

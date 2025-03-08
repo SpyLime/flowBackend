@@ -59,6 +59,11 @@ func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInn
 		return
 	}
 
+	_, err = topicBucket.CreateBucket([]byte(KeyEdges))
+	if err != nil {
+		return
+	}
+
 	response.Topic.Title = topic.Title
 
 	newNode := openapi.NodeData{

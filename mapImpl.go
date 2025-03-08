@@ -125,7 +125,12 @@ func postEdgeTx(topicBucket *bolt.Bucket, edge openapi.GetMapById200ResponseEdge
 
 	foundEdge := edgesBucket.Get([]byte(edge.Id))
 	if foundEdge != nil {
-		return newId, fmt.Errorf("your trying to make an edge that is already there")
+		return newId, fmt.Errorf("your trying to connect nodes that are already connected")
+	}
+
+	reverseEdge := edgesBucket.Get([]byte(edge.Target.Format(time.RFC3339Nano) + "-" + edge.Source.Format(time.RFC3339Nano)))
+	if reverseEdge != nil {
+		return newId, fmt.Errorf("your trying to connect nodes that are already connected")
 	}
 
 	id := edge.Id

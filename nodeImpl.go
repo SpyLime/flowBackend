@@ -202,6 +202,8 @@ func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData)
 		node.Description = request.Description
 	}
 
+	//needs to add edited by to the array if they are not already on there
+
 	marshal, err := json.Marshal(node)
 	if err != nil {
 		return
