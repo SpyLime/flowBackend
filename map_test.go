@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -73,5 +75,40 @@ func TestAddEdge(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, 3, len(newMap.Edges)) //root to the 2 other nodes plus 1 more that was just created between the second and third node
+
+}
+
+func TestDeleteEdge(t *testing.T) {
+	clock := TestClock{}
+	db, tearDown := FullStartTestServer("deleteEdge", 8088, "")
+	defer tearDown()
+
+	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 2)
+	require.Nil(t, err)
+
+	client := &http.Client{}
+
+	edge := openapi.GetMapById200ResponseEdgesInner{
+		Id:     nodesAndEdges[1].TargetId.Format(time.RFC3339Nano) + "-" + nodesAndEdges[2].TargetId.Format(time.RFC3339Nano),
+		Source: nodesAndEdges[1].TargetId,
+		Target: nodesAndEdges[2].TargetId,
+	}
+
+	_, err = postEdge(db, topics[0], edge)
+	require.Nil(t, err)
+
+	baseURL := "http://127.0.0.1:8088/api/v1/map/" + topics[0] + "/edge"
+	params := url.Values{}
+	params.Add("edgeId", edge.Id)
+
+	url := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+
+	req, _ := http.NewRequest(http.MethodDelete, url, nil)
+
+	resp, err := client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.NotNil(t, resp)
+	require.Equal(t, 204, resp.StatusCode)
 
 }

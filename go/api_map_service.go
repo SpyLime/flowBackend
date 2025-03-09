@@ -15,7 +15,6 @@ import (
 	"context"
 	"net/http"
 	"errors"
-	"time"
 )
 
 // MapAPIService is a service that implements the logic for the MapAPIServicer
@@ -61,7 +60,7 @@ func (s *MapAPIService) AddEdge(ctx context.Context, topicId string, getMapById2
 }
 
 // DeleteEdge - delete edge
-func (s *MapAPIService) DeleteEdge(ctx context.Context, topicId string, edgeId time.Time) (ImplResponse, error) {
+func (s *MapAPIService) DeleteEdge(ctx context.Context, topicId string, edgeId string) (ImplResponse, error) {
 	// TODO - update DeleteEdge with the required logic for this service method.
 	// Add api_map_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 

@@ -144,3 +144,34 @@ func postEdgeTx(topicBucket *bolt.Bucket, edge openapi.GetMapById200ResponseEdge
 	err = edgesBucket.Put([]byte(id), marshal)
 	return
 }
+
+func deleteEdge(db *bolt.DB, topicId string, edgeId string) (err error) {
+	err = db.Update(func(tx *bolt.Tx) error {
+		err = deleteEdgeTx(tx, topicId, edgeId)
+		return err
+	})
+
+	return
+}
+
+func deleteEdgeTx(tx *bolt.Tx, topicId string, edgeId string) (err error) {
+
+	topicsBucket := tx.Bucket([]byte(KeyTopics))
+	if topicsBucket == nil {
+		return fmt.Errorf("can't find topics bucket")
+	}
+
+	topicBucket := topicsBucket.Bucket([]byte(topicId))
+	if topicBucket == nil {
+		return fmt.Errorf("can't find topic bucket")
+	}
+
+	edgesBucket := topicBucket.Bucket([]byte(KeyEdges))
+	if edgesBucket == nil {
+		return fmt.Errorf("can't find edges bucket")
+	}
+
+	err = edgesBucket.Delete([]byte(edgeId))
+
+	return
+}

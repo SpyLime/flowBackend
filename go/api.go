@@ -14,7 +14,6 @@ package openapi
 import (
 	"context"
 	"net/http"
-	"time"
 )
 
 
@@ -69,7 +68,7 @@ type UserAPIRouter interface {
 type MapAPIServicer interface { 
 	GetMapById(context.Context, string) (ImplResponse, error)
 	AddEdge(context.Context, string, GetMapById200ResponseEdgesInner) (ImplResponse, error)
-	DeleteEdge(context.Context, string, time.Time) (ImplResponse, error)
+	DeleteEdge(context.Context, string, string) (ImplResponse, error)
 }
 
 

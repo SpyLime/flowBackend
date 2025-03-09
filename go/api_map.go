@@ -15,7 +15,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -135,17 +134,13 @@ func (c *MapAPIController) DeleteEdge(w http.ResponseWriter, r *http.Request) {
 		c.errorHandler(w, r, &RequiredError{"topicId"}, nil)
 		return
 	}
-	var edgeIdParam time.Time
-	if query.Has("edgeId"){
-		param, err := parseTime(query.Get("edgeId"))
-		if err != nil {
-			c.errorHandler(w, r, &ParsingError{Param: "edgeId", Err: err}, nil)
-			return
-		}
+	var edgeIdParam string
+	if query.Has("edgeId") {
+		param := query.Get("edgeId")
 
 		edgeIdParam = param
 	} else {
-		c.errorHandler(w, r, &RequiredError{"edgeId"}, nil)
+		c.errorHandler(w, r, &RequiredError{Field: "edgeId"}, nil)
 		return
 	}
 	result, err := c.service.DeleteEdge(r.Context(), topicIdParam, edgeIdParam)
