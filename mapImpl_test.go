@@ -61,3 +61,35 @@ func TestPostEdge(t *testing.T) {
 	require.NotNil(t, err)
 
 }
+
+func TestDeleteEdgeImpl(t *testing.T) {
+	clock := TestClock{}
+	db, tearDown := FullStartTestServer("deleteEdgeImpl", 8088, "")
+	defer tearDown()
+
+	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 2)
+	require.Nil(t, err)
+
+	edge := openapi.GetMapById200ResponseEdgesInner{
+		Id:     nodesAndEdges[1].TargetId.Format(time.RFC3339Nano) + "-" + nodesAndEdges[2].TargetId.Format(time.RFC3339Nano),
+		Source: nodesAndEdges[1].TargetId,
+		Target: nodesAndEdges[2].TargetId,
+	}
+
+	_, err = postEdge(db, topics[0], edge)
+	require.Nil(t, err)
+
+	response, err := getMapById(db, topics[0])
+	require.Nil(t, err)
+
+	require.Equal(t, len(response.Edges), 3)
+
+	err = deleteEdge(db, topics[0], edge.Id)
+	require.Nil(t, err)
+
+	response, err = getMapById(db, topics[0])
+	require.Nil(t, err)
+
+	require.Equal(t, len(response.Edges), 2)
+
+}
