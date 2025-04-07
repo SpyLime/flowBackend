@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
+	openapi "github.com/SpyLime/flowBackend/go"
 	"github.com/go-pkgz/lgr"
 	bolt "go.etcd.io/bbolt"
 )
@@ -64,7 +66,7 @@ func seedDbHandler(db *bolt.DB, clock *DemoClock) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		encoder := json.NewEncoder(w)
 
-		err := seedDb(db, clock)
+		_, _, _, err := CreateTestData(db, clock, 0, 2, 0)
 		if err != nil {
 			lgr.Printf("%s", err.Error())
 			err = encoder.Encode(err.Error())
@@ -80,6 +82,74 @@ func seedDbHandler(db *bolt.DB, clock *DemoClock) http.Handler {
 			}
 		}
 	})
+}
+
+func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int) (users, topics []string, nodesAndEdges []openapi.ResponsePostNode, err error) {
+	if numUsers == 0 && numNodes > 0 {
+		return users, topics, nodesAndEdges, fmt.Errorf("You can't create nodes without a user")
+	}
+
+	if numTopics == 0 && numNodes > 0 {
+		return users, topics, nodesAndEdges, fmt.Errorf("You can't create nodes without a topic")
+	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+
+		for i := 0; i < numUsers; i++ {
+			rep, _ := strconv.Atoi(RandomString(3))
+			user := openapi.UpdateUserRequest{
+				Username:    RandomString(2),
+				FirstName:   "d",
+				LastName:    "d",
+				Email:       "d@d.com",
+				Role:        0,
+				Reputation:  int32(rep),
+				Description: "d",
+			}
+			userId, err := postUserTx(tx, user)
+			if err != nil {
+				return err
+			}
+			users = append(users, userId)
+		}
+
+		for i := 0; i < numTopics; i++ {
+			topic := openapi.GetTopics200ResponseInner{
+				Title: RandomString(6),
+			}
+
+			response, err := postTopicTx(tx, clock, topic)
+			if err != nil {
+				return err
+			}
+
+			nodesAndEdges = append(nodesAndEdges, openapi.ResponsePostNode{SourceId: response.NodeData.Id})
+
+			topics = append(topics, response.Topic.Title)
+
+			for j := 0; j < numNodes; j++ {
+				node := openapi.AddTopic200ResponseNodeData{
+					Id:        response.NodeData.Id,
+					Topic:     topic.Title,
+					CreatedBy: users[0],
+				}
+				nodeIds, err := postNodeTx(tx, clock, node)
+				if err != nil {
+					return err
+				}
+
+				nodesAndEdges = append(nodesAndEdges, nodeIds)
+			}
+		}
+
+		return err
+	})
+
+	sort.Strings(users)
+	sort.Strings(topics)
+
+	return
+
 }
 
 // func newSchoolHandler(db *bolt.DB, clock Clock) http.Handler {

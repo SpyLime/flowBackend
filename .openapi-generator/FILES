@@ -17,6 +17,8 @@ go/model_add_node_200_response.go
 go/model_add_topic_200_response.go
 go/model_add_topic_200_response_node_data.go
 go/model_add_topic_200_response_node_data_youtube_links_inner.go
+go/model_auth_user_200_response.go
+go/model_auth_user_404_response.go
 go/model_edge.go
 go/model_flow_node.go
 go/model_get_map_by_id_200_response.go
@@ -31,6 +33,9 @@ go/model_login_user_request.go
 go/model_map_data.go
 go/model_node_data.go
 go/model_request_post_node.go
+go/model_response_auth2.go
+go/model_response_auth4.go
+go/model_response_cookie.go
 go/model_response_post_node.go
 go/model_response_post_topic.go
 go/model_topic.go

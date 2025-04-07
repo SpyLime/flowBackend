@@ -408,6 +408,26 @@ paths:
       summary: fresh vote a node
       tags:
       - node
+  /users/auth:
+    get:
+      description: return user
+      operationId: AuthUser
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser_200_response'
+          description: students matching criteria
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser_404_response'
+          description: No user found with that data
+      summary: return authenticated user details
+      tags:
+      - user
   /user/login:
     post:
       description: Login using SSO
@@ -613,6 +633,21 @@ components:
           $ref: '#/components/schemas/getMapById_200_response_nodes_inner_data'
     User:
       properties:
+        provider:
+          example: google
+          type: string
+        id:
+          example: 2451632
+          type: string
+        lastLogin:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        createdAt:
+          format: date-time
+          type: string
         username:
           example: theUser
           type: string
@@ -729,6 +764,29 @@ components:
       items:
         $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
       type: array
+    ResponseAuth2:
+      properties:
+        isAuth:
+          type: boolean
+        role:
+          example: 0
+          type: integer
+      required:
+      - isAuth
+      - role
+    ResponseAuth4:
+      properties:
+        isAuth:
+          example: "False"
+          type: boolean
+        error:
+          type: boolean
+    ResponseCookie:
+      properties:
+        w_authExp:
+          type: string
+        w_auth:
+          type: string
     MapData:
       properties:
         nodes:
@@ -1030,6 +1088,30 @@ components:
       required:
       - sourceId
       - targetId
+    AuthUser_200_response:
+      example:
+        isAuth: true
+        role: 0
+      properties:
+        isAuth:
+          type: boolean
+        role:
+          example: 0
+          type: integer
+      required:
+      - isAdmin
+      - isAuth
+      - role
+    AuthUser_404_response:
+      example:
+        isAuth: "False"
+        error: true
+      properties:
+        isAuth:
+          example: "False"
+          type: boolean
+        error:
+          type: boolean
     loginUser_request:
       properties:
         ssoProvider:
@@ -1066,6 +1148,7 @@ components:
         - topic: bjj
           title: armbar
           nodeId: 2024-12-09T04:10:00.350Z
+        lastLogin: 2000-01-23T04:56:07.000+00:00
         lastName: James
         role: 1
         edited:
@@ -1102,7 +1185,9 @@ components:
           title: armbar
           nodeId: 2024-12-09T04:10:00.350Z
         isFlagged: true
+        createdAt: 2000-01-23T04:56:07.000+00:00
         firstName: John
+        provider: google
         videoDown:
         - www.youtube.com
         - www.youtube.com
@@ -1114,7 +1199,9 @@ components:
           title: armbar
           nodeId: 2024-12-09T04:10:00.350Z
         location: Austin TX
+        id: 2451632
         email: john@email.com
+        updatedAt: 2000-01-23T04:56:07.000+00:00
         username: theUser
         linked:
         - addedBy: Mike21
@@ -1126,6 +1213,21 @@ components:
           votes: 21
           dateAdded: 2024-08-19T19:25:42.568Z
       properties:
+        provider:
+          example: google
+          type: string
+        id:
+          example: 2451632
+          type: string
+        lastLogin:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        createdAt:
+          format: date-time
+          type: string
         username:
           example: theUser
           type: string

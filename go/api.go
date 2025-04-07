@@ -53,6 +53,7 @@ type TopicAPIRouter interface {
 // The UserAPIRouter implementation should parse necessary information from the http request,
 // pass the data to a UserAPIServicer to perform the required actions, then write the service results to the http response.
 type UserAPIRouter interface { 
+	AuthUser(http.ResponseWriter, *http.Request)
 	LoginUser(http.ResponseWriter, *http.Request)
 	LogoutUser(http.ResponseWriter, *http.Request)
 	UpdateUser(http.ResponseWriter, *http.Request)
@@ -106,6 +107,7 @@ type TopicAPIServicer interface {
 // while the service implementation can be ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
 type UserAPIServicer interface { 
+	AuthUser(context.Context) (ImplResponse, error)
 	LoginUser(context.Context, LoginUserRequest) (ImplResponse, error)
 	LogoutUser(context.Context) (ImplResponse, error)
 	UpdateUser(context.Context, UpdateUserRequest) (ImplResponse, error)

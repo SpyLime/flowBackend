@@ -7,12 +7,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"sort"
-	"strconv"
 	"testing"
 	"time"
 
-	openapi "github.com/SpyLime/flowBackend/go"
 	"github.com/go-pkgz/auth/token"
 	"github.com/go-pkgz/lgr"
 	"github.com/stretchr/testify/assert"
@@ -118,73 +115,6 @@ func InitDB(db *bolt.DB, clock Clock) {
 // nodesAndEdges[0].targetId is invalid
 //
 // nodesAndEdges[x].sourceId is the id of the current node while targetId is the id of the node its forward point is connecting to
-func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int) (users, topics []string, nodesAndEdges []openapi.ResponsePostNode, err error) {
-	if numUsers == 0 && numNodes > 0 {
-		return users, topics, nodesAndEdges, fmt.Errorf("You can't create nodes without a user")
-	}
-
-	if numTopics == 0 && numNodes > 0 {
-		return users, topics, nodesAndEdges, fmt.Errorf("You can't create nodes without a topic")
-	}
-
-	err = db.Update(func(tx *bolt.Tx) error {
-
-		for i := 0; i < numUsers; i++ {
-			rep, _ := strconv.Atoi(RandomString(3))
-			user := openapi.UpdateUserRequest{
-				Username:    RandomString(2),
-				FirstName:   "d",
-				LastName:    "d",
-				Email:       "d@d.com",
-				Role:        0,
-				Reputation:  int32(rep),
-				Description: "d",
-			}
-			userId, err := postUserTx(tx, user)
-			if err != nil {
-				return err
-			}
-			users = append(users, userId)
-		}
-
-		for i := 0; i < numTopics; i++ {
-			topic := openapi.GetTopics200ResponseInner{
-				Title: RandomString(6),
-			}
-
-			response, err := postTopicTx(tx, clock, topic)
-			if err != nil {
-				return err
-			}
-
-			nodesAndEdges = append(nodesAndEdges, openapi.ResponsePostNode{SourceId: response.NodeData.Id})
-
-			topics = append(topics, response.Topic.Title)
-
-			for j := 0; j < numNodes; j++ {
-				node := openapi.AddTopic200ResponseNodeData{
-					Id:        response.NodeData.Id,
-					Topic:     topic.Title,
-					CreatedBy: users[0],
-				}
-				nodeIds, err := postNodeTx(tx, clock, node)
-				if err != nil {
-					return err
-				}
-
-				nodesAndEdges = append(nodesAndEdges, nodeIds)
-			}
-		}
-
-		return err
-	})
-
-	sort.Strings(users)
-	sort.Strings(topics)
-
-	return
-
-}
 
 func TestFirst(t *testing.T) {
 

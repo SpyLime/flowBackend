@@ -12,9 +12,23 @@
 package openapi
 
 
+import (
+	"time"
+)
+
 
 
 type User struct {
+
+	Provider string `json:"provider,omitempty"`
+
+	Id string `json:"id,omitempty"`
+
+	LastLogin time.Time `json:"lastLogin,omitempty"`
+
+	UpdatedAt time.Time `json:"updatedAt,omitempty"`
+
+	CreatedAt time.Time `json:"createdAt,omitempty"`
 
 	Username string `json:"username,omitempty"`
 

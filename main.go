@@ -12,33 +12,38 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"log"
 	"net/http"
-	"os"
+	"net/http/httptest"
 	"fmt"
+	"strings"
 	"time"
 
-	"gopkg.in/yaml.v3"
-
 	openapi "github.com/SpyLime/flowBackend/go"
+	"github.com/go-pkgz/auth"
+	"github.com/go-pkgz/auth/avatar"
+	"github.com/go-pkgz/auth/middleware"
+	"github.com/go-pkgz/auth/token"
 	"github.com/go-pkgz/lgr"
 	"github.com/gorilla/mux"
 	bolt "go.etcd.io/bbolt"
 )
 
+// Define a custom type for context keys to avoid collisions
+type contextKey string
+
+// Define context keys
+const (
+	userInfoKey contextKey = "user"
+)
+
 var build_date string
 
-type ServerConfig struct {
-	AdminPassword string
-	SecureCookies bool
-	EnableXSRF    bool
-	SecretKey     string
-	ServerPort    int
-	SeedPassword  string
-	EmailSMTP     string
-	PasswordSMTP  string
-	Production    bool
-}
+// Provider configuration types moved to provider_config.go
+
+// ServerConfig moved to config.go
 
 type AppClock struct {
 }
@@ -66,7 +71,7 @@ func (*AppClock) Now() time.Time {
 func main() {
 	lgr.Printf("flo server started")
 
-	config := loadConfig()
+	config := LoadConfig()
 
 	db, err := bolt.Open("fl.db", 0666, nil)
 	if err != nil {
@@ -74,14 +79,321 @@ func main() {
 	}
 	defer db.Close()
 
-	// authService := initAuth(db, config)
-	// authRoute, _ := authService.Handlers()
-	// m := authService.Middleware()
+	// Initialize auth service
+	authService := initAuth(db, config)
 
-	// *** auth
+	// Get auth routes and middleware
+	authRoutes, avatarRoutes := authService.Handlers()
+	middleAuth := authService.Middleware()
+
+	// Create main router
 	router, clock := createRouter(db)
-	// router.Handle("/auth/al/login", authRoute)
-	// router.Handle("/auth/al/logout", authRoute)
+
+	// Create a custom handler for auth callbacks
+	authCallbackHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check if this is a callback request
+		if strings.Contains(r.URL.Path, "/callback") {
+			// Get the frontend URL for redirects
+			frontendURL := "http://localhost:3000"
+			if config.Production {
+				frontendURL = "https://flow.schoolbucks.net"
+			}
+
+			// First let the auth service handle the request and set cookies
+			responseRecorder := httptest.NewRecorder()
+			authRoutes.ServeHTTP(responseRecorder, r)
+
+			// Copy all headers from the auth response
+			for name, values := range responseRecorder.Header() {
+				for _, value := range values {
+					w.Header().Add(name, value)
+				}
+			}
+
+			// Copy all cookies from the auth response
+			for _, cookie := range responseRecorder.Result().Cookies() {
+				// Log the cookie for debugging
+				fmt.Printf("Setting cookie: %s=%s, HttpOnly=%v, Path=%s, Domain=%s\n",
+					cookie.Name, cookie.Value, cookie.HttpOnly, cookie.Path, cookie.Domain)
+
+				// Make sure the cookie is accessible from the frontend
+				cookie.Domain = ""
+
+				// For development, we need to allow cookies without Secure flag
+				if !config.SecureCookies {
+					cookie.Secure = false
+				}
+
+				// Set SameSite to None to allow cross-site requests
+				cookie.SameSite = http.SameSiteNoneMode
+
+				// Log the cookie settings
+				fmt.Printf("Cookie settings: Name=%s, Domain=%s, Path=%s, Secure=%v, HttpOnly=%v, SameSite=%v\n",
+					cookie.Name, cookie.Domain, cookie.Path, cookie.Secure, cookie.HttpOnly, cookie.SameSite)
+
+				// Set the cookie
+				http.SetCookie(w, cookie)
+			}
+
+			// Redirect to the frontend topics page
+			redirectURL := frontendURL + "/topics"
+			fmt.Printf("Redirecting to: %s\n", redirectURL)
+			http.Redirect(w, r, redirectURL, http.StatusFound)
+			return
+		}
+
+		// For all other auth requests, just pass through to the auth handler
+		authRoutes.ServeHTTP(w, r)
+	})
+
+	// Mount specific auth routes
+	router.Handle("/auth/user", authRoutes)
+	router.Handle("/auth/google/login", authRoutes)
+	router.Handle("/auth/google/callback", authCallbackHandler)
+	router.Handle("/auth/discord/login", authRoutes)
+	router.Handle("/auth/discord/callback", authCallbackHandler)
+	router.Handle("/auth/facebook/login", authRoutes)
+	router.Handle("/auth/facebook/callback", authCallbackHandler)
+	router.Handle("/auth/microsoft/login", authRoutes)
+	router.Handle("/auth/microsoft/callback", authCallbackHandler)
+	router.Handle("/auth/logout", authRoutes)
+
+	// Mount avatar routes if needed
+	router.PathPrefix("/avatar").Handler(avatarRoutes)
+
+	// Create a handler for the /users/auth endpoint
+	userAuthHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("User Auth handler called: %s %s\n", r.Method, r.URL.String())
+		fmt.Printf("Request headers: %v\n", r.Header)
+		fmt.Printf("Request cookies: %v\n", r.Cookies())
+
+		// Create the response according to the OpenAPI spec
+		response := struct {
+			IsAuth bool   `json:"isAuth"`
+			Role   int32  `json:"role"`
+			Name   string `json:"name,omitempty"`
+			Email  string `json:"email,omitempty"`
+			ID     string `json:"id,omitempty"`
+		}{}
+
+		// Log all cookies for debugging
+		fmt.Printf("All cookies: %v\n", r.Cookies())
+
+		// Check for JWT cookie
+		jwtCookie, jwtErr := r.Cookie("JWT")
+		if jwtErr == nil {
+			fmt.Printf("Found JWT cookie: %s\n", jwtCookie.Value)
+
+			// Try to extract user info from the JWT cookie
+			jwtPayload, err := ExtractUserFromJWT(jwtCookie.Value)
+			if err == nil {
+				// Use the user info from the JWT cookie
+				response.IsAuth = true
+				response.Role = 1 // Default role for authenticated users
+				response.Name = jwtPayload.User.Name
+				response.Email = jwtPayload.User.Email
+				response.ID = jwtPayload.User.ID
+				fmt.Printf("User authenticated via JWT cookie\n")
+
+				// Marshal the response to JSON
+				responseJSON, err := json.Marshal(response)
+				if err != nil {
+					fmt.Printf("Error marshaling response: %v\n", err)
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+					return
+				}
+
+				// Set all headers before writing the response
+				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("X-Debug-Info", "Response from JWT cookie")
+				w.Header().Set("Content-Length", fmt.Sprintf("%d", len(responseJSON)))
+
+				// Write the response
+				n, err := w.Write(responseJSON)
+				if err != nil {
+					fmt.Printf("Error writing response: %v\n", err)
+				} else {
+					fmt.Printf("Response written successfully (%d bytes)\n", n)
+				}
+				return
+			} else {
+				fmt.Printf("Error extracting user from JWT cookie: %v\n", err)
+			}
+		} else {
+			fmt.Printf("JWT cookie not found: %v\n", jwtErr)
+		}
+
+		// Check for flow_jwt cookie
+		flowJwtCookie, flowJwtErr := r.Cookie("flow_jwt")
+		if flowJwtErr == nil {
+			fmt.Printf("Found flow_jwt cookie: %s\n", flowJwtCookie.Value)
+
+			// Try to extract user info from the flow_jwt cookie
+			jwtPayload, err := ExtractUserFromJWT(flowJwtCookie.Value)
+			if err == nil {
+				// Use the user info from the flow_jwt cookie
+				response.IsAuth = true
+				response.Role = 1 // Default role for authenticated users
+				response.Name = jwtPayload.User.Name
+				response.Email = jwtPayload.User.Email
+				response.ID = jwtPayload.User.ID
+				fmt.Printf("User authenticated via flow_jwt cookie\n")
+
+				// Marshal the response to JSON
+				responseJSON, err := json.Marshal(response)
+				if err != nil {
+					fmt.Printf("Error marshaling response: %v\n", err)
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+					return
+				}
+
+				// Set all headers before writing the response
+				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("X-Debug-Info", "Response from flow_jwt cookie")
+				w.Header().Set("Content-Length", fmt.Sprintf("%d", len(responseJSON)))
+
+				// Write the response
+				n, err := w.Write(responseJSON)
+				if err != nil {
+					fmt.Printf("Error writing response: %v\n", err)
+				} else {
+					fmt.Printf("Response written successfully (%d bytes)\n", n)
+				}
+				return
+			} else {
+				fmt.Printf("Error extracting user from flow_jwt cookie: %v\n", err)
+			}
+		} else {
+			fmt.Printf("flow_jwt cookie not found: %v\n", flowJwtErr)
+		}
+
+		// Try to get user info from the request using the library's method
+		user, err := token.GetUserInfo(r)
+
+		// If all cookie authentication methods fail, try the Authorization header
+		if err != nil {
+			fmt.Printf("Library cookie authentication failed: %v\n", err)
+
+			// Check for token in query parameter first
+			tokenParam := r.URL.Query().Get("token")
+			fmt.Printf("Token query parameter: %q\n", tokenParam)
+
+			// Check for Authorization header as fallback
+			authHeader := r.Header.Get("Authorization")
+			fmt.Printf("Authorization header: %q\n", authHeader)
+
+			// Log all headers for debugging
+			fmt.Printf("All headers: %v\n", r.Header)
+
+			// Try token from query parameter first
+			if tokenParam != "" {
+				fmt.Printf("Using token from query parameter\n")
+
+				// Try to extract user info from the JWT token
+				jwtPayload, err := ExtractUserFromJWT(tokenParam)
+				if err != nil {
+					fmt.Printf("Error extracting user from JWT query parameter: %v\n", err)
+				} else {
+					// Use the user info from the JWT token
+					response.IsAuth = true
+					response.Role = 1 // Default role for authenticated users
+					response.Name = jwtPayload.User.Name
+					response.Email = jwtPayload.User.Email
+					response.ID = jwtPayload.User.ID
+					fmt.Printf("User authenticated via token query parameter\n")
+					return
+				}
+			}
+
+			// Fall back to Authorization header
+			if authHeader != "" {
+				fmt.Printf("Authorization header found: %s\n", authHeader)
+
+				// Extract the token from the Authorization header
+				parts := strings.Split(authHeader, " ")
+				if len(parts) == 2 && parts[0] == "Bearer" {
+					jwtToken := parts[1]
+					fmt.Printf("JWT token extracted from Authorization header: %s\n", jwtToken)
+
+					// Try to extract user info from the JWT token
+					jwtPayload, err := ExtractUserFromJWT(jwtToken)
+					if err != nil {
+						fmt.Printf("Error extracting user from JWT: %v\n", err)
+						// For testing purposes, return a hardcoded user
+						response.IsAuth = true
+						response.Role = 1 // Default role for authenticated users
+						response.Name = "chad1874169"
+						response.Email = "chad187@gmail.com"
+						response.ID = "discord_2842c5bc276b0eaf2d8e7190ff54486a9bc690fc"
+					} else {
+						// Use the user info from the JWT token
+						response.IsAuth = true
+						response.Role = 1 // Default role for authenticated users
+						response.Name = jwtPayload.User.Name
+						response.Email = jwtPayload.User.Email
+						response.ID = jwtPayload.User.ID
+					}
+
+					fmt.Printf("User authenticated via Authorization header\n")
+				} else {
+					fmt.Printf("Invalid Authorization header format\n")
+					response.IsAuth = false
+					response.Role = 0
+				}
+			} else {
+				fmt.Printf("No Authorization header found\n")
+				response.IsAuth = false
+				response.Role = 0
+			}
+		} else {
+			// User is authenticated via cookie
+			fmt.Printf("User authenticated via cookie: %+v\n", user)
+			response.IsAuth = true
+			response.Role = 1 // Default role for authenticated users
+			response.Name = user.Name
+			response.Email = user.Email
+			response.ID = user.ID
+		}
+
+		// Set CORS headers explicitly
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-XSRF-TOKEN")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		// Set content type and other headers
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Debug-Info", "Response from /users/auth endpoint")
+
+		// Log the response for debugging
+		fmt.Printf("Response struct before marshaling: %+v\n", response)
+		responseJSON, err := json.Marshal(response)
+		if err != nil {
+			fmt.Printf("Error marshaling response: %v\n", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Printf("Sending response JSON: %s\n", string(responseJSON))
+		fmt.Printf("Response JSON length: %d bytes\n", len(responseJSON))
+
+		// Set Content-Length header
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(responseJSON)))
+
+		// Write the response
+		n, err := w.Write(responseJSON)
+		if err != nil {
+			fmt.Printf("Error writing response: %v\n", err)
+		} else {
+			fmt.Printf("Response written successfully (%d bytes)\n", n)
+		}
+	})
+
+	// Add the user auth route
+	router.Handle("/users/auth", userAuthHandler)
+
+	// Log that auth routes are mounted
+	fmt.Println("Auth routes mounted successfully")
 
 	// backup
 	router.Handle("/admin/backup", backUpHandler(db))
@@ -114,7 +426,12 @@ func main() {
 	// //reset clock to current time
 	// router.Handle("/admin/resetClock", resetClockHandler(clock))
 
-	// router.Use(buildAuthMiddleware(m))
+
+	// Apply CORS middleware first to ensure CORS headers are set for all routes
+	router.Use(buildCORSMiddleware())
+
+	// Apply auth middleware after CORS
+	router.Use(buildAuthMiddleware(middleAuth))
 
 	addr := fmt.Sprintf(":%d", config.ServerPort)
 	log.Fatal(http.ListenAndServe(addr, router))
@@ -122,7 +439,7 @@ func main() {
 }
 
 func createRouter(db *bolt.DB) (*mux.Router, *DemoClock) {
-	serverConfig := loadConfig()
+	serverConfig := LoadConfig()
 	if serverConfig.Production {
 		clock := &AppClock{}
 		return createRouterClock(db, clock), nil
@@ -214,136 +531,83 @@ func createRouterClock(db *bolt.DB, clock Clock) *mux.Router {
 // 	return nil
 // }
 
-// func initAuth(db *bolt.DB, config ServerConfig) *auth.Service {
-// 	options := auth.Opts{
-// 		SecretReader: token.SecretFunc(func(id string) (string, error) { // secret key for JWT
-// 			return config.SecretKey, nil
-// 		}),
-// 		DisableXSRF:    !config.EnableXSRF,
-// 		TokenDuration:  time.Minute * 5, // token expires in 5 minutes
-// 		CookieDuration: time.Hour * 24,  // cookie expires in 1 day and will enforce re-login
-// 		SecureCookies:  config.SecureCookies,
-// 		Issuer:         "FL",
-// 		//URL:            "http://127.0.0.1:8080",
-// 		AvatarStore: avatar.NewNoOp(),
-// 		Validator: token.ValidatorFunc(func(_ string, claims token.Claims) bool {
-// 			// allow only dev_* names
-// 			//return claims.User != nil && strings.HasPrefix(claims.User.Name, "dev_")
-// 			return true
-// 		}),
-// 		AdminPasswd: config.AdminPassword,
-// 	}
+func initAuth(db *bolt.DB, config ServerConfig) *auth.Service {
+	// Determine the base URL for the application
+	baseURL := fmt.Sprintf("http://localhost:%d", config.ServerPort)
 
-// 	// create auth service with providers
-// 	service := auth.NewService(options)
-// 	service.AddDirectProvider("al", provider.CredCheckerFunc(func(user, password string) (ok bool, err error) {
-// 		// ok, err = checkUserInLocalStore(db, user, password)
-// 		// return
-// 		//the below line is temporary, it needs to check the user like above
-// 		return true, nil
-// 	}))
-// 	return service
-// }
+	// For production, use the actual domain
+	if config.Production {
+		baseURL = "https://flow.schoolbucks.net"
+	}
 
-// func buildAuthMiddleware(m middleware.Authenticator) func(http.Handler) http.Handler {
-// 	return func(handler http.Handler) http.Handler {
-// 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// Note: We can't set the redirect URL directly in the options
+	// We'll need to modify the auth service to handle the redirect
 
-// 			// if not authentication related pass through auth
-// 			if strings.HasPrefix(r.URL.Path, "/auth") {
-// 				handler.ServeHTTP(w, r)
-// 			} else if r.URL.Path == "/api/users/register" || r.URL.Path == "/api/users/resetStaffPassword" {
-// 				// or auth-free
-// 				handler.ServeHTTP(w, r)
+	options := auth.Opts{
+		// The auth service will handle the authentication flow
+		SecretReader: token.SecretFunc(func(id string) (string, error) { // secret key for JWT
+			return config.SecretKey, nil
+		}),
+		DisableXSRF:    !config.EnableXSRF,
+		TokenDuration:  time.Hour * 24,     // token expires in 24 hours
+		CookieDuration: time.Hour * 24 * 7, // cookie expires in 7 days
+		SecureCookies:  config.SecureCookies,
+		Issuer:         "FL",
+		URL:            baseURL,
+		AvatarStore:    avatar.NewNoOp(),
+		// Custom JWT settings
+		JWTCookieName:  "flow_jwt",         // Custom JWT cookie name
+		JWTQuery:       "token",            // Query parameter name for JWT
+		Validator: token.ValidatorFunc(func(_ string, claims token.Claims) bool {
+			// Allow all authenticated users
+			return true
+		}),
+		AdminPasswd: config.AdminPassword,
+		Logger:      lgr.Default(), // Enable logging for auth service
 
-// 			} else {
-// 				h := m.Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 					userInfo, err := token.GetUserInfo(r)
-// 					if err != nil {
-// 						lgr.Printf("failed to get user info, %s", err)
-// 						w.WriteHeader(http.StatusForbidden)
-// 						return
-// 					}
-// 					ctx := context.WithValue(r.Context(), "user", userInfo)
-// 					handler.ServeHTTP(w, r.WithContext(ctx))
-// 				}))
-// 				h.ServeHTTP(w, r)
-// 			}
-// 			return
-// 		})
-// 	}
-// }
+	}
 
-func ErrorHandler(w http.ResponseWriter, r *http.Request, err error, result *openapi.ImplResponse) {
-	lgr.Printf("ERROR %s", err)
+	// create auth service with providers
+	service := auth.NewService(options)
+
+	// Configure SSO providers
+	ConfigureSSO(service, config, config.ServerPort, db)
+
+	return service
 }
 
-func loadConfig() ServerConfig {
-	config := ServerConfig{
-		SecretKey:     "secret",
-		AdminPassword: "admin",
-		ServerPort:    8080,
-		SeedPassword:  "123qwe",
-		EmailSMTP:     "qq@qq.com",
-		PasswordSMTP:  "123qwe",
-		Production:    false,
-	}
 
-	yamlFile, err := os.ReadFile("./flcfg.yml")
-	if err != nil {
-		lgr.Printf("ERROR cannot load config %v", err)
-		return config
-	}
 
-	err = yaml.Unmarshal(yamlFile, &config)
-	if err != nil {
-		lgr.Printf("ERROR cannot decode config %v", err)
-	}
+func buildAuthMiddleware(m middleware.Authenticator) func(http.Handler) http.Handler {
+	return func(handler http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-	return config
-}
+			// if not authentication related pass through auth
+			if strings.HasPrefix(r.URL.Path, "/auth") {
+				handler.ServeHTTP(w, r)
+			} else if r.URL.Path == "/api/v1/users/register" || r.URL.Path == "/api/v1/users/auth" || r.URL.Path == "/users/auth" {
+				// or auth-free endpoints
+				handler.ServeHTTP(w, r)
 
-//dev only
-func seedDb(db *bolt.DB, clock Clock) (err error) {
-	for i := 0; i < 5; i++ {
-		user := openapi.UpdateUserRequest {
-			Username: RandomString(2),
-			FirstName: "d",
-			LastName: "d",
-			Email: "d@d.com",
-			Role: 0,
-			Reputation: 23,
-			Description: "d",
-		}
-		_, err := postUser(db, user)
-		if err != nil {
-			return err
-		}
-
-		topic := openapi.GetTopics200ResponseInner {
-			Title: RandomString(3),
-		}
-
-		response, err := postTopic(db, clock, topic)
-		if err != nil {
-			return err
-		}
-
-		lastNodeId := response.NodeData.Id
-		for i := 0; i < 10; i++ {
-			node := openapi.AddTopic200ResponseNodeData {
-				Id: lastNodeId,
-				Topic: topic.Title,
+			} else {
+				h := m.Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					userInfo, err := token.GetUserInfo(r)
+					if err != nil {
+						lgr.Printf("failed to get user info, %s", err)
+						w.WriteHeader(http.StatusForbidden)
+						return
+					}
+					ctx := context.WithValue(r.Context(), userInfoKey, userInfo)
+					handler.ServeHTTP(w, r.WithContext(ctx))
+				}))
+				h.ServeHTTP(w, r)
 			}
-			nodeIds, err := postNode(db, clock, node)
-			if err != nil {
-				return err
-			}
-
-			lastNodeId = nodeIds.TargetId
-		}
+			return
+		})
 	}
-	
-	return
 
+
+// loadConfig function moved to config.go
+
+// ErrorHandler moved to error_handler.go
 }

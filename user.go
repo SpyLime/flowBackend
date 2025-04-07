@@ -89,5 +89,17 @@ func (s *UserAPIServiceImpl) DeleteUser(ctx context.Context, userId string) (ope
 	}
 
 	return openapi.Response(400, nil), err
+}
 
+// AuthUser - return authenticated user details
+func (s *UserAPIServiceImpl) AuthUser(ctx context.Context) (openapi.ImplResponse, error) {
+	// For the OpenAPI implementation, we'll just return a response indicating the user is not authenticated
+	// The actual authentication check will be handled by our custom /users/auth endpoint
+	response := openapi.AuthUser200Response{
+		IsAuth: false,
+		Role:   0,
+	}
+
+	// Return a successful response with isAuth=false
+	return openapi.Response(http.StatusOK, response), nil
 }
