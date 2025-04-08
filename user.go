@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	openapi "github.com/SpyLime/flowBackend/go"
@@ -44,16 +45,11 @@ func (s *UserAPIServiceImpl) LoginUser(ctx context.Context, loginUserRequest ope
 
 // LogoutUser - Log the user out of the system
 func (s *UserAPIServiceImpl) LogoutUser(ctx context.Context) (openapi.ImplResponse, error) {
-	// TODO - update LogoutUser with the required logic for this service method.
-	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	// TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	// return Response(200, nil),nil
-
-	// TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	// return Response(401, nil),nil
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("LogoutUser method not implemented")
+	// We can't directly access the request or response writer from the context
+	// in the OpenAPI generated code, so we'll just return a success response
+	// The actual logout functionality is handled by our custom logout handler
+	fmt.Println("LogoutUser method called")
+	return openapi.Response(http.StatusOK, nil), nil
 }
 
 // UpdateUser - Update user

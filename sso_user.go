@@ -13,7 +13,7 @@ import (
 
 // saveOrUpdateSSOUser saves or updates a user in the database after successful SSO authentication
 func saveOrUpdateSSOUser(db *bbolt.DB, user token.User) error {
-	fmt.Printf("Saving/updating SSO user in database: %+v\n", user)
+	// Save or update SSO user in database
 
 	// Extract provider from the user ID (format: "provider_hash")
 	parts := strings.SplitN(user.ID, "_", 2)
@@ -73,15 +73,12 @@ func saveOrUpdateSSOUser(db *bbolt.DB, user token.User) error {
 			return fmt.Errorf("could not marshal new user: %w", err)
 		}
 
-		fmt.Printf("Creating new user: %s\n", user.ID)
+		// Creating new user
 		return b.Put([]byte(user.ID), userBytes)
 	})
 
 	if err != nil {
-		fmt.Printf("Error saving/updating user: %v\n", err)
 		return err
 	}
-
-	fmt.Printf("User %s saved/updated successfully\n", user.ID)
 	return nil
 }

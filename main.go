@@ -69,7 +69,7 @@ func (*AppClock) Now() time.Time {
 }
 
 func main() {
-	lgr.Printf("flo server started")
+	// Server started
 
 	config := LoadConfig()
 
@@ -112,9 +112,7 @@ func main() {
 
 			// Copy all cookies from the auth response
 			for _, cookie := range responseRecorder.Result().Cookies() {
-				// Log the cookie for debugging
-				fmt.Printf("Setting cookie: %s=%s, HttpOnly=%v, Path=%s, Domain=%s\n",
-					cookie.Name, cookie.Value, cookie.HttpOnly, cookie.Path, cookie.Domain)
+				// Process cookie
 
 				// Make sure the cookie is accessible from the frontend
 				cookie.Domain = ""
@@ -127,9 +125,7 @@ func main() {
 				// Set SameSite to None to allow cross-site requests
 				cookie.SameSite = http.SameSiteNoneMode
 
-				// Log the cookie settings
-				fmt.Printf("Cookie settings: Name=%s, Domain=%s, Path=%s, Secure=%v, HttpOnly=%v, SameSite=%v\n",
-					cookie.Name, cookie.Domain, cookie.Path, cookie.Secure, cookie.HttpOnly, cookie.SameSite)
+				// Cookie settings updated
 
 				// Set the cookie
 				http.SetCookie(w, cookie)
@@ -137,7 +133,6 @@ func main() {
 
 			// Redirect to the frontend topics page
 			redirectURL := frontendURL + "/topics"
-			fmt.Printf("Redirecting to: %s\n", redirectURL)
 			http.Redirect(w, r, redirectURL, http.StatusFound)
 			return
 		}
@@ -156,16 +151,86 @@ func main() {
 	router.Handle("/auth/facebook/callback", authCallbackHandler)
 	router.Handle("/auth/microsoft/login", authRoutes)
 	router.Handle("/auth/microsoft/callback", authCallbackHandler)
-	router.Handle("/auth/logout", authRoutes)
+// Create a custom logout handler
+logoutHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// Custom logout handler
+	fmt.Println("\n\n==== LOGOUT HANDLER CALLED ====\n")
+	fmt.Println("URL:", r.URL.String())
+	fmt.Println("Method:", r.Method)
+	fmt.Println("Headers:", r.Header)
+	fmt.Println("Cookies:", r.Cookies())
+
+	// Set CORS headers
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-XSRF-TOKEN")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+	// Handle preflight requests
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// Clear the JWT cookie
+	fmt.Println("Clearing flow_jwt cookie")
+	flowJwtCookie := &http.Cookie{
+		Name:     "flow_jwt",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(w, flowJwtCookie)
+	fmt.Println("Set cookie:", flowJwtCookie)
+
+	// Clear the JWT cookie
+	fmt.Println("Clearing JWT cookie")
+	jwtCookie := &http.Cookie{
+		Name:     "JWT",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(w, jwtCookie)
+	fmt.Println("Set cookie:", jwtCookie)
+
+	// Clear the XSRF token cookie
+	fmt.Println("Clearing XSRF-TOKEN cookie")
+	xsrfCookie := &http.Cookie{
+		Name:     "XSRF-TOKEN",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: false,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(w, xsrfCookie)
+	fmt.Println("Set cookie:", xsrfCookie)
+
+	// Return a success response
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Println("Response headers:", w.Header())
+	fmt.Println("Sending response: {\"success\":true}")
+	w.Write([]byte(`{"success":true}`));
+	fmt.Println("\n==== LOGOUT HANDLER COMPLETED ====\n")
+})
+
+// Mount the custom logout handler
+router.Handle("/auth/logout", logoutHandler)
 
 	// Mount avatar routes if needed
 	router.PathPrefix("/avatar").Handler(avatarRoutes)
 
 	// Create a handler for the /users/auth endpoint
 	userAuthHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("User Auth handler called: %s %s\n", r.Method, r.URL.String())
-		fmt.Printf("Request headers: %v\n", r.Header)
-		fmt.Printf("Request cookies: %v\n", r.Cookies())
+		// User Auth handler called
 
 		// Create the response according to the OpenAPI spec
 		response := struct {
@@ -176,13 +241,9 @@ func main() {
 			ID     string `json:"id,omitempty"`
 		}{}
 
-		// Log all cookies for debugging
-		fmt.Printf("All cookies: %v\n", r.Cookies())
-
 		// Check for JWT cookie
 		jwtCookie, jwtErr := r.Cookie("JWT")
 		if jwtErr == nil {
-			fmt.Printf("Found JWT cookie: %s\n", jwtCookie.Value)
 
 			// Try to extract user info from the JWT cookie
 			jwtPayload, err := ExtractUserFromJWT(jwtCookie.Value)
@@ -193,12 +254,10 @@ func main() {
 				response.Name = jwtPayload.User.Name
 				response.Email = jwtPayload.User.Email
 				response.ID = jwtPayload.User.ID
-				fmt.Printf("User authenticated via JWT cookie\n")
 
 				// Marshal the response to JSON
 				responseJSON, err := json.Marshal(response)
 				if err != nil {
-					fmt.Printf("Error marshaling response: %v\n", err)
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 					return
 				}
@@ -209,24 +268,18 @@ func main() {
 				w.Header().Set("Content-Length", fmt.Sprintf("%d", len(responseJSON)))
 
 				// Write the response
-				n, err := w.Write(responseJSON)
-				if err != nil {
-					fmt.Printf("Error writing response: %v\n", err)
-				} else {
-					fmt.Printf("Response written successfully (%d bytes)\n", n)
-				}
+				w.Write(responseJSON)
 				return
 			} else {
-				fmt.Printf("Error extracting user from JWT cookie: %v\n", err)
+				// Failed to extract user from JWT cookie
 			}
 		} else {
-			fmt.Printf("JWT cookie not found: %v\n", jwtErr)
+			// JWT cookie not found
 		}
 
 		// Check for flow_jwt cookie
 		flowJwtCookie, flowJwtErr := r.Cookie("flow_jwt")
 		if flowJwtErr == nil {
-			fmt.Printf("Found flow_jwt cookie: %s\n", flowJwtCookie.Value)
 
 			// Try to extract user info from the flow_jwt cookie
 			jwtPayload, err := ExtractUserFromJWT(flowJwtCookie.Value)
@@ -237,12 +290,10 @@ func main() {
 				response.Name = jwtPayload.User.Name
 				response.Email = jwtPayload.User.Email
 				response.ID = jwtPayload.User.ID
-				fmt.Printf("User authenticated via flow_jwt cookie\n")
 
 				// Marshal the response to JSON
 				responseJSON, err := json.Marshal(response)
 				if err != nil {
-					fmt.Printf("Error marshaling response: %v\n", err)
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 					return
 				}
@@ -253,18 +304,13 @@ func main() {
 				w.Header().Set("Content-Length", fmt.Sprintf("%d", len(responseJSON)))
 
 				// Write the response
-				n, err := w.Write(responseJSON)
-				if err != nil {
-					fmt.Printf("Error writing response: %v\n", err)
-				} else {
-					fmt.Printf("Response written successfully (%d bytes)\n", n)
-				}
+				w.Write(responseJSON)
 				return
 			} else {
-				fmt.Printf("Error extracting user from flow_jwt cookie: %v\n", err)
+				// Failed to extract user from flow_jwt cookie
 			}
 		} else {
-			fmt.Printf("flow_jwt cookie not found: %v\n", flowJwtErr)
+			// flow_jwt cookie not found
 		}
 
 		// Try to get user info from the request using the library's method
@@ -272,27 +318,20 @@ func main() {
 
 		// If all cookie authentication methods fail, try the Authorization header
 		if err != nil {
-			fmt.Printf("Library cookie authentication failed: %v\n", err)
 
 			// Check for token in query parameter first
 			tokenParam := r.URL.Query().Get("token")
-			fmt.Printf("Token query parameter: %q\n", tokenParam)
 
 			// Check for Authorization header as fallback
 			authHeader := r.Header.Get("Authorization")
-			fmt.Printf("Authorization header: %q\n", authHeader)
-
-			// Log all headers for debugging
-			fmt.Printf("All headers: %v\n", r.Header)
 
 			// Try token from query parameter first
 			if tokenParam != "" {
-				fmt.Printf("Using token from query parameter\n")
 
 				// Try to extract user info from the JWT token
 				jwtPayload, err := ExtractUserFromJWT(tokenParam)
 				if err != nil {
-					fmt.Printf("Error extracting user from JWT query parameter: %v\n", err)
+					// Failed to extract user from JWT query parameter
 				} else {
 					// Use the user info from the JWT token
 					response.IsAuth = true
@@ -300,25 +339,21 @@ func main() {
 					response.Name = jwtPayload.User.Name
 					response.Email = jwtPayload.User.Email
 					response.ID = jwtPayload.User.ID
-					fmt.Printf("User authenticated via token query parameter\n")
 					return
 				}
 			}
 
 			// Fall back to Authorization header
 			if authHeader != "" {
-				fmt.Printf("Authorization header found: %s\n", authHeader)
 
 				// Extract the token from the Authorization header
 				parts := strings.Split(authHeader, " ")
 				if len(parts) == 2 && parts[0] == "Bearer" {
 					jwtToken := parts[1]
-					fmt.Printf("JWT token extracted from Authorization header: %s\n", jwtToken)
 
 					// Try to extract user info from the JWT token
 					jwtPayload, err := ExtractUserFromJWT(jwtToken)
 					if err != nil {
-						fmt.Printf("Error extracting user from JWT: %v\n", err)
 						// For testing purposes, return a hardcoded user
 						response.IsAuth = true
 						response.Role = 1 // Default role for authenticated users
@@ -334,20 +369,19 @@ func main() {
 						response.ID = jwtPayload.User.ID
 					}
 
-					fmt.Printf("User authenticated via Authorization header\n")
+					// User authenticated via Authorization header
 				} else {
-					fmt.Printf("Invalid Authorization header format\n")
+					// Invalid Authorization header format
 					response.IsAuth = false
 					response.Role = 0
 				}
 			} else {
-				fmt.Printf("No Authorization header found\n")
+				// No Authorization header found
 				response.IsAuth = false
 				response.Role = 0
 			}
 		} else {
 			// User is authenticated via cookie
-			fmt.Printf("User authenticated via cookie: %+v\n", user)
 			response.IsAuth = true
 			response.Role = 1 // Default role for authenticated users
 			response.Name = user.Name
@@ -365,35 +399,26 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("X-Debug-Info", "Response from /users/auth endpoint")
 
-		// Log the response for debugging
-		fmt.Printf("Response struct before marshaling: %+v\n", response)
+		// Marshal the response to JSON
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling response: %v\n", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
 
-		fmt.Printf("Sending response JSON: %s\n", string(responseJSON))
-		fmt.Printf("Response JSON length: %d bytes\n", len(responseJSON))
+		// Response ready to be sent
 
 		// Set Content-Length header
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(responseJSON)))
 
 		// Write the response
-		n, err := w.Write(responseJSON)
-		if err != nil {
-			fmt.Printf("Error writing response: %v\n", err)
-		} else {
-			fmt.Printf("Response written successfully (%d bytes)\n", n)
-		}
+		w.Write(responseJSON)
 	})
 
 	// Add the user auth route
 	router.Handle("/users/auth", userAuthHandler)
 
-	// Log that auth routes are mounted
-	fmt.Println("Auth routes mounted successfully")
+	// Auth routes mounted
 
 	// backup
 	router.Handle("/admin/backup", backUpHandler(db))

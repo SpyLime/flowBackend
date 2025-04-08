@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -9,9 +8,7 @@ import (
 func buildCORSMiddleware() func(http.Handler) http.Handler {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Log the request for debugging
-			fmt.Printf("CORS middleware: %s %s\n", r.Method, r.URL.String())
-			fmt.Printf("Request headers: %v\n", r.Header)
+			// CORS middleware
 
 			// Set CORS headers
 			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")

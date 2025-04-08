@@ -1,10 +1,10 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
-	"encoding/base64"
 )
 
 // JWTPayload represents the payload of a JWT token
@@ -42,9 +42,7 @@ func ExtractUserFromJWT(tokenString string) (*JWTPayload, error) {
 		return nil, fmt.Errorf("failed to parse payload: %v", err)
 	}
 
-	// Log the payload for debugging
-	fmt.Printf("Extracted JWT payload: %+v\n", jwtPayload)
-	fmt.Printf("User from JWT: %+v\n", jwtPayload.User)
+	// JWT payload extracted successfully
 
 	return &jwtPayload, nil
 }
