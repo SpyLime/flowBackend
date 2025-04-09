@@ -154,11 +154,6 @@ func main() {
 // Create a custom logout handler
 logoutHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// Custom logout handler
-	fmt.Println("\n\n==== LOGOUT HANDLER CALLED ====\n")
-	fmt.Println("URL:", r.URL.String())
-	fmt.Println("Method:", r.Method)
-	fmt.Println("Headers:", r.Header)
-	fmt.Println("Cookies:", r.Cookies())
 
 	// Set CORS headers
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
@@ -173,7 +168,6 @@ logoutHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Clear the JWT cookie
-	fmt.Println("Clearing flow_jwt cookie")
 	flowJwtCookie := &http.Cookie{
 		Name:     "flow_jwt",
 		Value:    "",
@@ -184,10 +178,8 @@ logoutHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, flowJwtCookie)
-	fmt.Println("Set cookie:", flowJwtCookie)
 
 	// Clear the JWT cookie
-	fmt.Println("Clearing JWT cookie")
 	jwtCookie := &http.Cookie{
 		Name:     "JWT",
 		Value:    "",
@@ -198,10 +190,8 @@ logoutHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, jwtCookie)
-	fmt.Println("Set cookie:", jwtCookie)
 
 	// Clear the XSRF token cookie
-	fmt.Println("Clearing XSRF-TOKEN cookie")
 	xsrfCookie := &http.Cookie{
 		Name:     "XSRF-TOKEN",
 		Value:    "",
@@ -212,14 +202,14 @@ logoutHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, xsrfCookie)
-	fmt.Println("Set cookie:", xsrfCookie)
 
 	// Return a success response
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Println("Response headers:", w.Header())
-	fmt.Println("Sending response: {\"success\":true}")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-XSRF-TOKEN")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Write([]byte(`{"success":true}`));
-	fmt.Println("\n==== LOGOUT HANDLER COMPLETED ====\n")
 })
 
 // Mount the custom logout handler
