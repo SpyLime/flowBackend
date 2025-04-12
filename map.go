@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 
 	openapi "github.com/SpyLime/flowBackend/go"
+	"github.com/go-pkgz/auth/token"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -21,6 +23,10 @@ func NewMapAPIServiceImpl(db *bolt.DB, clock Clock) openapi.MapAPIServicer {
 
 // GetMapById - Find map by ID
 func (s *MapAPIServiceImpl) GetMapById(ctx context.Context, topicId string) (openapi.ImplResponse, error) {
+	_, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
 
 	response, err := getMapById(s.db, topicId)
 	if err != nil {
@@ -33,8 +39,20 @@ func (s *MapAPIServiceImpl) GetMapById(ctx context.Context, topicId string) (ope
 
 // AddEdge - Add a new edge
 func (s *MapAPIServiceImpl) AddEdge(ctx context.Context, topicId string, getMapById200ResponseEdgesInner openapi.GetMapById200ResponseEdgesInner) (openapi.ImplResponse, error) {
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+	userDetails, err := getUser(s.db, user.Name)
+	if err != nil {
+		return openapi.Response(401, nil), err
+	}
 
-	_, err := postEdge(s.db, topicId, getMapById200ResponseEdgesInner)
+	if userDetails.Role != KeyAdmin && userDetails.Reputation < KeyReputationContributor {
+		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Contributor)")
+	}
+
+	_, err = postEdge(s.db, topicId, getMapById200ResponseEdgesInner)
 	if err != nil {
 		return openapi.Response(405, nil), err
 	}
@@ -45,8 +63,20 @@ func (s *MapAPIServiceImpl) AddEdge(ctx context.Context, topicId string, getMapB
 
 // AddEdge - Add a new edge
 func (s *MapAPIServiceImpl) DeleteEdge(ctx context.Context, topicId string, edgeId string) (openapi.ImplResponse, error) {
-	//need to check user privs
-	err := deleteEdge(s.db, topicId, edgeId)
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+	userDetails, err := getUser(s.db, user.Name)
+	if err != nil {
+		return openapi.Response(401, nil), err
+	}
+
+	if userDetails.Role != KeyAdmin && userDetails.Reputation < KeyReputationEditor {
+		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Editor)")
+	}
+
+	err = deleteEdge(s.db, topicId, edgeId)
 	if err != nil {
 		return openapi.Response(405, nil), err
 	}

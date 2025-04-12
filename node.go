@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 
 	openapi "github.com/SpyLime/flowBackend/go"
+	"github.com/go-pkgz/auth/token"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -25,8 +27,12 @@ func NewNodeAPIServiceImpl(db *bolt.DB, clock Clock) openapi.NodeAPIServicer {
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeBattleVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	user := "tempUser"
-	err := updateNodeBattleVote(s.db, updateNodeRequest, user)
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+
+	err := updateNodeBattleVote(s.db, updateNodeRequest, user.Name)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
@@ -36,7 +42,23 @@ func (s *NodeAPIServiceImpl) UpdateNodeBattleVote(ctx context.Context, updateNod
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeTitle(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	err := updateNodeTitle(s.db, updateNodeRequest)
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+
+	userDetails, err := getUser(s.db, user.Name)
+	if err != nil {
+		return openapi.Response(401, nil), err
+	}
+
+	//the creator should be able to update the node within first 15 minues. that is not how it currently works
+
+	if userDetails.Role != KeyAdmin && userDetails.Reputation < KeyReputationEditor {
+		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Editor)")
+	}
+
+	err = updateNodeTitle(s.db, updateNodeRequest, user.Name)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
@@ -46,8 +68,12 @@ func (s *NodeAPIServiceImpl) UpdateNodeTitle(ctx context.Context, updateNodeRequ
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeVideoEdit(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	user := "tempUser"
-	err := updateNodeVideoEdit(s.db, s.clock, updateNodeRequest, user)
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+
+	err := updateNodeVideoEdit(s.db, s.clock, updateNodeRequest, user.Name)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
@@ -57,8 +83,12 @@ func (s *NodeAPIServiceImpl) UpdateNodeVideoEdit(ctx context.Context, updateNode
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeVideoVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	user := "tempUser"
-	err := updateNodeVideoVote(s.db, updateNodeRequest, user)
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+
+	err := updateNodeVideoVote(s.db, updateNodeRequest, user.Name)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
@@ -68,6 +98,11 @@ func (s *NodeAPIServiceImpl) UpdateNodeVideoVote(ctx context.Context, updateNode
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeFlag(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+	_, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+
 	err := updateNodeFlag(s.db, updateNodeRequest)
 	if err != nil {
 		return openapi.Response(400, nil), err
@@ -78,8 +113,12 @@ func (s *NodeAPIServiceImpl) UpdateNodeFlag(ctx context.Context, updateNodeReque
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeFreshVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	user := "tempUser"
-	err := updateNodeFreshVote(s.db, updateNodeRequest, user)
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+
+	err := updateNodeFreshVote(s.db, updateNodeRequest, user.Name)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
@@ -89,6 +128,10 @@ func (s *NodeAPIServiceImpl) UpdateNodeFreshVote(ctx context.Context, updateNode
 
 // GetNode - get wiki node
 func (s *NodeAPIServiceImpl) GetNode(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
+	_, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
 
 	node, err := getNode(s.db, nodeId, tid)
 	if err != nil {
@@ -101,6 +144,21 @@ func (s *NodeAPIServiceImpl) GetNode(ctx context.Context, nodeId string, tid str
 
 // AddNode - Add a new node
 func (s *NodeAPIServiceImpl) AddNode(ctx context.Context, addTopic200ResponseNodeData openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+	userDetails, err := getUser(s.db, user.Name)
+	if err != nil {
+		return openapi.Response(401, nil), err
+	}
+
+	if userDetails.Role != KeyAdmin && userDetails.Reputation < KeyReputationContributor {
+		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Contributor)")
+	}
+
+	addTopic200ResponseNodeData.CreatedBy = user.Name
+
 	response, err := postNode(s.db, s.clock, addTopic200ResponseNodeData)
 	if err != nil {
 		return openapi.Response(405, nil), err
@@ -112,7 +170,20 @@ func (s *NodeAPIServiceImpl) AddNode(ctx context.Context, addTopic200ResponseNod
 
 // DeleteNode - Delete a node
 func (s *NodeAPIServiceImpl) DeleteNode(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
-	err := deleteNode(s.db, nodeId, tid)
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+	userDetails, err := getUser(s.db, user.Name)
+	if err != nil {
+		return openapi.Response(401, nil), err
+	}
+
+	if userDetails.Role != KeyAdmin && userDetails.Reputation < KeyReputationDeleter {
+		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Deleter)")
+	}
+
+	err = deleteNode(s.db, nodeId, tid)
 
 	if err == nil {
 		return openapi.Response(204, nil), nil

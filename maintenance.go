@@ -84,13 +84,52 @@ func seedDbHandler(db *bolt.DB, clock *DemoClock) http.Handler {
 	})
 }
 
+func UpdateUserRoleAndReputation(db *bolt.DB, username string, isAdmin bool, reputation int32) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		// Get users bucket
+		usersBucket := tx.Bucket([]byte(KeyUsers))
+		if usersBucket == nil {
+			return fmt.Errorf("users bucket not found")
+		}
+
+		// Get user data
+		userData := usersBucket.Get([]byte(username))
+		if userData == nil {
+			return fmt.Errorf("user %s not found", username)
+		}
+
+		var user openapi.UpdateUserRequest
+		if err := json.Unmarshal(userData, &user); err != nil {
+			return fmt.Errorf("failed to unmarshal user data: %v", err)
+		}
+
+		// Update role
+		if isAdmin {
+			user.Role = KeyAdmin
+		} else {
+			user.Role = KeyUser
+		}
+
+		// Update reputation with direct value
+		user.Reputation = reputation
+
+		// Save updated user data
+		updatedData, err := json.Marshal(user)
+		if err != nil {
+			return fmt.Errorf("failed to marshal updated user data: %v", err)
+		}
+
+		return usersBucket.Put([]byte(username), updatedData)
+	})
+}
+
 func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int) (users, topics []string, nodesAndEdges []openapi.ResponsePostNode, err error) {
 	if numUsers == 0 && numNodes > 0 {
-		return users, topics, nodesAndEdges, fmt.Errorf("You can't create nodes without a user")
+		return users, topics, nodesAndEdges, fmt.Errorf("you can't create nodes without a user")
 	}
 
 	if numTopics == 0 && numNodes > 0 {
-		return users, topics, nodesAndEdges, fmt.Errorf("You can't create nodes without a topic")
+		return users, topics, nodesAndEdges, fmt.Errorf("you can't create nodes without a topic")
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
@@ -102,7 +141,7 @@ func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int)
 				FirstName:   "d",
 				LastName:    "d",
 				Email:       "d@d.com",
-				Role:        0,
+				Role:        KeyAdmin,
 				Reputation:  int32(rep),
 				Description: "d",
 			}

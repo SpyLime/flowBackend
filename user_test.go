@@ -46,7 +46,8 @@ func TestGetUserByName(t *testing.T) {
 	users, _, _, err := CreateTestData(db, &clock, 2, 0, 0)
 	require.Nil(t, err)
 
-	// SetTestLoginUser(teachers[0])
+	UpdateUserRoleAndReputation(db, users[0], false, 0)
+	SetTestLoginUser(users[0])
 
 	client := &http.Client{}
 	userID := url.QueryEscape(users[0])
@@ -76,6 +77,9 @@ func TestUpdateUser(t *testing.T) {
 
 	users, _, _, err := CreateTestData(db, &clock, 1, 0, 0)
 	require.Nil(t, err)
+
+	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	SetTestLoginUser(users[0])
 
 	originalUser, err := getUser(db, users[0])
 	require.Nil(t, err)
@@ -113,6 +117,9 @@ func TestDeleteUser(t *testing.T) {
 
 	users, _, _, err := CreateTestData(db, &clock, 1, 0, 0)
 	require.Nil(t, err)
+
+	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	SetTestLoginUser(users[0])
 
 	client := &http.Client{}
 

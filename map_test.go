@@ -18,10 +18,10 @@ func TestGetMapById(t *testing.T) {
 	db, tearDown := FullStartTestServer("GetMapById", 8088, "")
 	defer tearDown()
 
-	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 2)
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 2)
 	require.Nil(t, err)
 
-	// SetTestLoginUser(teachers[0])
+	SetTestLoginUser(users[0])
 
 	client := &http.Client{}
 
@@ -49,8 +49,11 @@ func TestAddEdge(t *testing.T) {
 	db, tearDown := FullStartTestServer("AddEdge", 8088, "")
 	defer tearDown()
 
-	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 2)
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 2)
 	require.Nil(t, err)
+
+	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	SetTestLoginUser(users[0])
 
 	client := &http.Client{}
 
@@ -83,8 +86,11 @@ func TestDeleteEdge(t *testing.T) {
 	db, tearDown := FullStartTestServer("deleteEdge", 8088, "")
 	defer tearDown()
 
-	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 2)
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 2)
 	require.Nil(t, err)
+
+	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	SetTestLoginUser(users[0])
 
 	client := &http.Client{}
 

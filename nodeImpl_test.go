@@ -87,7 +87,7 @@ func TestUpdateNodeImpl(t *testing.T) {
 	db, dbTearDown := OpenTestDB("UpdateNodeImpl")
 	defer dbTearDown()
 
-	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
 	originalNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -98,7 +98,7 @@ func TestUpdateNodeImpl(t *testing.T) {
 	modNode.Title = "Jack"
 	modNode.Description = "turbo"
 
-	err = updateNodeTitle(db, modNode)
+	err = updateNodeTitle(db, modNode, users[0])
 	require.Nil(t, err)
 
 	updatedNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])

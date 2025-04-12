@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	openapi "github.com/SpyLime/flowBackend/go"
+	"github.com/go-pkgz/auth/token"
+	"github.com/go-pkgz/lgr"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -27,6 +29,19 @@ func NewTopicAPIServiceImpl(db *bolt.DB, clock Clock) openapi.TopicAPIServicer {
 
 // GetTopics - get all topics
 func (s *TopicAPIServiceImpl) GetTopics(ctx context.Context) (openapi.ImplResponse, error) {
+	// Safely extract user from context
+	userValue := ctx.Value("user")
+	lgr.Printf("User value from context: %+v", userValue)
+	if userValue == nil {
+		lgr.Printf("WARNING: User value is nil")
+	} else {
+		lgr.Printf("User value type: %T", userValue)
+	}
+
+	_, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
 
 	response, err := getTopics(s.db)
 	if err != nil {
@@ -64,6 +79,21 @@ func (s *TopicAPIServiceImpl) UpdateTopic(ctx context.Context, getTopics200Respo
 
 // AddTopic - Add a new topic
 func (s *TopicAPIServiceImpl) AddTopic(ctx context.Context, getTopics200ResponseInner openapi.GetTopics200ResponseInner) (openapi.ImplResponse, error) {
+	// Extract user information from context
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+
+	userDetails, err := getUser(s.db, user.Name)
+	if err != nil {
+		return openapi.Response(401, nil), err
+	}
+
+	if userDetails.Role != KeyAdmin && userDetails.Reputation < KeyReputationDeleter {
+		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Deleter)")
+	}
+
 	responsePostTopic, err := postTopic(s.db, s.clock, getTopics200ResponseInner)
 	if err != nil {
 		return openapi.Response(405, nil), err
@@ -71,12 +101,27 @@ func (s *TopicAPIServiceImpl) AddTopic(ctx context.Context, getTopics200Response
 
 	response := openapi.AddTopic200Response(responsePostTopic)
 	return openapi.Response(200, response), nil
-
 }
 
 // DeleteTopic - Delete a node
 func (s *TopicAPIServiceImpl) DeleteTopic(ctx context.Context, topicId string) (openapi.ImplResponse, error) {
-	err := deleteTopic(s.db, topicId)
+
+	// Extract user information from context
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+
+	userDetails, err := getUser(s.db, user.Name)
+	if err != nil {
+		return openapi.Response(401, nil), err
+	}
+
+	if userDetails.Role != KeyAdmin {
+		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin email a request for this topic to be deleted")
+	}
+
+	err = deleteTopic(s.db, topicId)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}

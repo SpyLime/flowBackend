@@ -62,7 +62,7 @@ func saveOrUpdateSSOUser(db *bbolt.DB, user token.User) error {
 			Username:  user.Name,
 			Email:     user.Email,
 			Provider:  provider,
-			Role:      1, // Default role for SSO users
+			Role:      0,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 			LastLogin: time.Now(),

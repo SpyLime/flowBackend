@@ -18,10 +18,10 @@ func TestGetNode(t *testing.T) {
 	db, tearDown := FullStartTestServer("getNode", 8088, "")
 	defer tearDown()
 
-	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 2)
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 2)
 	require.Nil(t, err)
 
-	// SetTestLoginUser(teachers[0])
+	SetTestLoginUser(users[0])
 
 	client := &http.Client{}
 
@@ -56,6 +56,8 @@ func TestPostNode(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
+	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	SetTestLoginUser(users[0])
 	require.Nil(t, err)
 
 	client := &http.Client{}
@@ -124,8 +126,11 @@ func TestUpdateNode(t *testing.T) {
 	db, tearDown := FullStartTestServer("udpateNode", 8088, "")
 	defer tearDown()
 
-	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
+
+	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	SetTestLoginUser(users[0])
 
 	originalNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
 	require.Nil(t, err)

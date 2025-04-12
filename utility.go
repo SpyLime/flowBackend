@@ -12,10 +12,15 @@ type Clock interface {
 }
 
 const (
-	KeyUsers  = "users"
-	KeyTopics = "topics"
-	KeyNodes  = "nodes"
-	KeyEdges  = "edges"
+	KeyUsers                 = "users"
+	KeyTopics                = "topics"
+	KeyNodes                 = "nodes"
+	KeyEdges                 = "edges"
+	KeyUser                  = 0
+	KeyAdmin                 = 1
+	KeyReputationDeleter     = 200
+	KeyReputationEditor      = 100
+	KeyReputationContributor = 50
 )
 
 func RandomString(n int) string {

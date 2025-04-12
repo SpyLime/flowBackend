@@ -15,10 +15,10 @@ func TestGetTopics(t *testing.T) {
 	db, tearDown := FullStartTestServer("getUserByName", 8088, "")
 	defer tearDown()
 
-	_, topics, _, err := CreateTestData(db, &clock, 0, 4, 0)
+	users, topics, _, err := CreateTestData(db, &clock, 1, 4, 0)
 	require.Nil(t, err)
 
-	// SetTestLoginUser(teachers[0])
+	SetTestLoginUser(users[0])
 
 	client := &http.Client{}
 
@@ -45,8 +45,12 @@ func TestDeleteTopic(t *testing.T) {
 	db, tearDown := FullStartTestServer("DeleteTopic", 8088, "")
 	defer tearDown()
 
-	_, topics, _, err := CreateTestData(db, &clock, 0, 1, 0)
+	users, topics, _, err := CreateTestData(db, &clock, 1, 1, 0)
 	require.Nil(t, err)
+
+	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	SetTestLoginUser(users[0])
+
 	nonEmptyTopics, err := getTopics(db)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(nonEmptyTopics))
@@ -73,6 +77,12 @@ func TestAddTopic(t *testing.T) {
 
 	db, tearDown := FullStartTestServer("AddTopic", 8088, "")
 	defer tearDown()
+	clock := TestClock{}
+	users, _, _, err := CreateTestData(db, &clock, 1, 0, 0)
+	require.Nil(t, err)
+
+	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	SetTestLoginUser(users[0])
 
 	emptyTopics, err := getTopics(db)
 	require.Nil(t, err)

@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	openapi "github.com/SpyLime/flowBackend/go"
+	"github.com/go-pkgz/auth/token"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -54,8 +55,21 @@ func (s *UserAPIServiceImpl) LogoutUser(ctx context.Context) (openapi.ImplRespon
 
 // UpdateUser - Update user
 func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest openapi.UpdateUserRequest) (openapi.ImplResponse, error) {
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
 
-	err := updateUser(s.db, updateUserRequest)
+	userDetails, err := getUser(s.db, user.Name)
+	if err != nil {
+		return openapi.Response(401, nil), err
+	}
+
+	if userDetails.Role != KeyAdmin && updateUserRequest.Username != user.Name {
+		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or trying to update others")
+	}
+
+	err = updateUser(s.db, updateUserRequest)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
@@ -66,6 +80,10 @@ func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest o
 
 // GetUserByName - Get user by user name
 func (s *UserAPIServiceImpl) GetUserByName(ctx context.Context, userId string) (openapi.ImplResponse, error) {
+	_, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
 
 	response, err := getUser(s.db, userId)
 	if err != nil {
@@ -78,7 +96,21 @@ func (s *UserAPIServiceImpl) GetUserByName(ctx context.Context, userId string) (
 
 // DeleteUser - Delete user
 func (s *UserAPIServiceImpl) DeleteUser(ctx context.Context, userId string) (openapi.ImplResponse, error) {
-	err := deleteUser(s.db, userId)
+	user, ok := ctx.Value("user").(token.User)
+	if !ok {
+		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
+	}
+
+	userDetails, err := getUser(s.db, user.Name)
+	if err != nil {
+		return openapi.Response(401, nil), err
+	}
+
+	if userDetails.Role != KeyAdmin && userId != user.Name {
+		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or is trying to delete others")
+	}
+
+	err = deleteUser(s.db, userId)
 
 	if err == nil {
 		return openapi.Response(204, nil), nil

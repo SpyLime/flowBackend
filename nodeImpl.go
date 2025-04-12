@@ -171,9 +171,9 @@ func deleteNodeTx(tx *bolt.Tx, nodeId, topicId string) (err error) {
 
 }
 
-func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData) (err error) {
+func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, editor string) (err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
-		err = updateNodeTitleTx(tx, request)
+		err = updateNodeTitleTx(tx, request, editor)
 		return err
 	})
 
@@ -181,7 +181,7 @@ func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData) (
 }
 
 // updates the title and description
-func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData) (err error) {
+func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, editor string) (err error) {
 
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
@@ -195,14 +195,33 @@ func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData)
 		return
 	}
 
+	isEdited := false
 	if request.Title != "" && request.Title != node.Title {
 		node.Title = request.Title
+		isEdited = true
 	}
 	if request.Description != "" && request.Title != node.Description {
 		node.Description = request.Description
+		isEdited = true
 	}
 
-	//needs to add edited by to the array if they are not already on there
+	if !isEdited {
+		return
+	}
+
+	// Check if the editor already exists in the slice
+	editorExists := false
+	for _, existingEditor := range node.EditedBy {
+		if existingEditor == editor {
+			editorExists = true
+			break
+		}
+	}
+
+	// Only append if the editor doesn't already exist
+	if !editorExists {
+		node.EditedBy = append(node.EditedBy, editor)
+	}
 
 	marshal, err := json.Marshal(node)
 	if err != nil {
@@ -363,6 +382,9 @@ func userBattleVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Res
 	return
 }
 
+// want to add a video to a node
+//
+// if votes are greater than zero then trying to add a video
 func updateNodeVideoEdit(db *bolt.DB, clock Clock, request openapi.AddTopic200ResponseNodeData, userId string) (err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		err = updateNodeVideoEditTx(tx, clock, request, userId)
@@ -391,7 +413,7 @@ func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200
 			if request.YoutubeLinks[0].Votes > 0 {
 				return fmt.Errorf("this video is already added")
 			} else {
-				node.YoutubeLinks = append(node.YoutubeLinks[:i], node.YoutubeLinks[i+1:]...)
+				node.YoutubeLinks = append(node.YoutubeLinks[:i], node.YoutubeLinks[i+1:]...) //subtract video because votes are less than zero
 			}
 
 			marshal, err := json.Marshal(node)
@@ -400,6 +422,9 @@ func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200
 			}
 
 			err = nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
+			if err != nil {
+				return err
+			}
 
 			err = userVideoEditTx(tx, clock, userId, request)
 
@@ -407,7 +432,7 @@ func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200
 		}
 	}
 
-	if request.YoutubeLinks[0].Votes > 0 {
+	if request.YoutubeLinks[0].Votes > 0 { //video was not found and you want to add
 		node.YoutubeLinks = append(node.YoutubeLinks, openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{
 			Link:      request.YoutubeLinks[0].Link,
 			Votes:     0,
@@ -481,6 +506,9 @@ func userVideoEditTx(tx *bolt.Tx, clock Clock, userId string, request openapi.Ad
 
 }
 
+// vote on a video
+//
+// if votes are greater than zero then trying to add a vote
 func updateNodeVideoVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, userId string) (err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		err = updateNodeVideoVoteTx(tx, request, userId)
