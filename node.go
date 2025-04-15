@@ -27,12 +27,12 @@ func NewNodeAPIServiceImpl(db *bolt.DB, clock Clock) openapi.NodeAPIServicer {
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeBattleVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	user, ok := ctx.Value("user").(token.User)
+	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
 
-	err := updateNodeBattleVote(s.db, updateNodeRequest, user.Name)
+	err := updateNodeBattleVote(s.db, updateNodeRequest, user.ID)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
@@ -42,12 +42,12 @@ func (s *NodeAPIServiceImpl) UpdateNodeBattleVote(ctx context.Context, updateNod
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeTitle(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	user, ok := ctx.Value("user").(token.User)
+	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
 
-	userDetails, err := getUser(s.db, user.Name)
+	userDetails, err := getUser(s.db, user.ID)
 	if err != nil {
 		return openapi.Response(401, nil), err
 	}
@@ -58,7 +58,7 @@ func (s *NodeAPIServiceImpl) UpdateNodeTitle(ctx context.Context, updateNodeRequ
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Editor)")
 	}
 
-	err = updateNodeTitle(s.db, updateNodeRequest, user.Name)
+	err = updateNodeTitle(s.db, updateNodeRequest, userDetails)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
@@ -68,12 +68,17 @@ func (s *NodeAPIServiceImpl) UpdateNodeTitle(ctx context.Context, updateNodeRequ
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeVideoEdit(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	user, ok := ctx.Value("user").(token.User)
+	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
 
-	err := updateNodeVideoEdit(s.db, s.clock, updateNodeRequest, user.Name)
+	userDetails, err := getUser(s.db, user.ID)
+	if err != nil {
+		return openapi.Response(401, nil), err
+	}
+
+	err = updateNodeVideoEdit(s.db, s.clock, updateNodeRequest, userDetails)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
@@ -83,12 +88,12 @@ func (s *NodeAPIServiceImpl) UpdateNodeVideoEdit(ctx context.Context, updateNode
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeVideoVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	user, ok := ctx.Value("user").(token.User)
+	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
 
-	err := updateNodeVideoVote(s.db, updateNodeRequest, user.Name)
+	err := updateNodeVideoVote(s.db, updateNodeRequest, user.ID)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
@@ -98,7 +103,7 @@ func (s *NodeAPIServiceImpl) UpdateNodeVideoVote(ctx context.Context, updateNode
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeFlag(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	_, ok := ctx.Value("user").(token.User)
+	_, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
@@ -113,12 +118,12 @@ func (s *NodeAPIServiceImpl) UpdateNodeFlag(ctx context.Context, updateNodeReque
 
 // UpdateNode - Update an node
 func (s *NodeAPIServiceImpl) UpdateNodeFreshVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	user, ok := ctx.Value("user").(token.User)
+	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
 
-	err := updateNodeFreshVote(s.db, updateNodeRequest, user.Name)
+	err := updateNodeFreshVote(s.db, updateNodeRequest, user.ID)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
@@ -128,7 +133,7 @@ func (s *NodeAPIServiceImpl) UpdateNodeFreshVote(ctx context.Context, updateNode
 
 // GetNode - get wiki node
 func (s *NodeAPIServiceImpl) GetNode(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
-	_, ok := ctx.Value("user").(token.User)
+	_, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
@@ -144,11 +149,11 @@ func (s *NodeAPIServiceImpl) GetNode(ctx context.Context, nodeId string, tid str
 
 // AddNode - Add a new node
 func (s *NodeAPIServiceImpl) AddNode(ctx context.Context, addTopic200ResponseNodeData openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
-	user, ok := ctx.Value("user").(token.User)
+	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
-	userDetails, err := getUser(s.db, user.Name)
+	userDetails, err := getUser(s.db, user.ID)
 	if err != nil {
 		return openapi.Response(401, nil), err
 	}
@@ -157,7 +162,10 @@ func (s *NodeAPIServiceImpl) AddNode(ctx context.Context, addTopic200ResponseNod
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Contributor)")
 	}
 
-	addTopic200ResponseNodeData.CreatedBy = user.Name
+	addTopic200ResponseNodeData.CreatedBy = openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+		Id:       user.ID,
+		Username: user.Name,
+	}
 
 	response, err := postNode(s.db, s.clock, addTopic200ResponseNodeData)
 	if err != nil {
@@ -170,11 +178,11 @@ func (s *NodeAPIServiceImpl) AddNode(ctx context.Context, addTopic200ResponseNod
 
 // DeleteNode - Delete a node
 func (s *NodeAPIServiceImpl) DeleteNode(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
-	user, ok := ctx.Value("user").(token.User)
+	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
-	userDetails, err := getUser(s.db, user.Name)
+	userDetails, err := getUser(s.db, user.ID)
 	if err != nil {
 		return openapi.Response(401, nil), err
 	}

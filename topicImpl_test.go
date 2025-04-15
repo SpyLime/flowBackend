@@ -16,14 +16,17 @@ func TestPostGetTopic(t *testing.T) {
 	db, dbTearDown := OpenTestDB("PostGetTopic")
 	defer dbTearDown()
 
-	_, _, _, err := CreateTestData(db, &clock, 0, 2, 0)
+	users, _, _, err := CreateTestData(db, &clock, 1, 2, 0)
 	require.Nil(t, err)
 
 	topic := openapi.GetTopics200ResponseInner{
 		Title: "zzz",
 	}
 
-	topicData, err := postTopic(db, &clock, topic)
+	user, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	topicData, err := postTopic(db, &clock, topic, user)
 	require.Nil(t, err)
 
 	require.Equal(t, topic.Title, topicData.Topic.Title)
@@ -44,7 +47,7 @@ func TestDeleteTopicImpl(t *testing.T) {
 	db, dbTearDown := OpenTestDB("DeleteTopicImpl")
 	defer dbTearDown()
 
-	_, topics, _, err := CreateTestData(db, &clock, 0, 1, 0)
+	_, topics, _, err := CreateTestData(db, &clock, 1, 1, 0)
 	require.Nil(t, err)
 
 	beforeDelete, err := getTopics(db)

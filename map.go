@@ -23,7 +23,7 @@ func NewMapAPIServiceImpl(db *bolt.DB, clock Clock) openapi.MapAPIServicer {
 
 // GetMapById - Find map by ID
 func (s *MapAPIServiceImpl) GetMapById(ctx context.Context, topicId string) (openapi.ImplResponse, error) {
-	_, ok := ctx.Value("user").(token.User)
+	_, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
@@ -39,11 +39,11 @@ func (s *MapAPIServiceImpl) GetMapById(ctx context.Context, topicId string) (ope
 
 // AddEdge - Add a new edge
 func (s *MapAPIServiceImpl) AddEdge(ctx context.Context, topicId string, getMapById200ResponseEdgesInner openapi.GetMapById200ResponseEdgesInner) (openapi.ImplResponse, error) {
-	user, ok := ctx.Value("user").(token.User)
+	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
-	userDetails, err := getUser(s.db, user.Name)
+	userDetails, err := getUser(s.db, user.ID)
 	if err != nil {
 		return openapi.Response(401, nil), err
 	}
@@ -63,11 +63,11 @@ func (s *MapAPIServiceImpl) AddEdge(ctx context.Context, topicId string, getMapB
 
 // AddEdge - Add a new edge
 func (s *MapAPIServiceImpl) DeleteEdge(ctx context.Context, topicId string, edgeId string) (openapi.ImplResponse, error) {
-	user, ok := ctx.Value("user").(token.User)
+	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
-	userDetails, err := getUser(s.db, user.Name)
+	userDetails, err := getUser(s.db, user.ID)
 	if err != nil {
 		return openapi.Response(401, nil), err
 	}

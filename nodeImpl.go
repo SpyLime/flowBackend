@@ -80,10 +80,6 @@ func postNodeTx(tx *bolt.Tx, clock Clock, node openapi.AddTopic200ResponseNodeDa
 		CreatedBy: node.CreatedBy,
 	}
 
-	if newNode.CreatedBy == "" {
-		newNode.CreatedBy = "change hardcode"
-	}
-
 	marshal, err := json.Marshal(newNode)
 	if err != nil {
 		return
@@ -171,7 +167,7 @@ func deleteNodeTx(tx *bolt.Tx, nodeId, topicId string) (err error) {
 
 }
 
-func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, editor string) (err error) {
+func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, editor openapi.User) (err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		err = updateNodeTitleTx(tx, request, editor)
 		return err
@@ -181,7 +177,7 @@ func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, e
 }
 
 // updates the title and description
-func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, editor string) (err error) {
+func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, editor openapi.User) (err error) {
 
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
@@ -211,16 +207,26 @@ func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData,
 
 	// Check if the editor already exists in the slice
 	editorExists := false
-	for _, existingEditor := range node.EditedBy {
-		if existingEditor == editor {
-			editorExists = true
-			break
+
+	if node.CreatedBy.Id == editor.Id {
+		editorExists = true
+	}
+
+	if !editorExists {
+		for _, existingEditor := range node.EditedBy {
+			if existingEditor.Id == editor.Id {
+				editorExists = true
+				break
+			}
 		}
 	}
 
 	// Only append if the editor doesn't already exist
 	if !editorExists {
-		node.EditedBy = append(node.EditedBy, editor)
+		node.EditedBy = append(node.EditedBy, openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+			Id:       editor.Id,
+			Username: editor.Username,
+		})
 	}
 
 	marshal, err := json.Marshal(node)
@@ -385,16 +391,16 @@ func userBattleVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Res
 // want to add a video to a node
 //
 // if votes are greater than zero then trying to add a video
-func updateNodeVideoEdit(db *bolt.DB, clock Clock, request openapi.AddTopic200ResponseNodeData, userId string) (err error) {
+func updateNodeVideoEdit(db *bolt.DB, clock Clock, request openapi.AddTopic200ResponseNodeData, user openapi.User) (err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
-		err = updateNodeVideoEditTx(tx, clock, request, userId)
+		err = updateNodeVideoEditTx(tx, clock, request, user)
 		return err
 	})
 
 	return
 }
 
-func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200ResponseNodeData, userId string) (err error) {
+func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200ResponseNodeData, user openapi.User) (err error) {
 
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
@@ -426,7 +432,7 @@ func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200
 				return err
 			}
 
-			err = userVideoEditTx(tx, clock, userId, request)
+			err = userVideoEditTx(tx, clock, user.Id, request)
 
 			return err
 		}
@@ -434,9 +440,12 @@ func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200
 
 	if request.YoutubeLinks[0].Votes > 0 { //video was not found and you want to add
 		node.YoutubeLinks = append(node.YoutubeLinks, openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{
-			Link:      request.YoutubeLinks[0].Link,
-			Votes:     0,
-			AddedBy:   userId,
+			Link:  request.YoutubeLinks[0].Link,
+			Votes: 0,
+			AddedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+				Id:       user.Id,
+				Username: user.Username,
+			},
 			DateAdded: clock.Now(),
 		})
 	} else {
@@ -453,7 +462,7 @@ func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200
 		return
 	}
 
-	err = userVideoEditTx(tx, clock, userId, request)
+	err = userVideoEditTx(tx, clock, user.Id, request)
 
 	return
 }
@@ -485,9 +494,12 @@ func userVideoEditTx(tx *bolt.Tx, clock Clock, userId string, request openapi.Ad
 
 	if request.YoutubeLinks[0].Votes > 0 {
 		user.Linked = append(user.Linked, openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{
-			Link:      request.YoutubeLinks[0].Link,
-			Votes:     0,
-			AddedBy:   userId,
+			Link:  request.YoutubeLinks[0].Link,
+			Votes: 0,
+			AddedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+				Id:       user.Id,
+				Username: user.Username,
+			},
 			DateAdded: clock.Now(),
 		})
 

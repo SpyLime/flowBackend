@@ -573,14 +573,10 @@ components:
             $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
           type: array
         createdBy:
-          example: super1
-          type: string
+          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
         editedBy:
-          example:
-          - super1
-          - super2
           items:
-            type: string
+            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
           type: array
     LinkData:
       properties:
@@ -593,8 +589,7 @@ components:
           format: int32
           type: integer
         addedBy:
-          example: Mike21
-          type: string
+          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
         dateAdded:
           example: 2024-08-19T19:25:42.568Z
           format: date-time
@@ -811,6 +806,14 @@ components:
           - apple
           - discord
           type: string
+    UserIdentifier:
+      properties:
+        username:
+          example: super123
+          type: string
+        id:
+          example: dkd94njd
+          type: string
     getTopics_200_response_inner:
       example:
         title: bjj
@@ -820,9 +823,22 @@ components:
           type: string
       required:
       - title
+    addTopic_200_response_nodeData_youtubeLinks_inner_addedBy:
+      example:
+        id: dkd94njd
+        username: super123
+      properties:
+        username:
+          example: super123
+          type: string
+        id:
+          example: dkd94njd
+          type: string
     addTopic_200_response_nodeData_youtubeLinks_inner:
       example:
-        addedBy: Mike21
+        addedBy:
+          id: dkd94njd
+          username: super123
         link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
         votes: 21
         dateAdded: 2024-08-19T19:25:42.568Z
@@ -836,8 +852,7 @@ components:
           format: int32
           type: integer
         addedBy:
-          example: Mike21
-          type: string
+          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
         dateAdded:
           example: 2024-08-19T19:25:42.568Z
           format: date-time
@@ -845,9 +860,13 @@ components:
     addTopic_200_response_nodeData:
       example:
         editedBy:
-        - super1
-        - super2
-        createdBy: super1
+        - id: dkd94njd
+          username: super123
+        - id: dkd94njd
+          username: super123
+        createdBy:
+          id: dkd94njd
+          username: super123
         topic: bjj
         description: used to attack ninjas on Friday
         battleTested: 44
@@ -857,11 +876,15 @@ components:
         speed: 55
         isFlagged: true
         youtubeLinks:
-        - addedBy: Mike21
+        - addedBy:
+            id: dkd94njd
+            username: super123
           link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
           votes: 21
           dateAdded: 2024-08-19T19:25:42.568Z
-        - addedBy: Mike21
+        - addedBy:
+            id: dkd94njd
+            username: super123
           link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
           votes: 21
           dateAdded: 2024-08-19T19:25:42.568Z
@@ -899,22 +922,22 @@ components:
             $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
           type: array
         createdBy:
-          example: super1
-          type: string
+          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
         editedBy:
-          example:
-          - super1
-          - super2
           items:
-            type: string
+            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
           type: array
     addTopic_200_response:
       example:
         nodeData:
           editedBy:
-          - super1
-          - super2
-          createdBy: super1
+          - id: dkd94njd
+            username: super123
+          - id: dkd94njd
+            username: super123
+          createdBy:
+            id: dkd94njd
+            username: super123
           topic: bjj
           description: used to attack ninjas on Friday
           battleTested: 44
@@ -924,11 +947,15 @@ components:
           speed: 55
           isFlagged: true
           youtubeLinks:
-          - addedBy: Mike21
+          - addedBy:
+              id: dkd94njd
+              username: super123
             link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
             votes: 21
             dateAdded: 2024-08-19T19:25:42.568Z
-          - addedBy: Mike21
+          - addedBy:
+              id: dkd94njd
+              username: super123
             link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
             votes: 21
             dateAdded: 2024-08-19T19:25:42.568Z
@@ -1204,11 +1231,15 @@ components:
         updatedAt: 2000-01-23T04:56:07.000+00:00
         username: theUser
         linked:
-        - addedBy: Mike21
+        - addedBy:
+            id: dkd94njd
+            username: super123
           link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
           votes: 21
           dateAdded: 2024-08-19T19:25:42.568Z
-        - addedBy: Mike21
+        - addedBy:
+            id: dkd94njd
+            username: super123
           link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
           votes: 21
           dateAdded: 2024-08-19T19:25:42.568Z

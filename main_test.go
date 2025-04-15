@@ -50,20 +50,20 @@ func OpenTestDB(suffix string) (db *bolt.DB, teardown func()) {
 
 var testLoginUser string
 
-func SetTestLoginUser(username string) {
-	testLoginUser = username
+func SetTestLoginUser(id string) {
+	testLoginUser = id
 }
 
-func InitTestServer(port int, db *bolt.DB, userName string, clock Clock) (teardown func()) {
-	SetTestLoginUser(userName)
+func InitTestServer(port int, db *bolt.DB, id string, clock Clock) (teardown func()) {
+	SetTestLoginUser(id)
 	mux := createRouterClock(db, clock)
 	mux.Use(func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			user := token.User{
-				Name: testLoginUser,
+				ID: testLoginUser,
 			}
 			ctx := request.Context()
-			ctx = context.WithValue(ctx, "user", user)
+			ctx = context.WithValue(ctx, userInfoKey, user)
 			handler.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	})

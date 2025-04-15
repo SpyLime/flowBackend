@@ -21,9 +21,11 @@ func TestPostGetNode(t *testing.T) {
 	require.Nil(t, err)
 
 	node := openapi.AddTopic200ResponseNodeData{
-		CreatedBy: users[0],
-		Title:     "turbo",
-		Topic:     topics[0],
+		CreatedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+			Id: users[0],
+		},
+		Title: "turbo",
+		Topic: topics[0],
 	}
 
 	nodeInfo, err := postNode(db, &clock, node)
@@ -51,10 +53,12 @@ func TestDeleteNodeImpl(t *testing.T) {
 	require.Nil(t, err)
 
 	data := openapi.AddTopic200ResponseNodeData{
-		Topic:     topics[0],
-		Title:     "tester",
-		CreatedBy: users[0],
-		Id:        nodesAndEdges[0].SourceId,
+		Topic: topics[0],
+		Title: "tester",
+		CreatedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+			Id: users[0],
+		},
+		Id: nodesAndEdges[0].SourceId,
 	}
 
 	for i := 0; i < 5; i++ {
@@ -98,7 +102,10 @@ func TestUpdateNodeImpl(t *testing.T) {
 	modNode.Title = "Jack"
 	modNode.Description = "turbo"
 
-	err = updateNodeTitle(db, modNode, users[0])
+	user, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	err = updateNodeTitle(db, modNode, user)
 	require.Nil(t, err)
 
 	updatedNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -499,7 +506,10 @@ func TestUpdateNodeVideoVoteUpImpl(t *testing.T) {
 		}},
 	}
 
-	err = updateNodeVideoEdit(db, &clock, vidUp, users[0])
+	user, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	err = updateNodeVideoEdit(db, &clock, vidUp, user)
 	require.Nil(t, err)
 
 	err = updateNodeVideoVote(db, vidUp, users[0])
@@ -548,7 +558,10 @@ func TestUpdateNodeVideoVoteDownImpl(t *testing.T) {
 		}},
 	}
 
-	err = updateNodeVideoEdit(db, &clock, vidUp, users[0])
+	user, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	err = updateNodeVideoEdit(db, &clock, vidUp, user)
 	require.Nil(t, err)
 
 	vidDown := openapi.AddTopic200ResponseNodeData{
@@ -606,7 +619,10 @@ func TestUpdateNodeVideoVoteUpDownImpl(t *testing.T) {
 		}},
 	}
 
-	err = updateNodeVideoEdit(db, &clock, vidUp, users[0])
+	user, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	err = updateNodeVideoEdit(db, &clock, vidUp, user)
 	require.Nil(t, err)
 
 	vidDown := openapi.AddTopic200ResponseNodeData{
@@ -665,7 +681,10 @@ func TestUpdateNodeVideoVoteDownUpImpl(t *testing.T) {
 		}},
 	}
 
-	err = updateNodeVideoEdit(db, &clock, vidUp, users[0])
+	user, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	err = updateNodeVideoEdit(db, &clock, vidUp, user)
 	require.Nil(t, err)
 
 	vidDown := openapi.AddTopic200ResponseNodeData{
@@ -757,7 +776,10 @@ func TestUpdateNodeVideoEditImpl(t *testing.T) {
 		}},
 	}
 
-	err = updateNodeVideoEdit(db, &clock, vidAdd, users[0])
+	user, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	err = updateNodeVideoEdit(db, &clock, vidAdd, user)
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -765,11 +787,11 @@ func TestUpdateNodeVideoEditImpl(t *testing.T) {
 
 	require.Equal(t, upNode.YoutubeLinks[0].Link, vidAdd.YoutubeLinks[0].Link)
 
-	err = updateNodeVideoEdit(db, &clock, vidAdd, users[0])
-	require.NotNil(t, err)
-
 	upUser, err := getUser(db, users[0])
 	require.Nil(t, err)
+
+	err = updateNodeVideoEdit(db, &clock, vidAdd, upUser)
+	require.NotNil(t, err)
 
 	require.Equal(t, upUser.Linked[0].Link, vidAdd.YoutubeLinks[0].Link)
 
@@ -782,7 +804,7 @@ func TestUpdateNodeVideoEditImpl(t *testing.T) {
 		}},
 	}
 
-	err = updateNodeVideoEdit(db, &clock, vidSub, users[0])
+	err = updateNodeVideoEdit(db, &clock, vidSub, upUser)
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -795,7 +817,7 @@ func TestUpdateNodeVideoEditImpl(t *testing.T) {
 
 	require.Zero(t, len(upUser.VideoDown))
 
-	err = updateNodeVideoEdit(db, &clock, vidSub, users[0])
+	err = updateNodeVideoEdit(db, &clock, vidSub, upUser)
 	require.NotNil(t, err)
 
 }

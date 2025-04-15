@@ -66,7 +66,7 @@ func seedDbHandler(db *bolt.DB, clock *DemoClock) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		encoder := json.NewEncoder(w)
 
-		_, _, _, err := CreateTestData(db, clock, 0, 2, 0)
+		_, _, _, err := CreateTestData(db, clock, 1, 2, 0)
 		if err != nil {
 			lgr.Printf("%s", err.Error())
 			err = encoder.Encode(err.Error())
@@ -128,6 +128,10 @@ func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int)
 		return users, topics, nodesAndEdges, fmt.Errorf("you can't create nodes without a user")
 	}
 
+	if numUsers == 0 && numTopics > 0 {
+		return users, topics, nodesAndEdges, fmt.Errorf("you can't create topics without a user")
+	}
+
 	if numTopics == 0 && numNodes > 0 {
 		return users, topics, nodesAndEdges, fmt.Errorf("you can't create nodes without a topic")
 	}
@@ -157,7 +161,12 @@ func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int)
 				Title: RandomString(6),
 			}
 
-			response, err := postTopicTx(tx, clock, topic)
+			user := openapi.User{
+				Id:       users[0],
+				Username: users[0],
+			}
+
+			response, err := postTopicTx(tx, clock, topic, user)
 			if err != nil {
 				return err
 			}
@@ -168,9 +177,12 @@ func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int)
 
 			for j := 0; j < numNodes; j++ {
 				node := openapi.AddTopic200ResponseNodeData{
-					Id:        response.NodeData.Id,
-					Topic:     topic.Title,
-					CreatedBy: users[0],
+					Id:    response.NodeData.Id,
+					Topic: topic.Title,
+					CreatedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+						Id:       users[0],
+						Username: "tester",
+					},
 				}
 				nodeIds, err := postNodeTx(tx, clock, node)
 				if err != nil {

@@ -23,6 +23,14 @@ const (
 	KeyReputationContributor = 50
 )
 
+// Define a custom type for context keys to avoid collisions
+type contextKey string
+
+// Define context keys
+const (
+	userInfoKey contextKey = "user"
+)
+
 func RandomString(n int) string {
 	letters := "0123456789"
 	//

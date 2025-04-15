@@ -58,15 +58,17 @@ func TestPostNode(t *testing.T) {
 
 	UpdateUserRoleAndReputation(db, users[0], true, 0)
 	SetTestLoginUser(users[0])
-	require.Nil(t, err)
 
 	client := &http.Client{}
 
 	newNode := openapi.NodeData{
-		Id:        nodesAndEdges[0].TargetId,
-		Topic:     topics[0],
-		Title:     "turbo",
-		CreatedBy: users[0],
+		Id:    nodesAndEdges[0].TargetId,
+		Topic: topics[0],
+		Title: "turbo",
+		CreatedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+			Id:       users[0],
+			Username: users[0],
+		},
 	}
 
 	marshal, err := json.Marshal(newNode)
@@ -96,8 +98,11 @@ func TestDeleteNode(t *testing.T) {
 	db, tearDown := FullStartTestServer("DeleteNode", 8088, "")
 	defer tearDown()
 
-	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
+
+	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	SetTestLoginUser(users[0])
 
 	client := &http.Client{}
 

@@ -17,6 +17,7 @@ go/model_add_node_200_response.go
 go/model_add_topic_200_response.go
 go/model_add_topic_200_response_node_data.go
 go/model_add_topic_200_response_node_data_youtube_links_inner.go
+go/model_add_topic_200_response_node_data_youtube_links_inner_added_by.go
 go/model_auth_user_200_response.go
 go/model_auth_user_404_response.go
 go/model_edge.go
@@ -42,4 +43,5 @@ go/model_topic.go
 go/model_update_user_request.go
 go/model_update_user_request_battle_tested_up_inner.go
 go/model_user.go
+go/model_user_identifier.go
 go/routers.go

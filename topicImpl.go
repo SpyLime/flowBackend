@@ -18,6 +18,7 @@ func getTopics(db *bolt.DB) (response []openapi.GetTopics200ResponseInner, err e
 }
 
 func getTopicsRx(tx *bolt.Tx) (response []openapi.GetTopics200ResponseInner, err error) {
+	response = []openapi.GetTopics200ResponseInner{}
 	topicsBucket := tx.Bucket([]byte(KeyTopics))
 	if topicsBucket == nil {
 		return response, fmt.Errorf("cannot find topics bucket")
@@ -33,16 +34,16 @@ func getTopicsRx(tx *bolt.Tx) (response []openapi.GetTopics200ResponseInner, err
 	return
 }
 
-func postTopic(db *bolt.DB, clock Clock, topic openapi.GetTopics200ResponseInner) (response openapi.ResponsePostTopic, err error) {
+func postTopic(db *bolt.DB, clock Clock, topic openapi.GetTopics200ResponseInner, user openapi.User) (response openapi.ResponsePostTopic, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
-		response, err = postTopicTx(tx, clock, topic)
+		response, err = postTopicTx(tx, clock, topic, user)
 		return err
 	})
 
 	return
 }
 
-func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInner) (response openapi.ResponsePostTopic, err error) {
+func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInner, user openapi.User) (response openapi.ResponsePostTopic, err error) {
 
 	topicsBucket, err := tx.CreateBucketIfNotExists([]byte(KeyTopics))
 	if err != nil {
@@ -67,8 +68,11 @@ func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInn
 	response.Topic.Title = topic.Title
 
 	newNode := openapi.NodeData{
-		Topic:     topic.Title,
-		CreatedBy: "change hard code",
+		Topic: topic.Title,
+		CreatedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+			Id:       user.Id,
+			Username: user.Username,
+		},
 	}
 
 	marshal, err := json.Marshal(newNode)

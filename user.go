@@ -55,17 +55,17 @@ func (s *UserAPIServiceImpl) LogoutUser(ctx context.Context) (openapi.ImplRespon
 
 // UpdateUser - Update user
 func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest openapi.UpdateUserRequest) (openapi.ImplResponse, error) {
-	user, ok := ctx.Value("user").(token.User)
+	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
 
-	userDetails, err := getUser(s.db, user.Name)
+	userDetails, err := getUser(s.db, user.ID)
 	if err != nil {
 		return openapi.Response(401, nil), err
 	}
 
-	if userDetails.Role != KeyAdmin && updateUserRequest.Username != user.Name {
+	if userDetails.Role != KeyAdmin && updateUserRequest.Id != user.ID {
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or trying to update others")
 	}
 
@@ -80,7 +80,7 @@ func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest o
 
 // GetUserByName - Get user by user name
 func (s *UserAPIServiceImpl) GetUserByName(ctx context.Context, userId string) (openapi.ImplResponse, error) {
-	_, ok := ctx.Value("user").(token.User)
+	_, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
@@ -96,17 +96,17 @@ func (s *UserAPIServiceImpl) GetUserByName(ctx context.Context, userId string) (
 
 // DeleteUser - Delete user
 func (s *UserAPIServiceImpl) DeleteUser(ctx context.Context, userId string) (openapi.ImplResponse, error) {
-	user, ok := ctx.Value("user").(token.User)
+	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
 
-	userDetails, err := getUser(s.db, user.Name)
+	userDetails, err := getUser(s.db, user.ID)
 	if err != nil {
 		return openapi.Response(401, nil), err
 	}
 
-	if userDetails.Role != KeyAdmin && userId != user.Name {
+	if userDetails.Role != KeyAdmin && userId != user.ID {
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or is trying to delete others")
 	}
 

@@ -94,10 +94,39 @@ func getUserRx(tx *bolt.Tx, userId string) (response openapi.User, err error) {
 	var user openapi.UpdateUserRequest
 	err = json.Unmarshal(userData, &user)
 	if err != nil {
-		return
+		return response, fmt.Errorf("unmarshal error: %w", err)
 	}
 
+	user.Id = userId
+
 	response = openapi.User(user)
+
+	// Explicitly copy fields to ensure proper type conversion
+	// response = openapi.User{
+	// 	Provider:         user.Provider,
+	// 	Id:               user.Id,
+	// 	LastLogin:        user.LastLogin,
+	// 	UpdatedAt:        user.UpdatedAt,
+	// 	CreatedAt:        user.CreatedAt,
+	// 	Username:         user.Username,
+	// 	FirstName:        user.FirstName,
+	// 	LastName:         user.LastName,
+	// 	Email:            user.Email,
+	// 	Role:             user.Role,
+	// 	Reputation:       user.Reputation,
+	// 	Description:      user.Description,
+	// 	Location:         user.Location,
+	// 	IsFlagged:        user.IsFlagged,
+	// 	BattleTestedUp:   user.BattleTestedUp,
+	// 	BattleTestedDown: user.BattleTestedDown,
+	// 	FreshUp:          user.FreshUp,
+	// 	FreshDown:        user.FreshDown,
+	// 	Edited:           user.Edited,
+	// 	Created:          user.Created,
+	// 	Linked:           user.Linked, // Both types use the same type, so direct assignment should work
+	// 	VideoUp:          user.VideoUp,
+	// 	VideoDown:        user.VideoDown,
+	// }
 
 	return
 }

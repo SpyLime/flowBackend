@@ -31,14 +31,6 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// Define a custom type for context keys to avoid collisions
-type contextKey string
-
-// Define context keys
-const (
-	userInfoKey contextKey = "user"
-)
-
 var build_date string
 
 // Provider configuration types moved to provider_config.go

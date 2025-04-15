@@ -24,17 +24,23 @@ type AddTopic200ResponseNodeDataYoutubeLinksInner struct {
 
 	Votes int32 `json:"votes,omitempty"`
 
-	AddedBy string `json:"addedBy,omitempty"`
+	AddedBy AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy `json:"addedBy,omitempty"`
 
 	DateAdded time.Time `json:"dateAdded,omitempty"`
 }
 
 // AssertAddTopic200ResponseNodeDataYoutubeLinksInnerRequired checks if the required fields are not zero-ed
 func AssertAddTopic200ResponseNodeDataYoutubeLinksInnerRequired(obj AddTopic200ResponseNodeDataYoutubeLinksInner) error {
+	if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByRequired(obj.AddedBy); err != nil {
+		return err
+	}
 	return nil
 }
 
 // AssertAddTopic200ResponseNodeDataYoutubeLinksInnerConstraints checks if the values respects the defined constraints
 func AssertAddTopic200ResponseNodeDataYoutubeLinksInnerConstraints(obj AddTopic200ResponseNodeDataYoutubeLinksInner) error {
+	if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByConstraints(obj.AddedBy); err != nil {
+		return err
+	}
 	return nil
 }
