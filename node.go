@@ -32,12 +32,12 @@ func (s *NodeAPIServiceImpl) UpdateNodeBattleVote(ctx context.Context, updateNod
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
 
-	err := updateNodeBattleVote(s.db, updateNodeRequest, user.ID)
+	vote, err := updateNodeBattleVote(s.db, updateNodeRequest, user.ID)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
 
-	return openapi.Response(200, nil), nil
+	return openapi.Response(200, vote), nil
 }
 
 // UpdateNode - Update an node
@@ -93,12 +93,12 @@ func (s *NodeAPIServiceImpl) UpdateNodeVideoVote(ctx context.Context, updateNode
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
 
-	err := updateNodeVideoVote(s.db, updateNodeRequest, user.ID)
+	vote, err := updateNodeVideoVote(s.db, updateNodeRequest, user.ID)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
 
-	return openapi.Response(200, nil), nil
+	return openapi.Response(200, vote), nil
 }
 
 // UpdateNode - Update an node
@@ -123,12 +123,12 @@ func (s *NodeAPIServiceImpl) UpdateNodeFreshVote(ctx context.Context, updateNode
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
 
-	err := updateNodeFreshVote(s.db, updateNodeRequest, user.ID)
+	vote, err := updateNodeFreshVote(s.db, updateNodeRequest, user.ID)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
 
-	return openapi.Response(200, nil), nil
+	return openapi.Response(200, vote), nil
 }
 
 // GetNode - get wiki node

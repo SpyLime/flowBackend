@@ -131,7 +131,7 @@ func TestUpdateBattleVoteUpImpl(t *testing.T) {
 		BattleTested: 1,
 	}
 
-	err = updateNodeBattleVote(db, battleUp, users[0]) // should cause +1
+	_, err = updateNodeBattleVote(db, battleUp, users[0]) // should cause +1
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -144,7 +144,7 @@ func TestUpdateBattleVoteUpImpl(t *testing.T) {
 
 	require.Equal(t, len(upUser.BattleTestedUp), 1)
 
-	err = updateNodeBattleVote(db, battleUp, users[0]) // should cause -1
+	_, err = updateNodeBattleVote(db, battleUp, users[0]) // should cause -1
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -174,7 +174,7 @@ func TestUpdateBattleVoteDownImpl(t *testing.T) {
 		BattleTested: -1,
 	}
 
-	err = updateNodeBattleVote(db, battleDown, users[0])
+	_, err = updateNodeBattleVote(db, battleDown, users[0])
 	require.Nil(t, err)
 
 	downNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -187,7 +187,7 @@ func TestUpdateBattleVoteDownImpl(t *testing.T) {
 
 	require.Equal(t, len(DownUser.BattleTestedDown), 1)
 
-	err = updateNodeBattleVote(db, battleDown, users[0])
+	_, err = updateNodeBattleVote(db, battleDown, users[0])
 	require.Nil(t, err)
 
 	downNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -217,7 +217,7 @@ func TestUpdateBattleVoteUpDownImpl(t *testing.T) {
 		BattleTested: 1,
 	}
 
-	err = updateNodeBattleVote(db, battleUp, users[0])
+	_, err = updateNodeBattleVote(db, battleUp, users[0])
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -236,7 +236,7 @@ func TestUpdateBattleVoteUpDownImpl(t *testing.T) {
 		BattleTested: -1,
 	}
 
-	err = updateNodeBattleVote(db, battleDown, users[0])
+	_, err = updateNodeBattleVote(db, battleDown, users[0])
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -267,7 +267,7 @@ func TestUpdateBattleVoteDownUpImpl(t *testing.T) {
 		BattleTested: -1,
 	}
 
-	err = updateNodeBattleVote(db, battleUp, users[0])
+	_, err = updateNodeBattleVote(db, battleUp, users[0])
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -286,7 +286,7 @@ func TestUpdateBattleVoteDownUpImpl(t *testing.T) {
 		BattleTested: 1,
 	}
 
-	err = updateNodeBattleVote(db, battleDown, users[0])
+	_, err = updateNodeBattleVote(db, battleDown, users[0])
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -317,7 +317,7 @@ func TestUpdateFreshVoteUpImpl(t *testing.T) {
 		Fresh: 1,
 	}
 
-	err = updateNodeFreshVote(db, freshUp, users[0]) // should cause +1
+	_, err = updateNodeFreshVote(db, freshUp, users[0]) // should cause +1
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -330,7 +330,7 @@ func TestUpdateFreshVoteUpImpl(t *testing.T) {
 
 	require.Equal(t, len(upUser.FreshUp), 1)
 
-	err = updateNodeFreshVote(db, freshUp, users[0]) // should cause -1
+	_, err = updateNodeFreshVote(db, freshUp, users[0]) // should cause -1
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -360,7 +360,7 @@ func TestUpdateFreshVoteDownImpl(t *testing.T) {
 		Fresh: -1,
 	}
 
-	err = updateNodeFreshVote(db, freshDown, users[0])
+	_, err = updateNodeFreshVote(db, freshDown, users[0])
 	require.Nil(t, err)
 
 	downNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -373,7 +373,7 @@ func TestUpdateFreshVoteDownImpl(t *testing.T) {
 
 	require.Equal(t, len(DownUser.FreshDown), 1)
 
-	err = updateNodeFreshVote(db, freshDown, users[0])
+	_, err = updateNodeFreshVote(db, freshDown, users[0])
 	require.Nil(t, err)
 
 	downNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -403,7 +403,7 @@ func TestUpdateFreshVoteUpDownImpl(t *testing.T) {
 		Fresh: 1,
 	}
 
-	err = updateNodeFreshVote(db, freshUp, users[0])
+	_, err = updateNodeFreshVote(db, freshUp, users[0])
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -422,7 +422,7 @@ func TestUpdateFreshVoteUpDownImpl(t *testing.T) {
 		Fresh: -1,
 	}
 
-	err = updateNodeFreshVote(db, freshDown, users[0])
+	_, err = updateNodeFreshVote(db, freshDown, users[0])
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -453,7 +453,7 @@ func TestUpdateFreshVoteDownUpImpl(t *testing.T) {
 		Fresh: -1,
 	}
 
-	err = updateNodeFreshVote(db, freshUp, users[0])
+	_, err = updateNodeFreshVote(db, freshUp, users[0])
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -472,7 +472,7 @@ func TestUpdateFreshVoteDownUpImpl(t *testing.T) {
 		Fresh: 1,
 	}
 
-	err = updateNodeFreshVote(db, freshDown, users[0])
+	_, err = updateNodeFreshVote(db, freshDown, users[0])
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -512,7 +512,7 @@ func TestUpdateNodeVideoVoteUpImpl(t *testing.T) {
 	err = updateNodeVideoEdit(db, &clock, vidUp, user)
 	require.Nil(t, err)
 
-	err = updateNodeVideoVote(db, vidUp, users[0])
+	_, err = updateNodeVideoVote(db, vidUp, users[0])
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -525,7 +525,7 @@ func TestUpdateNodeVideoVoteUpImpl(t *testing.T) {
 
 	require.Equal(t, len(upUser.VideoUp), 1)
 
-	err = updateNodeVideoVote(db, vidUp, users[0]) // should cause -1
+	_, err = updateNodeVideoVote(db, vidUp, users[0]) // should cause -1
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -573,7 +573,7 @@ func TestUpdateNodeVideoVoteDownImpl(t *testing.T) {
 		}},
 	}
 
-	err = updateNodeVideoVote(db, vidDown, users[0])
+	_, err = updateNodeVideoVote(db, vidDown, users[0])
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -586,7 +586,7 @@ func TestUpdateNodeVideoVoteDownImpl(t *testing.T) {
 
 	require.Equal(t, len(upUser.VideoDown), 1)
 
-	err = updateNodeVideoVote(db, vidDown, users[0]) // should cause -1
+	_, err = updateNodeVideoVote(db, vidDown, users[0]) // should cause -1
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -634,7 +634,7 @@ func TestUpdateNodeVideoVoteUpDownImpl(t *testing.T) {
 		}},
 	}
 
-	err = updateNodeVideoVote(db, vidUp, users[0])
+	_, err = updateNodeVideoVote(db, vidUp, users[0])
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -647,7 +647,7 @@ func TestUpdateNodeVideoVoteUpDownImpl(t *testing.T) {
 
 	require.Equal(t, len(upUser.VideoUp), 1)
 
-	err = updateNodeVideoVote(db, vidDown, users[0]) // should cause -1
+	_, err = updateNodeVideoVote(db, vidDown, users[0]) // should cause -1
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -696,7 +696,7 @@ func TestUpdateNodeVideoVoteDownUpImpl(t *testing.T) {
 		}},
 	}
 
-	err = updateNodeVideoVote(db, vidDown, users[0])
+	_, err = updateNodeVideoVote(db, vidDown, users[0])
 	require.Nil(t, err)
 
 	upNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -709,7 +709,7 @@ func TestUpdateNodeVideoVoteDownUpImpl(t *testing.T) {
 
 	require.Equal(t, len(upUser.VideoDown), 1)
 
-	err = updateNodeVideoVote(db, vidUp, users[0]) // should cause -1
+	_, err = updateNodeVideoVote(db, vidUp, users[0]) // should cause -1
 	require.Nil(t, err)
 
 	upNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])

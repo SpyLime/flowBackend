@@ -101,8 +101,8 @@ func (s *NodeAPIService) UpdateNodeVideoVote(ctx context.Context, addTopic200Res
 	// TODO - update UpdateNodeVideoVote with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	// return Response(200, nil),nil
+	// TODO: Uncomment the next line to return response Response(200, int32{}) or use other options such as http.Ok ...
+	// return Response(200, int32{}), nil
 
 	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
 	// return Response(400, nil),nil
@@ -141,8 +141,8 @@ func (s *NodeAPIService) UpdateNodeBattleVote(ctx context.Context, addTopic200Re
 	// TODO - update UpdateNodeBattleVote with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	// return Response(200, nil),nil
+	// TODO: Uncomment the next line to return response Response(200, int32{}) or use other options such as http.Ok ...
+	// return Response(200, int32{}), nil
 
 	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
 	// return Response(400, nil),nil
@@ -161,8 +161,8 @@ func (s *NodeAPIService) UpdateNodeFreshVote(ctx context.Context, addTopic200Res
 	// TODO - update UpdateNodeFreshVote with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	// return Response(200, nil),nil
+	// TODO: Uncomment the next line to return response Response(200, int32{}) or use other options such as http.Ok ...
+	// return Response(200, int32{}), nil
 
 	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
 	// return Response(400, nil),nil

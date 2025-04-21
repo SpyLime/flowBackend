@@ -306,6 +306,12 @@ paths:
         required: true
       responses:
         "200":
+          content:
+            application/json:
+              schema:
+                description: The updated video vote count (or some other relevant
+                  integer value).
+                type: integer
           description: Successful operation
         "400":
           description: Invalid ID supplied
@@ -352,6 +358,12 @@ paths:
         required: true
       responses:
         "200":
+          content:
+            application/json:
+              schema:
+                description: The updated battle vote count (or some other relevant
+                  integer value).
+                type: integer
           description: Successful operation
         "400":
           description: Invalid ID supplied
@@ -375,6 +387,12 @@ paths:
         required: true
       responses:
         "200":
+          content:
+            application/json:
+              schema:
+                description: The updated fresh vote count (or some other relevant
+                  integer value).
+                type: integer
           description: Successful operation
         "400":
           description: Invalid ID supplied

@@ -263,16 +263,16 @@ func nodeDataFinderTx(tx *bolt.Tx, TopicId, NodeId string) (nodesBucket *bolt.Bu
 	return
 }
 
-func updateNodeBattleVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, userId string) (err error) {
+func updateNodeBattleVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
-		err = updateNodeBattleVoteTx(tx, request, userId)
+		vote, err = updateNodeBattleVoteTx(tx, request, userId)
 		return err
 	})
 
 	return
 }
 
-func updateNodeBattleVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (err error) {
+func updateNodeBattleVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
 
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
@@ -289,7 +289,7 @@ func updateNodeBattleVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNode
 	if request.BattleTested != 0 {
 		vote, err := userBattleVoteTx(tx, userId, request)
 		if err != nil {
-			return err
+			return vote, err
 		}
 
 		node.BattleTested += vote //vote will either be a -2,-1,1,2
@@ -301,6 +301,8 @@ func updateNodeBattleVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNode
 	}
 
 	err = nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
+
+	vote = node.BattleTested
 
 	return
 }
@@ -521,16 +523,16 @@ func userVideoEditTx(tx *bolt.Tx, clock Clock, userId string, request openapi.Ad
 // vote on a video
 //
 // if votes are greater than zero then trying to add a vote
-func updateNodeVideoVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, userId string) (err error) {
+func updateNodeVideoVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
-		err = updateNodeVideoVoteTx(tx, request, userId)
+		vote, err = updateNodeVideoVoteTx(tx, request, userId)
 		return err
 	})
 
 	return
 }
 
-func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (err error) {
+func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
 
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
@@ -545,9 +547,9 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 	}
 
 	if request.YoutubeLinks != nil && request.YoutubeLinks[0].Votes != 0 {
-		vote, err := userVideoVoteTx(tx, userId, request)
+		vote, err = userVideoVoteTx(tx, userId, request)
 		if err != nil {
-			return err
+			return vote, err
 		}
 
 		found := false
@@ -555,12 +557,13 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 			if item.Link == request.YoutubeLinks[0].Link {
 				node.YoutubeLinks[i].Votes += vote
 				found = true
+				vote = node.YoutubeLinks[i].Votes
 				break
 			}
 		}
 
 		if !found {
-			return fmt.Errorf("could not find the video on node")
+			return vote, fmt.Errorf("could not find the video on node")
 		}
 
 	}
@@ -687,9 +690,9 @@ func updateNodeFlagTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData) 
 	return
 }
 
-func updateNodeFreshVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, userId string) (err error) {
+func updateNodeFreshVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
-		err = updateNodeFreshVoteTx(tx, request, userId)
+		vote, err = updateNodeFreshVoteTx(tx, request, userId)
 		return err
 	})
 
@@ -697,7 +700,7 @@ func updateNodeFreshVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeDat
 }
 
 // updates the title and description
-func updateNodeFreshVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (err error) {
+func updateNodeFreshVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
 
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
@@ -712,9 +715,9 @@ func updateNodeFreshVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 	}
 
 	if request.Fresh != 0 {
-		vote, err := userFreshVoteTx(tx, userId, request)
+		vote, err = userFreshVoteTx(tx, userId, request)
 		if err != nil {
-			return err
+			return vote, err
 		}
 
 		node.Fresh += vote //vote will either be a +1 or -1
@@ -726,6 +729,7 @@ func updateNodeFreshVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 	}
 
 	err = nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
+	vote = node.Fresh
 
 	return
 }
