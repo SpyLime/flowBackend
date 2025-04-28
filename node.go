@@ -58,12 +58,12 @@ func (s *NodeAPIServiceImpl) UpdateNodeTitle(ctx context.Context, updateNodeRequ
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Editor)")
 	}
 
-	err = updateNodeTitle(s.db, updateNodeRequest, userDetails)
+	editorAdded, err := updateNodeTitle(s.db, updateNodeRequest, userDetails)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
 
-	return openapi.Response(200, nil), nil
+	return openapi.Response(200, editorAdded), nil
 }
 
 // UpdateNode - Update an node

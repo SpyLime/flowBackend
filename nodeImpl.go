@@ -167,9 +167,9 @@ func deleteNodeTx(tx *bolt.Tx, nodeId, topicId string) (err error) {
 
 }
 
-func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, editor openapi.User) (err error) {
+func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, editor openapi.User) (editorAdded bool, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
-		err = updateNodeTitleTx(tx, request, editor)
+		editorAdded, err = updateNodeTitleTx(tx, request, editor)
 		return err
 	})
 
@@ -177,7 +177,7 @@ func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, e
 }
 
 // updates the title and description
-func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, editor openapi.User) (err error) {
+func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, editor openapi.User) (editorAdded bool, err error) {
 
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
@@ -227,6 +227,7 @@ func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData,
 			Id:       editor.Id,
 			Username: editor.Username,
 		})
+		editorAdded = true
 	}
 
 	marshal, err := json.Marshal(node)

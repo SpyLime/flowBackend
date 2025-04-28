@@ -105,7 +105,7 @@ func TestUpdateNodeImpl(t *testing.T) {
 	user, err := getUser(db, users[0])
 	require.Nil(t, err)
 
-	err = updateNodeTitle(db, modNode, user)
+	_, err = updateNodeTitle(db, modNode, user)
 	require.Nil(t, err)
 
 	updatedNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
