@@ -96,6 +96,10 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response openapi.GetMapById200Re
 }
 
 func postEdge(db *bolt.DB, topic string, edge openapi.GetMapById200ResponseEdgesInner) (newId string, err error) {
+	if edge.Source == edge.Target {
+		return newId, fmt.Errorf("your trying to connect a node to itself")
+	}
+
 	err = db.Update(func(tx *bolt.Tx) error {
 		topicsBucket := tx.Bucket([]byte(KeyTopics))
 		if topicsBucket == nil {

@@ -98,6 +98,11 @@ func postNodeTx(tx *bolt.Tx, clock Clock, node openapi.AddTopic200ResponseNodeDa
 		return
 	}
 
+	err = userNodeCreatedTx(tx, node.CreatedBy.Id, newNode)
+	if err != nil {
+		return
+	}
+
 	response.SourceId = node.Id
 	response.TargetId = id
 
@@ -114,6 +119,40 @@ func postNodeTx(tx *bolt.Tx, clock Clock, node openapi.AddTopic200ResponseNodeDa
 	return
 }
 
+// Helper function to save the created node to the user
+func userNodeCreatedTx(tx *bolt.Tx, userId string, node openapi.NodeData) error {
+	usersBucket, user, err := getUserAndBucketRx(tx, userId)
+	if err != nil {
+		return err
+	}
+
+	// Check for duplicates before appending
+	isDuplicate := false
+	for _, created := range user.Created {
+		if created.NodeId == node.Id {
+			isDuplicate = true
+			break
+		}
+	}
+
+	if !isDuplicate {
+		user.Created = append(user.Created, openapi.UpdateUserRequestBattleTestedUpInner{
+			Topic:  node.Topic,
+			Title:  node.Title,
+			NodeId: node.Id,
+		})
+
+		marshal, err := json.Marshal(user)
+		if err != nil {
+			return err
+		}
+
+		return usersBucket.Put([]byte(userId), marshal)
+	}
+
+	return nil
+}
+
 func deleteNode(db *bolt.DB, nodeId, topicId string) (err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		err = deleteNodeTx(tx, nodeId, topicId)
@@ -123,8 +162,211 @@ func deleteNode(db *bolt.DB, nodeId, topicId string) (err error) {
 	return
 }
 
-func deleteNodeTx(tx *bolt.Tx, nodeId, topicId string) (err error) {
+// Helper function to remove the deleted node from all users who interacted with it
+func removeNodeFromAllUsersTx(tx *bolt.Tx, nodeId string, topicId string) error {
+	// First get the node to find all users who interacted with it
+	_, nodeData, err := nodeDataFinderTx(tx, topicId, nodeId)
+	if err != nil {
+		return err
+	}
 
+	var node openapi.NodeData
+	err = json.Unmarshal(nodeData, &node)
+	if err != nil {
+		return err
+	}
+
+	// Collect all unique user IDs who interacted with this node
+	userIds := make(map[string]bool)
+
+	// Add creator
+	userIds[node.CreatedBy.Id] = true
+
+	// Add editors
+	for _, editor := range node.EditedBy {
+		userIds[editor.Id] = true
+	}
+
+	// We need to scan all users to find those who voted on this node
+	usersBucket := tx.Bucket([]byte(KeyUsers))
+	if usersBucket == nil {
+		return fmt.Errorf("can't find users bucket")
+	}
+
+	c := usersBucket.Cursor()
+	for k, v := c.First(); k != nil && v != nil; k, v = c.Next() {
+		var user openapi.UpdateUserRequest
+		if err := json.Unmarshal(v, &user); err != nil {
+			continue // Skip this user if we can't unmarshal
+		}
+
+		// Check if user interacted with this node in any way
+		nodeIdStr := nodeId
+
+		// Check battle votes
+		for _, item := range user.BattleTestedUp {
+			if item.NodeId.Format(time.RFC3339Nano) == nodeIdStr {
+				userIds[string(k)] = true
+				break
+			}
+		}
+
+		for _, item := range user.BattleTestedDown {
+			if item.NodeId.Format(time.RFC3339Nano) == nodeIdStr {
+				userIds[string(k)] = true
+				break
+			}
+		}
+
+		// Check fresh votes
+		for _, item := range user.FreshUp {
+			if item.NodeId.Format(time.RFC3339Nano) == nodeIdStr {
+				userIds[string(k)] = true
+				break
+			}
+		}
+
+		for _, item := range user.FreshDown {
+			if item.NodeId.Format(time.RFC3339Nano) == nodeIdStr {
+				userIds[string(k)] = true
+				break
+			}
+		}
+
+		// Check video interactions
+		// We need to check if any of the node's videos are in the user's video votes
+		for _, video := range node.YoutubeLinks {
+			for _, userVideo := range user.VideoUp {
+				if userVideo == video.Link {
+					userIds[string(k)] = true
+				}
+			}
+
+			for _, userVideo := range user.VideoDown {
+				if userVideo == video.Link {
+					userIds[string(k)] = true
+				}
+			}
+
+			// Check linked videos
+			for _, linked := range user.Linked {
+				if linked.Link == video.Link {
+					userIds[string(k)] = true
+				}
+			}
+		}
+	}
+
+	// Process each user
+	for userId := range userIds {
+		err = removeNodeFromUserTx(tx, userId, nodeId, topicId, node.Topic, node.YoutubeLinks)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Helper function to remove a node from a specific user's data
+func removeNodeFromUserTx(tx *bolt.Tx, userId string, nodeId string, topicId string, topic string, videos []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner) error {
+	usersBucket, user, err := getUserAndBucketRx(tx, userId)
+	if err != nil {
+		return err
+	}
+
+	// Remove the node from user's created list
+	for i, created := range user.Created {
+		if created.NodeId.Format(time.RFC3339Nano) == nodeId {
+			user.Created = append(user.Created[:i], user.Created[i+1:]...)
+			break
+		}
+	}
+
+	// Remove from edited list
+	for i, edited := range user.Edited {
+		if edited.NodeId.Format(time.RFC3339Nano) == nodeId {
+			user.Edited = append(user.Edited[:i], user.Edited[i+1:]...)
+			break
+		}
+	}
+
+	// Remove from battle tested votes
+	for i, item := range user.BattleTestedUp {
+		if item.NodeId.Format(time.RFC3339Nano) == nodeId {
+			user.BattleTestedUp = append(user.BattleTestedUp[:i], user.BattleTestedUp[i+1:]...)
+			break
+		}
+	}
+
+	for i, item := range user.BattleTestedDown {
+		if item.NodeId.Format(time.RFC3339Nano) == nodeId {
+			user.BattleTestedDown = append(user.BattleTestedDown[:i], user.BattleTestedDown[i+1:]...)
+			break
+		}
+	}
+
+	// Remove from fresh votes
+	for i, item := range user.FreshUp {
+		if item.NodeId.Format(time.RFC3339Nano) == nodeId {
+			user.FreshUp = append(user.FreshUp[:i], user.FreshUp[i+1:]...)
+			break
+		}
+	}
+
+	for i, item := range user.FreshDown {
+		if item.NodeId.Format(time.RFC3339Nano) == nodeId {
+			user.FreshDown = append(user.FreshDown[:i], user.FreshDown[i+1:]...)
+			break
+		}
+	}
+
+	// Remove video interactions
+	for _, video := range videos {
+		// Remove from video up votes
+		for i, link := range user.VideoUp {
+			if link == video.Link {
+				user.VideoUp = append(user.VideoUp[:i], user.VideoUp[i+1:]...)
+				break
+			}
+		}
+
+		// Remove from video down votes
+		for i, link := range user.VideoDown {
+			if link == video.Link {
+				user.VideoDown = append(user.VideoDown[:i], user.VideoDown[i+1:]...)
+				break
+			}
+		}
+
+		// Remove from linked videos
+		for i, linked := range user.Linked {
+			if linked.Link == video.Link {
+				user.Linked = append(user.Linked[:i], user.Linked[i+1:]...)
+				break
+			}
+		}
+	}
+
+	marshal, err := json.Marshal(user)
+	if err != nil {
+		return err
+	}
+
+	return usersBucket.Put([]byte(userId), marshal)
+}
+
+// Helper function to check if a string is in a slice
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
+func deleteNodeTx(tx *bolt.Tx, nodeId, topicId string) (err error) {
 	topicsBucket := tx.Bucket([]byte(KeyTopics))
 	if topicsBucket == nil {
 		return fmt.Errorf("can't find topics bucket")
@@ -138,6 +380,12 @@ func deleteNodeTx(tx *bolt.Tx, nodeId, topicId string) (err error) {
 	nodesBucket := topicBucket.Bucket([]byte(KeyNodes))
 	if nodesBucket == nil {
 		return fmt.Errorf("can't find nodes bucket")
+	}
+
+	// Remove the node from all users who interacted with it
+	err = removeNodeFromAllUsersTx(tx, nodeId, topicId)
+	if err != nil {
+		return err
 	}
 
 	//this might not be good enough
@@ -164,7 +412,6 @@ func deleteNodeTx(tx *bolt.Tx, nodeId, topicId string) (err error) {
 	}
 
 	return
-
 }
 
 func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, editor openapi.User) (editorAdded bool, err error) {
@@ -178,7 +425,6 @@ func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, e
 
 // updates the title and description
 func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, editor openapi.User) (editorAdded bool, err error) {
-
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
 		return
@@ -228,6 +474,12 @@ func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData,
 			Username: editor.Username,
 		})
 		editorAdded = true
+
+		// Update the user's record to indicate they edited this node
+		err = userNodeEditedTx(tx, editor.Id, node)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	marshal, err := json.Marshal(node)
@@ -238,6 +490,40 @@ func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData,
 	err = nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
 
 	return
+}
+
+// Helper function to save the edited node to the user's record
+func userNodeEditedTx(tx *bolt.Tx, userId string, node openapi.NodeData) error {
+	usersBucket, user, err := getUserAndBucketRx(tx, userId)
+	if err != nil {
+		return err
+	}
+
+	// Check for duplicates before appending to edited list
+	isDuplicate := false
+	for _, edited := range user.Edited {
+		if edited.NodeId.Format(time.RFC3339Nano) == node.Id.Format(time.RFC3339Nano) {
+			isDuplicate = true
+			break
+		}
+	}
+
+	if !isDuplicate {
+		user.Edited = append(user.Edited, openapi.UpdateUserRequestBattleTestedUpInner{
+			Topic:  node.Topic,
+			Title:  node.Title,
+			NodeId: node.Id,
+		})
+
+		marshal, err := json.Marshal(user)
+		if err != nil {
+			return err
+		}
+
+		return usersBucket.Put([]byte(userId), marshal)
+	}
+
+	return nil
 }
 
 func nodeDataFinderTx(tx *bolt.Tx, TopicId, NodeId string) (nodesBucket *bolt.Bucket, nodeData []byte, err error) {

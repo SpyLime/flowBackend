@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"time"
 
 	openapi "github.com/SpyLime/flowBackend/go"
 	"github.com/go-pkgz/auth/token"
@@ -52,9 +53,19 @@ func (s *NodeAPIServiceImpl) UpdateNodeTitle(ctx context.Context, updateNodeRequ
 		return openapi.Response(401, nil), err
 	}
 
-	//the creator should be able to update the node within first 15 minues. that is not how it currently works
+	// Get the node to check creation time and creator
+	node, err := getNode(s.db, updateNodeRequest.Id.Format(time.RFC3339Nano), updateNodeRequest.Topic)
+	if err != nil {
+		return openapi.Response(404, nil), err
+	}
 
-	if userDetails.Role != KeyAdmin && userDetails.Reputation < KeyReputationEditor {
+	// Check if user is the creator and within 15 minutes of creation
+	isCreator := node.CreatedBy.Id == userDetails.Id
+	creationTime := updateNodeRequest.Id
+	withinEditWindow := time.Since(creationTime) <= 15*time.Minute
+
+	// Allow edit if user is creator and within edit window, or has sufficient reputation
+	if !(isCreator && withinEditWindow) && userDetails.Role != KeyAdmin && userDetails.Reputation < KeyReputationEditor {
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Editor)")
 	}
 
@@ -182,12 +193,25 @@ func (s *NodeAPIServiceImpl) DeleteNode(ctx context.Context, nodeId string, tid 
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
 	}
+
 	userDetails, err := getUser(s.db, user.ID)
 	if err != nil {
 		return openapi.Response(401, nil), err
 	}
 
-	if userDetails.Role != KeyAdmin && userDetails.Reputation < KeyReputationDeleter {
+	// Get the node to check creation time and creator
+	node, err := getNode(s.db, nodeId, tid)
+	if err != nil {
+		return openapi.Response(404, nil), err
+	}
+
+	// Check if user is the creator and within 15 minutes of creation
+	isCreator := node.CreatedBy.Id == userDetails.Id
+	creationTime := node.Id
+	withinEditWindow := time.Since(creationTime) <= 15*time.Minute
+
+	// Allow edit if user is creator and within edit window, or has sufficient reputation
+	if !(isCreator && withinEditWindow) && userDetails.Role != KeyAdmin && userDetails.Reputation < KeyReputationDeleter {
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Deleter)")
 	}
 
