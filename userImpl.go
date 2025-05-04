@@ -9,7 +9,11 @@ import (
 )
 
 func updateUser(db *bolt.DB, request openapi.UpdateUserRequest) (err error) {
+	// Add logging to help debug
+	fmt.Printf("Updating user with ID: %s\n", request.Id)
+
 	err = db.Update(func(tx *bolt.Tx) error {
+		// Use the Id field instead of Username for consistency
 		err = updateUserTx(tx, request)
 		return err
 	})
@@ -18,7 +22,8 @@ func updateUser(db *bolt.DB, request openapi.UpdateUserRequest) (err error) {
 }
 
 func updateUserTx(tx *bolt.Tx, request openapi.UpdateUserRequest) (err error) {
-	usersBucket, user, err := getUserAndBucketRx(tx, request.Username)
+	// Use the Id field for lookup
+	usersBucket, user, err := getUserAndBucketRx(tx, request.Id)
 	if err != nil {
 		return
 	}
@@ -30,7 +35,8 @@ func updateUserTx(tx *bolt.Tx, request openapi.UpdateUserRequest) (err error) {
 		return
 	}
 
-	err = usersBucket.Put([]byte(request.Username), marshal)
+	// Use the Id field for storage
+	err = usersBucket.Put([]byte(request.Id), marshal)
 
 	return
 }
@@ -43,10 +49,18 @@ func getUserAndBucketRx(tx *bolt.Tx, userId string) (usersBucket *bolt.Bucket, u
 
 	userData := usersBucket.Get([]byte(userId))
 	if userData == nil {
+		// Add logging to help debug the issue
+		fmt.Printf("User not found in database: %s\n", userId)
 		return nil, user, fmt.Errorf("can't find user")
 	}
 
 	err = json.Unmarshal(userData, &user)
+	if err != nil {
+		fmt.Printf("Error unmarshaling user data: %v\n", err)
+	}
+
+	// Set the ID field explicitly
+	user.Id = userId
 
 	return
 }
@@ -83,23 +97,57 @@ func getUser(db *bolt.DB, userId string) (response openapi.User, err error) {
 func getUserRx(tx *bolt.Tx, userId string) (response openapi.User, err error) {
 	usersBucket := tx.Bucket([]byte(KeyUsers))
 	if usersBucket == nil {
-		return response, fmt.Errorf("cannot find users bucket")
+		return response, fmt.Errorf("can't find users bucket")
 	}
 
 	userData := usersBucket.Get([]byte(userId))
 	if userData == nil {
-		return response, fmt.Errorf("cannot find user data")
+		return response, fmt.Errorf("can't find user")
 	}
 
 	var user openapi.UpdateUserRequest
 	err = json.Unmarshal(userData, &user)
 	if err != nil {
-		return response, fmt.Errorf("unmarshal error: %w", err)
+		return
 	}
 
-	user.Id = userId
+	// Ensure all nodeIds in edited nodes are properly set
+	for i := range user.Edited {
+		if user.Edited[i].NodeId.IsZero() {
+			// If nodeId is zero time, try to find the actual node
+			// This is a fallback for older data
+			_, nodeData, nodeErr := nodeDataFinderTx(tx, user.Edited[i].Topic, user.Edited[i].Title)
+			if nodeErr == nil {
+				var node openapi.NodeData
+				if jsonErr := json.Unmarshal(nodeData, &node); jsonErr == nil {
+					user.Edited[i].NodeId = node.Id
+				}
+			}
+		}
+	}
 
-	response = openapi.User(user)
+	// Convert UpdateUserRequest to User
+	response = openapi.User{
+		Id:               userId,
+		Username:         user.Username,
+		FirstName:        user.FirstName,
+		LastName:         user.LastName,
+		Email:            user.Email,
+		Description:      user.Description,
+		Location:         user.Location,
+		Created:          user.Created,
+		Edited:           user.Edited,
+		BattleTestedUp:   user.BattleTestedUp,
+		BattleTestedDown: user.BattleTestedDown,
+		FreshUp:          user.FreshUp,
+		FreshDown:        user.FreshDown,
+		VideoUp:          user.VideoUp,
+		VideoDown:        user.VideoDown,
+		Linked:           user.Linked,
+		Role:             user.Role,
+		Reputation:       user.Reputation,
+		IsFlagged:        user.IsFlagged,
+	}
 
 	return
 }

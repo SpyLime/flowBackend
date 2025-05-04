@@ -80,19 +80,23 @@ func postNodeTx(tx *bolt.Tx, clock Clock, node openapi.AddTopic200ResponseNodeDa
 		CreatedBy: node.CreatedBy,
 	}
 
+	// Generate the ID first
+	id := clock.Now()
+	newNode.Id = id // Set the ID in the node object
+
+	// Marshal the node with the ID included
 	marshal, err := json.Marshal(newNode)
 	if err != nil {
 		return
 	}
 
-	id := clock.Now()
-	newNode.Id = id
-
+	// Convert ID to bytes for the bucket key
 	idB, err := id.MarshalText()
 	if err != nil {
 		return
 	}
 
+	// Store the node in the bucket
 	err = nodesBucket.Put(idB, marshal)
 	if err != nil {
 		return
@@ -425,6 +429,7 @@ func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, e
 
 // updates the title and description
 func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, editor openapi.User) (editorAdded bool, err error) {
+	fmt.Printf(request.Id.Format(time.RFC3339Nano))
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
 		return
@@ -442,7 +447,7 @@ func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData,
 		node.Title = request.Title
 		isEdited = true
 	}
-	if request.Description != "" && request.Title != node.Description {
+	if request.Description != "" && request.Description != node.Description {
 		node.Description = request.Description
 		isEdited = true
 	}
@@ -488,17 +493,23 @@ func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData,
 	}
 
 	err = nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
-	if err != nil {
-		return
-	}
 
-	// Update the title in all user records
-	err = updateUserNodeTitleTx(tx, request.Id, request.Topic, request.Title)
-	if err != nil {
-		return false, err
+	// Update all users who have this node in their lists
+	if isEdited {
+		err = updateUserNodeTitleTx(tx, node.Id, node.Topic, node.Title)
+		if err != nil {
+			return editorAdded, err
+		}
 	}
 
 	return
+}
+
+// Wrapper function that opens a transaction
+func updateUserNodeEdited(db *bolt.DB, userId string, node openapi.AddTopic200ResponseNodeData) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		return userNodeEditedTx(tx, userId, openapi.NodeData(node))
+	})
 }
 
 // Helper function to save the edited node to the user's record
@@ -510,11 +521,11 @@ func userNodeEditedTx(tx *bolt.Tx, userId string, node openapi.NodeData) error {
 
 	// Check for duplicates before appending to edited list
 	isDuplicate := false
-	for _, edited := range user.Edited {
+	for i, edited := range user.Edited {
 		if edited.NodeId.Format(time.RFC3339Nano) == node.Id.Format(time.RFC3339Nano) {
 			isDuplicate = true
 			// Update the title in case it changed
-			edited.Title = node.Title
+			user.Edited[i].Title = node.Title
 			break
 		}
 	}
@@ -534,7 +545,13 @@ func userNodeEditedTx(tx *bolt.Tx, userId string, node openapi.NodeData) error {
 		return usersBucket.Put([]byte(userId), marshal)
 	}
 
-	return nil
+	// Even if it's a duplicate, we need to save any updates
+	marshal, err := json.Marshal(user)
+	if err != nil {
+		return err
+	}
+
+	return usersBucket.Put([]byte(userId), marshal)
 }
 
 func nodeDataFinderTx(tx *bolt.Tx, TopicId, NodeId string) (nodesBucket *bolt.Bucket, nodeData []byte, err error) {
@@ -850,47 +867,217 @@ func updateNodeVideoVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeDat
 }
 
 func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
-
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
 		return
 	}
 
 	var node openapi.NodeData
-
 	err = json.Unmarshal(nodeData, &node)
 	if err != nil {
 		return
 	}
 
-	if request.YoutubeLinks != nil && request.YoutubeLinks[0].Votes != 0 {
-		vote, err = userVideoVoteTx(tx, userId, request)
-		if err != nil {
-			return vote, err
+	// Find the video link
+	var videoIndex = -1
+	for i, video := range node.YoutubeLinks {
+		if video.Link == request.YoutubeLinks[0].Link {
+			videoIndex = i
+			break
 		}
-
-		found := false
-		for i, item := range node.YoutubeLinks {
-			if item.Link == request.YoutubeLinks[0].Link {
-				node.YoutubeLinks[i].Votes += vote
-				found = true
-				vote = node.YoutubeLinks[i].Votes
-				break
-			}
-		}
-
-		if !found {
-			return vote, fmt.Errorf("could not find the video on node")
-		}
-
 	}
 
-	marshal, err := json.Marshal(node)
+	if videoIndex == -1 {
+		return 0, fmt.Errorf("video link not found")
+	}
+
+	// Get user data
+	usersBucket, user, err := getUserAndBucketRx(tx, userId)
 	if err != nil {
 		return
 	}
 
+	nodeTitle := node.Title
+	if nodeTitle == "" {
+		nodeTitle = "Untitled"
+	}
+
+	// Calculate reputation changes
+	var reputationChange int32 = 0
+
+	// Handle upvote
+	if request.YoutubeLinks[0].Votes > 0 {
+		// Check if user already upvoted
+		for i, item := range user.VideoUp {
+			if item == request.YoutubeLinks[0].Link {
+				// Remove upvote
+				user.VideoUp = append(user.VideoUp[:i], user.VideoUp[i+1:]...)
+				node.YoutubeLinks[videoIndex].Votes--
+
+				// Update reputation of video creator (if not the voter)
+				if node.YoutubeLinks[videoIndex].AddedBy.Id != "" && node.YoutubeLinks[videoIndex].AddedBy.Id != userId {
+					reputationChange = -1
+				}
+
+				marshal, err := json.Marshal(user)
+				if err != nil {
+					return vote, err
+				}
+				err = usersBucket.Put([]byte(userId), marshal)
+				vote = node.YoutubeLinks[videoIndex].Votes
+
+				// Update creator reputation
+				if reputationChange != 0 {
+					updateCreatorReputation(tx, node.YoutubeLinks[videoIndex].AddedBy.Id, reputationChange)
+				}
+
+				marshal, err = json.Marshal(node)
+				if err != nil {
+					return vote, err
+				}
+				return vote, nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
+			}
+		}
+
+		// Check if user already downvoted
+		for i, item := range user.VideoDown {
+			if item == request.YoutubeLinks[0].Link {
+				// Remove downvote and add upvote (switch vote)
+				user.VideoDown = append(user.VideoDown[:i], user.VideoDown[i+1:]...)
+				node.YoutubeLinks[videoIndex].Votes += 2 // +1 for removing downvote, +1 for adding upvote
+
+				// Update reputation
+				if node.YoutubeLinks[videoIndex].AddedBy.Id != "" && node.YoutubeLinks[videoIndex].AddedBy.Id != userId {
+					reputationChange = 2 // +1 for removing downvote, +1 for adding upvote
+				}
+
+				user.VideoUp = append(user.VideoUp, request.YoutubeLinks[0].Link)
+
+				marshal, err := json.Marshal(user)
+				if err != nil {
+					return vote, err
+				}
+				err = usersBucket.Put([]byte(userId), marshal)
+				vote = node.YoutubeLinks[videoIndex].Votes
+
+				// Update creator reputation
+				if reputationChange != 0 {
+					updateCreatorReputation(tx, node.YoutubeLinks[videoIndex].AddedBy.Id, reputationChange)
+				}
+
+				marshal, err = json.Marshal(node)
+				if err != nil {
+					return vote, err
+				}
+				return vote, nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
+			}
+		}
+
+		// New upvote
+		user.VideoUp = append(user.VideoUp, request.YoutubeLinks[0].Link)
+		node.YoutubeLinks[videoIndex].Votes++
+
+		// Update reputation
+		if node.YoutubeLinks[videoIndex].AddedBy.Id != "" && node.YoutubeLinks[videoIndex].AddedBy.Id != userId {
+			reputationChange = 1
+		}
+	} else if request.YoutubeLinks[0].Votes < 0 {
+		// Handle downvote
+		for i, item := range user.VideoDown {
+			if item == request.YoutubeLinks[0].Link {
+				// Remove downvote
+				user.VideoDown = append(user.VideoDown[:i], user.VideoDown[i+1:]...)
+				node.YoutubeLinks[videoIndex].Votes++
+
+				// Update reputation
+				if node.YoutubeLinks[videoIndex].AddedBy.Id != "" && node.YoutubeLinks[videoIndex].AddedBy.Id != userId {
+					reputationChange = 1
+				}
+
+				marshal, err := json.Marshal(user)
+				if err != nil {
+					return vote, err
+				}
+				err = usersBucket.Put([]byte(userId), marshal)
+				vote = node.YoutubeLinks[videoIndex].Votes
+
+				// Update creator reputation
+				if reputationChange != 0 {
+					updateCreatorReputation(tx, node.YoutubeLinks[videoIndex].AddedBy.Id, reputationChange)
+				}
+
+				marshal, err = json.Marshal(node)
+				if err != nil {
+					return vote, err
+				}
+				return vote, nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
+			}
+		}
+
+		// Check if user already upvoted
+		for i, item := range user.VideoUp {
+			if item == request.YoutubeLinks[0].Link {
+				// Remove upvote and add downvote (switch vote)
+				user.VideoUp = append(user.VideoUp[:i], user.VideoUp[i+1:]...)
+				node.YoutubeLinks[videoIndex].Votes -= 2 // -1 for removing upvote, -1 for adding downvote
+
+				// Update reputation
+				if node.YoutubeLinks[videoIndex].AddedBy.Id != "" && node.YoutubeLinks[videoIndex].AddedBy.Id != userId {
+					reputationChange = -2 // -1 for removing upvote, -1 for adding downvote
+				}
+
+				user.VideoDown = append(user.VideoDown, request.YoutubeLinks[0].Link)
+
+				marshal, err := json.Marshal(user)
+				if err != nil {
+					return vote, err
+				}
+				err = usersBucket.Put([]byte(userId), marshal)
+				vote = node.YoutubeLinks[videoIndex].Votes
+
+				// Update creator reputation
+				if reputationChange != 0 {
+					updateCreatorReputation(tx, node.YoutubeLinks[videoIndex].AddedBy.Id, reputationChange)
+				}
+
+				marshal, err = json.Marshal(node)
+				if err != nil {
+					return vote, err
+				}
+				return vote, nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
+			}
+		}
+
+		// New downvote
+		user.VideoDown = append(user.VideoDown, request.YoutubeLinks[0].Link)
+		node.YoutubeLinks[videoIndex].Votes--
+
+		// Update reputation
+		if node.YoutubeLinks[videoIndex].AddedBy.Id != "" && node.YoutubeLinks[videoIndex].AddedBy.Id != userId {
+			reputationChange = -1
+		}
+	}
+
+	marshal, err := json.Marshal(user)
+	if err != nil {
+		return vote, err
+	}
+	err = usersBucket.Put([]byte(userId), marshal)
+	if err != nil {
+		return
+	}
+
+	// Update creator reputation
+	if reputationChange != 0 {
+		updateCreatorReputation(tx, node.YoutubeLinks[videoIndex].AddedBy.Id, reputationChange)
+	}
+
+	marshal, err = json.Marshal(node)
+	if err != nil {
+		return
+	}
 	err = nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
+	vote = node.YoutubeLinks[videoIndex].Votes
 
 	return
 }
@@ -1241,14 +1428,10 @@ func updateCreatorReputation(tx *bolt.Tx, creatorId string, voteValue int32) err
 		return err
 	}
 
-	// Normalize vote value to +1 or -1
-	reputationChange := int32(1)
-	if voteValue < 0 {
-		reputationChange = -1
-	}
-
-	// Update reputation
-	creator.Reputation += reputationChange
+	// Use the actual vote value for reputation change
+	// This allows for -2 when switching from upvote to downvote
+	// and +2 when switching from downvote to upvote
+	creator.Reputation += voteValue
 
 	// Save updated user
 	marshal, err := json.Marshal(creator)

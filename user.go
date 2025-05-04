@@ -65,8 +65,27 @@ func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest o
 		return openapi.Response(401, nil), err
 	}
 
+	// Check if the user is trying to update their own profile or is an admin
 	if userDetails.Role != KeyAdmin && updateUserRequest.Id != user.ID {
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or trying to update others")
+	}
+
+	// If the user is not an admin, they can't modify certain fields
+	if userDetails.Role != KeyAdmin && updateUserRequest.Id == user.ID {
+		// Get the current user data to preserve restricted fields
+		currentUser, err := getUser(s.db, user.ID)
+		if err != nil {
+			return openapi.Response(400, nil), err
+		}
+
+		// Preserve fields that regular users shouldn't modify
+		updateUserRequest.Role = currentUser.Role
+		updateUserRequest.Reputation = currentUser.Reputation
+
+		// If the user is trying to unflag themselves, prevent it
+		if currentUser.IsFlagged && !updateUserRequest.IsFlagged {
+			updateUserRequest.IsFlagged = true
+		}
 	}
 
 	err = updateUser(s.db, updateUserRequest)
@@ -75,7 +94,6 @@ func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest o
 	}
 
 	return openapi.Response(200, nil), nil
-
 }
 
 // GetUserByName - Get user by user name

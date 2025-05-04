@@ -75,13 +75,13 @@ func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInn
 		},
 	}
 
+	id := clock.Now()
+	newNode.Id = id
+
 	marshal, err := json.Marshal(newNode)
 	if err != nil {
 		return
 	}
-
-	id := clock.Now()
-	newNode.Id = id
 
 	response.NodeData = openapi.AddTopic200ResponseNodeData(newNode)
 

@@ -821,3 +821,166 @@ func TestUpdateNodeVideoEditImpl(t *testing.T) {
 	require.NotNil(t, err)
 
 }
+
+func TestUpdateNodeVideoVoteReputationImpl(t *testing.T) {
+	clock := TestClock{}
+	lgr.Printf("INFO TestUpdateNodeVideoVoteReputationImpl")
+	t.Log("INFO TestUpdateNodeVideoVoteReputationImpl")
+	db, dbTearDown := OpenTestDB("UpdateNodeVideoVoteReputationImpl")
+	defer dbTearDown()
+
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 2, 1, 1)
+	require.Nil(t, err)
+
+	// First user adds a video
+	vidUp := openapi.AddTopic200ResponseNodeData{
+		Topic: topics[0],
+		Id:    nodesAndEdges[0].SourceId,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "www.youtube.com/test-reputation",
+			Votes: 1,
+		}},
+	}
+
+	user1, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	// Get initial reputation
+	initialReputation := user1.Reputation
+
+	// User1 adds a video
+	err = updateNodeVideoEdit(db, &clock, vidUp, user1)
+	require.Nil(t, err)
+
+	// User2 upvotes the video
+	_, err = updateNodeVideoVote(db, vidUp, users[1])
+	require.Nil(t, err)
+
+	// Check that user1's reputation increased
+	updatedUser1, err := getUser(db, users[0])
+	require.Nil(t, err)
+	require.Equal(t, initialReputation+1, updatedUser1.Reputation, "Reputation should increase by 1 after upvote")
+
+	// User2 removes upvote
+	_, err = updateNodeVideoVote(db, vidUp, users[1])
+	require.Nil(t, err)
+
+	// Check that user1's reputation decreased back
+	updatedUser1Again, err := getUser(db, users[0])
+	require.Nil(t, err)
+	require.Equal(t, initialReputation, updatedUser1Again.Reputation, "Reputation should decrease back after removing upvote")
+
+	// User2 downvotes the video
+	vidDown := openapi.AddTopic200ResponseNodeData{
+		Topic: topics[0],
+		Id:    nodesAndEdges[0].SourceId,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "www.youtube.com/test-reputation",
+			Votes: -1,
+		}},
+	}
+	_, err = updateNodeVideoVote(db, vidDown, users[1])
+	require.Nil(t, err)
+
+	// Check that user1's reputation decreased
+	updatedUser1AfterDownvote, err := getUser(db, users[0])
+	require.Nil(t, err)
+	require.Equal(t, initialReputation-1, updatedUser1AfterDownvote.Reputation, "Reputation should decrease by 1 after downvote")
+
+	// User2 removes downvote
+	_, err = updateNodeVideoVote(db, vidDown, users[1])
+	require.Nil(t, err)
+
+	// Check that user1's reputation inreased
+	updatedUser1AfterDownvote, err = getUser(db, users[0])
+	require.Nil(t, err)
+	require.Equal(t, initialReputation, updatedUser1AfterDownvote.Reputation, "Reputation should decrease by 1 after downvote")
+
+	// User2 upvotes the video
+	_, err = updateNodeVideoVote(db, vidUp, users[1])
+	require.Nil(t, err)
+
+	// Check that user1's reputation increased
+	updatedUser1, err = getUser(db, users[0])
+	require.Nil(t, err)
+	require.Equal(t, initialReputation+1, updatedUser1.Reputation, "Reputation should increase by 1 after upvote")
+
+	// User2 downvotes the video
+	_, err = updateNodeVideoVote(db, vidDown, users[1])
+	require.Nil(t, err)
+
+	// Check that user1's reputation is now -1 from initial (after switching from upvote to downvote)
+	// The change is -2 from the upvoted state, but compared to initial it's -1
+	updatedUser1AfterDownvote, err = getUser(db, users[0])
+	require.Nil(t, err)
+	require.Equal(t, initialReputation-1, updatedUser1AfterDownvote.Reputation, "Reputation should be initialReputation-1 after switching from upvote to downvote")
+}
+
+func TestUserNodeEdited(t *testing.T) {
+	lgr.Printf("INFO TestUserNodeEdited")
+	t.Log("INFO TestUserNodeEdited")
+	db, dbTearDown := OpenTestDB("UserNodeEdited")
+	defer dbTearDown()
+	clock := TestClock{}
+
+	// Create test data
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
+	require.Nil(t, err)
+
+	// Get the original node
+	originalNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
+	require.Nil(t, err)
+	require.NotNil(t, originalNode.Id, "Original node ID should not be nil")
+
+	// Verify the node ID is set correctly
+	require.Equal(t, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), originalNode.Id.Format(time.RFC3339Nano),
+		"Node ID should match the source ID")
+
+	// Get the user
+	user, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	// Count initial edited nodes
+	initialEditedCount := len(user.Edited)
+
+	// Call updateUserNodeEdited instead of directly using a transaction
+	err = updateUserNodeEdited(db, users[0], originalNode)
+	require.Nil(t, err)
+
+	// Get the updated user
+	updatedUser, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	// Verify the edited node was added
+	require.Equal(t, initialEditedCount+1, len(updatedUser.Edited),
+		"User should have one more edited node")
+
+	// Find the edited node
+	var editedNode *openapi.UpdateUserRequestBattleTestedUpInner
+	for i := range updatedUser.Edited {
+		if updatedUser.Edited[i].Topic == topics[0] &&
+			updatedUser.Edited[i].Title == originalNode.Title {
+			editedNode = &updatedUser.Edited[i]
+			break
+		}
+	}
+
+	require.NotNil(t, editedNode, "Edited node should be found in user's edited list")
+
+	// Verify the node ID is set correctly in the user's edited list
+	require.False(t, editedNode.NodeId.IsZero(), "Edited node ID should not be zero time")
+	require.Equal(t, originalNode.Id.Format(time.RFC3339Nano), editedNode.NodeId.Format(time.RFC3339Nano),
+		"Edited node ID should match the original node ID")
+
+	// Test editing the same node again (should not add duplicate)
+	err = updateUserNodeEdited(db, users[0], originalNode)
+	require.Nil(t, err)
+
+	// Get the user again
+	updatedUserAgain, err := getUser(db, users[0])
+	require.Nil(t, err)
+
+	// Verify no duplicate was added
+	require.Equal(t, len(updatedUser.Edited), len(updatedUserAgain.Edited),
+		"No duplicate edited node should be added")
+}
