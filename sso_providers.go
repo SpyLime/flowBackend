@@ -51,13 +51,32 @@ func (s *StringPrivateKeyLoader) LoadPrivateKey() ([]byte, error) {
 // ConfigureSSO adds all the SSO providers to the auth service
 func ConfigureSSO(service *auth.Service, config ServerConfig, serverPort int, db *bbolt.DB) {
 	// Configure SSO providers
-
-	// Add Google provider if enabled
 	if config.Providers.Google.Enabled {
-		// Add Google provider
-		service.AddProvider("google",
-			config.Providers.Google.ClientID,
-			config.Providers.Google.ClientSecret)
+
+		googleHandler := provider.CustomHandlerOpt{
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  "https://accounts.google.com/o/oauth2/auth",
+				TokenURL: "https://oauth2.googleapis.com/token",
+			},
+			InfoURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+			Scopes:  []string{"openid", "profile", "email"},
+			MapUserFn: func(data provider.UserData, _ []byte) token.User {
+				user := token.User{
+					ID:      "google_" + token.HashID(sha1.New(), data.Value("sub")),
+					Name:    data.Value("name"),
+					Email:   data.Value("email"),
+					Picture: data.Value("picture"),
+				}
+				// persist to your BoltDB
+				_ = saveOrUpdateSSOUser(db, user)
+				return user
+			},
+		}
+
+		service.AddCustomProvider("google",
+			auth.Client{Cid: config.Providers.Google.ClientID, Csecret: config.Providers.Google.ClientSecret},
+			googleHandler,
+		)
 	}
 
 	// Add Microsoft provider if enabled
