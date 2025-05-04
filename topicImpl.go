@@ -91,6 +91,11 @@ func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInn
 	}
 
 	err = nodesBucket.Put(idB, marshal)
+	if err != nil {
+		return
+	}
+
+	err = userNodeCreatedTx(tx, user.Id, newNode)
 
 	return
 }

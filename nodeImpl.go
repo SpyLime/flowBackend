@@ -488,6 +488,15 @@ func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData,
 	}
 
 	err = nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
+	if err != nil {
+		return
+	}
+
+	// Update the title in all user records
+	err = updateUserNodeTitleTx(tx, request.Id, request.Topic, request.Title)
+	if err != nil {
+		return false, err
+	}
 
 	return
 }
@@ -504,6 +513,8 @@ func userNodeEditedTx(tx *bolt.Tx, userId string, node openapi.NodeData) error {
 	for _, edited := range user.Edited {
 		if edited.NodeId.Format(time.RFC3339Nano) == node.Id.Format(time.RFC3339Nano) {
 			isDuplicate = true
+			// Update the title in case it changed
+			edited.Title = node.Title
 			break
 		}
 	}
@@ -560,14 +571,12 @@ func updateNodeBattleVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeDa
 }
 
 func updateNodeBattleVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
-
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
 		return
 	}
 
 	var node openapi.NodeData
-
 	err = json.Unmarshal(nodeData, &node)
 	if err != nil {
 		return
@@ -580,6 +589,14 @@ func updateNodeBattleVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNode
 		}
 
 		node.BattleTested += vote //vote will either be a -2,-1,1,2
+
+		// Update reputation of the node creator if this is a vote (not an unvote)
+		if vote != 0 && node.CreatedBy.Id != "" {
+			// Only update reputation if the voter is not the creator
+			if node.CreatedBy.Id != userId {
+				updateCreatorReputation(tx, node.CreatedBy.Id, vote)
+			}
+		}
 	}
 
 	marshal, err := json.Marshal(node)
@@ -588,17 +605,30 @@ func updateNodeBattleVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNode
 	}
 
 	err = nodesBucket.Put([]byte(request.Id.Format(time.RFC3339Nano)), marshal)
-
 	vote = node.BattleTested
 
 	return
 }
 
 func userBattleVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200ResponseNodeData) (vote int32, err error) {
-
 	usersBucket, user, err := getUserAndBucketRx(tx, userId)
 	if err != nil {
 		return
+	}
+
+	// Get the node to retrieve its title if not provided
+	var nodeTitle string
+	if request.Title == "" {
+		// Fetch the node to get its title
+		_, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
+		if err == nil {
+			var node openapi.NodeData
+			if err = json.Unmarshal(nodeData, &node); err == nil {
+				nodeTitle = node.Title
+			}
+		}
+	} else {
+		nodeTitle = request.Title
 	}
 
 	if request.BattleTested > 0 {
@@ -619,7 +649,7 @@ func userBattleVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Res
 
 		user.BattleTestedUp = append(user.BattleTestedUp, openapi.UpdateUserRequestBattleTestedUpInner{
 			Topic:  request.Topic,
-			Title:  request.Title,
+			Title:  nodeTitle,
 			NodeId: request.Id,
 		})
 
@@ -651,7 +681,7 @@ func userBattleVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Res
 
 		user.BattleTestedDown = append(user.BattleTestedDown, openapi.UpdateUserRequestBattleTestedUpInner{
 			Topic:  request.Topic,
-			Title:  request.Title,
+			Title:  nodeTitle,
 			NodeId: request.Id,
 		})
 
@@ -765,7 +795,8 @@ func userVideoEditTx(tx *bolt.Tx, clock Clock, userId string, request openapi.Ad
 	for i, item := range user.Linked {
 		if item.Link == request.YoutubeLinks[0].Link {
 			if request.YoutubeLinks[0].Votes > 0 {
-				return fmt.Errorf("this video is already added")
+				//already added
+				return nil
 			} else {
 				user.Linked = append(user.Linked[:i], user.Linked[i+1:]...)
 			}
@@ -804,7 +835,6 @@ func userVideoEditTx(tx *bolt.Tx, clock Clock, userId string, request openapi.Ad
 	} else {
 		return fmt.Errorf("could not find the video to remove on the user")
 	}
-
 }
 
 // vote on a video
@@ -866,7 +896,6 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 }
 
 func userVideoVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200ResponseNodeData) (vote int32, err error) {
-
 	usersBucket, user, err := getUserAndBucketRx(tx, userId)
 	if err != nil {
 		return
@@ -988,14 +1017,12 @@ func updateNodeFreshVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeDat
 
 // updates the title and description
 func updateNodeFreshVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
-
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
 		return
 	}
 
 	var node openapi.NodeData
-
 	err = json.Unmarshal(nodeData, &node)
 	if err != nil {
 		return
@@ -1008,6 +1035,14 @@ func updateNodeFreshVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 		}
 
 		node.Fresh += vote //vote will either be a +1 or -1
+
+		// Update reputation of the node creator if this is a vote (not an unvote)
+		if vote != 0 && node.CreatedBy.Id != "" {
+			// Only update reputation if the voter is not the creator
+			if node.CreatedBy.Id != userId {
+				updateCreatorReputation(tx, node.CreatedBy.Id, vote)
+			}
+		}
 	}
 
 	marshal, err := json.Marshal(node)
@@ -1022,10 +1057,24 @@ func updateNodeFreshVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 }
 
 func userFreshVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200ResponseNodeData) (vote int32, err error) {
-
 	usersBucket, user, err := getUserAndBucketRx(tx, userId)
 	if err != nil {
 		return
+	}
+
+	// Get the node to retrieve its title if not provided
+	var nodeTitle string
+	if request.Title == "" {
+		// Fetch the node to get its title
+		_, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
+		if err == nil {
+			var node openapi.NodeData
+			if err = json.Unmarshal(nodeData, &node); err == nil {
+				nodeTitle = node.Title
+			}
+		}
+	} else {
+		nodeTitle = request.Title
 	}
 
 	if request.Fresh > 0 {
@@ -1046,7 +1095,7 @@ func userFreshVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Resp
 
 		user.FreshUp = append(user.FreshUp, openapi.UpdateUserRequestBattleTestedUpInner{
 			Topic:  request.Topic,
-			Title:  request.Title,
+			Title:  nodeTitle,
 			NodeId: request.Id,
 		})
 
@@ -1078,7 +1127,7 @@ func userFreshVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Resp
 
 		user.FreshDown = append(user.FreshDown, openapi.UpdateUserRequestBattleTestedUpInner{
 			Topic:  request.Topic,
-			Title:  request.Title,
+			Title:  nodeTitle,
 			NodeId: request.Id,
 		})
 
@@ -1102,4 +1151,110 @@ func userFreshVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Resp
 	err = usersBucket.Put([]byte(userId), marshal)
 
 	return
+}
+
+// Helper function to update node title in user records
+func updateUserNodeTitleTx(tx *bolt.Tx, nodeId time.Time, topic string, newTitle string) error {
+	// Get all users
+	usersBucket := tx.Bucket([]byte(KeyUsers))
+	if usersBucket == nil {
+		return fmt.Errorf("can't find users bucket")
+	}
+
+	c := usersBucket.Cursor()
+	for k, v := c.First(); k != nil; k, v = c.Next() {
+		var user openapi.UpdateUserRequest
+		if err := json.Unmarshal(v, &user); err != nil {
+			continue // Skip this user if we can't unmarshal
+		}
+
+		updated := false
+
+		// Update in Created list
+		for i, created := range user.Created {
+			if created.NodeId.Equal(nodeId) {
+				user.Created[i].Title = newTitle
+				updated = true
+			}
+		}
+
+		// Update in Edited list
+		for i, edited := range user.Edited {
+			if edited.NodeId.Equal(nodeId) {
+				user.Edited[i].Title = newTitle
+				updated = true
+			}
+		}
+
+		// Update in BattleTestedUp list
+		for i, item := range user.BattleTestedUp {
+			if item.NodeId.Equal(nodeId) {
+				user.BattleTestedUp[i].Title = newTitle
+				updated = true
+			}
+		}
+
+		// Update in BattleTestedDown list
+		for i, item := range user.BattleTestedDown {
+			if item.NodeId.Equal(nodeId) {
+				user.BattleTestedDown[i].Title = newTitle
+				updated = true
+			}
+		}
+
+		// Update in FreshUp list
+		for i, item := range user.FreshUp {
+			if item.NodeId.Equal(nodeId) {
+				user.FreshUp[i].Title = newTitle
+				updated = true
+			}
+		}
+
+		// Update in FreshDown list
+		for i, item := range user.FreshDown {
+			if item.NodeId.Equal(nodeId) {
+				user.FreshDown[i].Title = newTitle
+				updated = true
+			}
+		}
+
+		// Save the user if any updates were made
+		if updated {
+			marshal, err := json.Marshal(user)
+			if err != nil {
+				return err
+			}
+
+			if err := usersBucket.Put(k, marshal); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// updateCreatorReputation updates the reputation of a node creator based on votes
+func updateCreatorReputation(tx *bolt.Tx, creatorId string, voteValue int32) error {
+	usersBucket, creator, err := getUserAndBucketRx(tx, creatorId)
+	if err != nil {
+		return err
+	}
+
+	// Normalize vote value to +1 or -1
+	reputationChange := int32(1)
+	if voteValue < 0 {
+		reputationChange = -1
+	}
+
+	// Update reputation
+	creator.Reputation += reputationChange
+
+	// Save updated user
+	marshal, err := json.Marshal(creator)
+	if err != nil {
+		return err
+	}
+
+	return usersBucket.Put([]byte(creatorId), marshal)
 }

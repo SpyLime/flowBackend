@@ -62,7 +62,7 @@ func saveOrUpdateSSOUser(db *bbolt.DB, user token.User) error {
 			Username:  user.Name,
 			Email:     user.Email,
 			Provider:  provider,
-			Role:      0,
+			Role:      KeyUser,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 			LastLogin: time.Now(),
