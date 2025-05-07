@@ -232,7 +232,16 @@ router.Handle("/auth/logout", logoutHandler)
 			if err == nil {
 				// Use the user info from the JWT cookie
 				response.IsAuth = true
-				response.Role = 1 // Default role for authenticated users
+				
+				// Get the user's role from the database instead of hardcoding KeyUser
+				userDetails, userErr := getUser(db, jwtPayload.User.ID)
+				if userErr == nil {
+					response.Role = userDetails.Role
+				} else {
+					// Fallback to default role if user not found in database
+					response.Role = KeyUser
+				}
+				
 				response.Name = jwtPayload.User.Name
 				response.Email = jwtPayload.User.Email
 				response.ID = jwtPayload.User.ID
@@ -268,7 +277,13 @@ router.Handle("/auth/logout", logoutHandler)
 			if err == nil {
 				// Use the user info from the flow_jwt cookie
 				response.IsAuth = true
-				response.Role = 1 // Default role for authenticated users
+				userDetails, userErr := getUser(db, jwtPayload.User.ID)
+				if userErr == nil {
+					response.Role = userDetails.Role
+				} else {
+					// Fallback to default role if user not found in database
+					response.Role = KeyUser
+				}
 				response.Name = jwtPayload.User.Name
 				response.Email = jwtPayload.User.Email
 				response.ID = jwtPayload.User.ID
@@ -317,7 +332,13 @@ router.Handle("/auth/logout", logoutHandler)
 				} else {
 					// Use the user info from the JWT token
 					response.IsAuth = true
-					response.Role = 1 // Default role for authenticated users
+					userDetails, userErr := getUser(db, jwtPayload.User.ID)
+					if userErr == nil {
+						response.Role = userDetails.Role
+					} else {
+						// Fallback to default role if user not found in database
+						response.Role = KeyUser
+					}
 					response.Name = jwtPayload.User.Name
 					response.Email = jwtPayload.User.Email
 					response.ID = jwtPayload.User.ID
@@ -338,14 +359,20 @@ router.Handle("/auth/logout", logoutHandler)
 					if err != nil {
 						// For testing purposes, return a hardcoded user
 						response.IsAuth = true
-						response.Role = 1 // Default role for authenticated users
+						response.Role = KeyUser // Default role for authenticated users
 						response.Name = "chad1874169"
 						response.Email = "chad187@gmail.com"
 						response.ID = "discord_2842c5bc276b0eaf2d8e7190ff54486a9bc690fc"
 					} else {
 						// Use the user info from the JWT token
 						response.IsAuth = true
-						response.Role = 1 // Default role for authenticated users
+						userDetails, userErr := getUser(db, jwtPayload.User.ID)
+						if userErr == nil {
+							response.Role = userDetails.Role
+						} else {
+							// Fallback to default role if user not found in database
+							response.Role = KeyUser
+						}
 						response.Name = jwtPayload.User.Name
 						response.Email = jwtPayload.User.Email
 						response.ID = jwtPayload.User.ID
@@ -355,17 +382,23 @@ router.Handle("/auth/logout", logoutHandler)
 				} else {
 					// Invalid Authorization header format
 					response.IsAuth = false
-					response.Role = 0
+					response.Role = KeyUser
 				}
 			} else {
 				// No Authorization header found
 				response.IsAuth = false
-				response.Role = 0
+				response.Role = KeyUser
 			}
 		} else {
 			// User is authenticated via cookie
 			response.IsAuth = true
-			response.Role = 1 // Default role for authenticated users
+			userDetails, userErr := getUser(db, user.ID)
+			if userErr == nil {
+				response.Role = userDetails.Role
+			} else {
+				// Fallback to default role if user not found in database
+				response.Role = KeyUser
+			}
 			response.Name = user.Name
 			response.Email = user.Email
 			response.ID = user.ID

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	openapi "github.com/SpyLime/flowBackend/go"
 	bolt "go.etcd.io/bbolt"
@@ -62,6 +63,18 @@ func getUserAndBucketRx(tx *bolt.Tx, userId string) (usersBucket *bolt.Bucket, u
 	// Set the ID field explicitly
 	user.Id = userId
 
+	// Check if timestamps are zero values and set them to current time if they are
+	now := time.Now()
+	if user.CreatedAt.IsZero() {
+		user.CreatedAt = now
+	}
+	if user.UpdatedAt.IsZero() {
+		user.UpdatedAt = now
+	}
+	if user.LastLogin.IsZero() {
+		user.LastLogin = now
+	}
+
 	return
 }
 
@@ -81,6 +94,10 @@ func updateUserHelper(user *openapi.UpdateUserRequest, request openapi.UpdateUse
 	if request.Location != "" {
 		user.Location = request.Location
 	}
+
+	// Always update the timestamps
+	user.UpdatedAt = time.Now()
+	user.LastLogin = time.Now()
 
 	user.IsFlagged = request.IsFlagged
 }

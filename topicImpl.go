@@ -110,14 +110,32 @@ func deleteTopic(db *bolt.DB, topicId string) (err error) {
 }
 
 func deleteTopicTx(tx *bolt.Tx, topicId string) (err error) {
-
 	topicsBucket := tx.Bucket([]byte(KeyTopics))
 	if topicsBucket == nil {
 		return fmt.Errorf("can't find topics bucket")
 	}
 
+	topicBucket := topicsBucket.Bucket([]byte(topicId))
+	if topicBucket == nil {
+		return fmt.Errorf("can't find topic bucket")
+	}
+
+	// Get the nodes bucket to process all nodes
+	nodesBucket := topicBucket.Bucket([]byte(KeyNodes))
+	if nodesBucket != nil {
+		// Iterate through all nodes and remove them from user records
+		c := nodesBucket.Cursor()
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			nodeId := string(k)
+			// Remove this node from all users who interacted with it
+			err = removeNodeFromAllUsersTx(tx, nodeId, topicId)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Now delete the topic bucket
 	err = topicsBucket.DeleteBucket([]byte(topicId))
-
 	return
-
 }
