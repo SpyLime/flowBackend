@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/sha1"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -49,7 +50,7 @@ func (s *StringPrivateKeyLoader) LoadPrivateKey() ([]byte, error) {
 }
 
 // ConfigureSSO adds all the SSO providers to the auth service
-func ConfigureSSO(service *auth.Service, config ServerConfig, serverPort int, db *bbolt.DB) {
+func ConfigureSSO(service *auth.Service, config ServerConfig, serverPort int, db *bbolt.DB, clock Clock) {
 	// Configure SSO providers
 	if config.Providers.Google.Enabled {
 
@@ -68,7 +69,7 @@ func ConfigureSSO(service *auth.Service, config ServerConfig, serverPort int, db
 					Picture: data.Value("picture"),
 				}
 				// persist to your BoltDB
-				_ = saveOrUpdateSSOUser(db, user)
+				_ = saveOrUpdateSSOUser(db, clock, user)
 				return user
 			},
 		}
@@ -81,16 +82,106 @@ func ConfigureSSO(service *auth.Service, config ServerConfig, serverPort int, db
 
 	// Add Microsoft provider if enabled
 	if config.Providers.Microsoft.Enabled {
-		service.AddProvider("microsoft",
-			config.Providers.Microsoft.ClientID,
-			config.Providers.Microsoft.ClientSecret)
+		// Create a custom Microsoft OAuth2 provider
+		microsoftHandler := provider.CustomHandlerOpt{
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+				TokenURL: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+			},
+			InfoURL: "https://graph.microsoft.com/v1.0/me",
+			// Request profile, email, and photo permissions
+			Scopes: []string{"openid", "profile", "email", "User.Read"},
+			MapUserFn: func(data provider.UserData, _ []byte) token.User {
+				// Create a user from the Microsoft data
+				user := token.User{
+					ID:   "microsoft_" + token.HashID(sha1.New(), data.Value("id")),
+					Name: data.Value("displayName"),
+				}
+
+				// Add email if available
+				if email := data.Value("mail"); email != "" {
+					user.Email = email
+				} else if upn := data.Value("userPrincipalName"); upn != "" {
+					// Fallback to userPrincipalName which is often the email
+					user.Email = upn
+				}
+
+				// Microsoft Graph API doesn't return the photo in the user info
+				// We would need to make a separate request to get the photo
+				// For now, we'll leave the picture empty
+				// A more complete implementation would make a request to:
+				// https://graph.microsoft.com/v1.0/me/photo/$value
+
+				// Save the user to the database
+				_ = saveOrUpdateSSOUser(db, clock, user)
+
+				return user
+			},
+		}
+
+		// Add the Microsoft provider with the custom handler
+		service.AddCustomProvider("microsoft",
+			auth.Client{
+				Cid:     config.Providers.Microsoft.ClientID,
+				Csecret: config.Providers.Microsoft.ClientSecret,
+			},
+			microsoftHandler,
+		)
 	}
 
 	// Add Facebook provider if enabled
 	if config.Providers.Facebook.Enabled {
-		service.AddProvider("facebook",
-			config.Providers.Facebook.ClientID,
-			config.Providers.Facebook.ClientSecret)
+		// Create a custom Facebook OAuth2 provider
+		facebookHandler := provider.CustomHandlerOpt{
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  "https://www.facebook.com/v18.0/dialog/oauth",
+				TokenURL: "https://graph.facebook.com/v18.0/oauth/access_token",
+			},
+			InfoURL: "https://graph.facebook.com/v18.0/me?fields=id,name,email,picture",
+			Scopes:  []string{"email", "public_profile"},
+			MapUserFn: func(data provider.UserData, _ []byte) token.User {
+				// Create a user from the Facebook data
+				user := token.User{
+					ID:   "facebook_" + token.HashID(sha1.New(), data.Value("id")),
+					Name: data.Value("name"),
+				}
+
+				// Add email if available
+				if email := data.Value("email"); email != "" {
+					user.Email = email
+				}
+
+				// Add profile picture if available
+				if picture := data.Value("picture"); picture != "" {
+					// Facebook returns picture data in a nested structure
+					var pictureData map[string]interface{}
+					if err := json.Unmarshal([]byte(picture), &pictureData); err == nil {
+						if data, ok := pictureData["data"].(map[string]interface{}); ok {
+							if url, ok := data["url"].(string); ok {
+								user.Picture = url
+							}
+						}
+					}
+				} else {
+					// Fallback to the Facebook profile picture URL format
+					user.Picture = fmt.Sprintf("https://graph.facebook.com/%s/picture?type=large", data.Value("id"))
+				}
+
+				// Save the user to the database
+				_ = saveOrUpdateSSOUser(db, clock, user)
+
+				return user
+			},
+		}
+
+		// Add the Facebook provider with the custom handler
+		service.AddCustomProvider("facebook",
+			auth.Client{
+				Cid:     config.Providers.Facebook.ClientID,
+				Csecret: config.Providers.Facebook.ClientSecret,
+			},
+			facebookHandler,
+		)
 	}
 
 	// Add Discord provider if enabled
@@ -132,7 +223,7 @@ func ConfigureSSO(service *auth.Service, config ServerConfig, serverPort int, db
 				}
 
 				// Save the user to the database
-				_ = saveOrUpdateSSOUser(db, user)
+				_ = saveOrUpdateSSOUser(db, clock, user)
 
 				return user
 			},

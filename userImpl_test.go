@@ -47,7 +47,7 @@ func TestUpdateUserImpl(t *testing.T) {
 		Username: users[0],
 	}
 
-	err = updateUser(db, modUser)
+	err = updateUser(db, &clock, modUser)
 	require.Nil(t, err)
 
 	updatedUser, err := getUser(db, users[0])

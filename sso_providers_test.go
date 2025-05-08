@@ -46,7 +46,7 @@ func TestSSOProviderConfiguration(t *testing.T) {
 	}
 
 	// Initialize the auth service
-	service := initAuth(db, config)
+	service := initAuth(db, &clock, config)
 	require.NotNil(t, service, "Auth service should be initialized")
 
 	// Get the auth handlers
@@ -93,7 +93,7 @@ func TestSSOUserCreation(t *testing.T) {
 	}
 
 	// Call the saveOrUpdateSSOUser function directly
-	err = saveOrUpdateSSOUser(db, tokenUser)
+	err = saveOrUpdateSSOUser(db, &clock, tokenUser)
 	require.NoError(t, err, "Should be able to save user to database")
 
 	// Check if the user was saved to the database
@@ -156,9 +156,9 @@ func TestSSOUserUpdate(t *testing.T) {
 			Email:     originalEmail,
 			Provider:  "discord",
 			Role:      1,
-			CreatedAt: time.Now().Add(-24 * time.Hour), // Created yesterday
-			UpdatedAt: time.Now().Add(-24 * time.Hour),
-			LastLogin: time.Now().Add(-24 * time.Hour),
+			CreatedAt: clock.Now().Add(-24 * time.Hour), // Created yesterday
+			UpdatedAt: clock.Now().Add(-24 * time.Hour),
+			LastLogin: clock.Now().Add(-24 * time.Hour),
 		}
 
 		userData, err := json.Marshal(user)
@@ -187,7 +187,7 @@ func TestSSOUserUpdate(t *testing.T) {
 	}
 
 	// Call the saveOrUpdateSSOUser function directly
-	err = saveOrUpdateSSOUser(db, updatedTokenUser)
+	err = saveOrUpdateSSOUser(db, &clock, updatedTokenUser)
 	require.NoError(t, err, "Should be able to update user")
 
 	// Check if the user was updated in the database
@@ -246,7 +246,7 @@ func TestSSOCookieAuthentication(t *testing.T) {
 	}
 
 	// Initialize the auth service
-	service := initAuth(db, config)
+	service := initAuth(db, &clock, config)
 
 	// Simulate a user authenticating with Discord
 	discordUserID := "123456789"
@@ -348,4 +348,87 @@ func TestSSOCookieAuthentication(t *testing.T) {
 
 	// Check the response
 	assert.Equal(t, http.StatusOK, rr.Code, "Should be authenticated")
+}
+
+// TestSSOUserTimestamps tests that user timestamps (createdAt, updatedAt, lastLogin) are properly set and updated
+func TestSSOUserTimestamps(t *testing.T) {
+	// Set up test database
+	db, teardown := FullStartTestServer("TestSSOUserTimestamps", 8088, "")
+	defer teardown()
+
+	// Create a test clock that we can control
+	clock := TestClock{}
+
+	// Create test data
+	_, _, _, err := CreateTestData(db, &clock, 1, 1, 1)
+	require.Nil(t, err)
+
+	// Set initial time
+
+	// 1. Test creating a new user
+	discordUserID := "123456789"
+	discordName := "TestUser"
+	discordEmail := "test@example.com"
+
+	// Create a user ID in the format used by the SSO provider
+	userID := fmt.Sprintf("discord_%s", token.HashID(sha1.New(), discordUserID))
+
+	// Create a token.User to simulate what would be created by the SSO provider
+	tokenUser := token.User{
+		ID:    userID,
+		Name:  discordName,
+		Email: discordEmail,
+	}
+
+	// Call the saveOrUpdateSSOUser function directly
+	err = saveOrUpdateSSOUser(db, &clock, tokenUser)
+	require.NoError(t, err, "Should be able to save user to database")
+
+	// Check if the user was saved to the database with correct timestamps
+	response, err := getUser(db, userID)
+	require.Nil(t, err)
+
+	require.Equal(t, clock.Now(), response.CreatedAt)
+	require.Equal(t, clock.Now(), response.UpdatedAt)
+	require.Equal(t, clock.Now(), response.LastLogin)
+
+	// 2. Test updating an existing user after some time has passed
+	// Advance the clock by 1 hour
+	clock.TickOne(1 * time.Hour)
+
+	// Update the user's name
+	tokenUser.Name = "UpdatedUser"
+
+	// Call the saveOrUpdateSSOUser function again
+	err = saveOrUpdateSSOUser(db, &clock, tokenUser)
+	require.NoError(t, err, "Should be able to update user in database")
+
+	err = updateUser(db, &clock, openapi.UpdateUserRequest{
+		Location: "UpdatedUser",
+		Id:       userID,
+	})
+	require.Nil(t, err)
+
+	response, err = getUser(db, userID)
+	require.Nil(t, err)
+
+	require.NotEqual(t, clock.Now(), response.CreatedAt)
+	require.Equal(t, clock.Now(), response.UpdatedAt)
+	require.Equal(t, clock.Now(), response.LastLogin)
+
+	// 3. Test simulating another login after more time has passed
+	// Advance the clock by another hour
+	clock.Tick()
+
+	// Call the saveOrUpdateSSOUser function again without changing any user data
+	err = saveOrUpdateSSOUser(db, &clock, tokenUser)
+	require.NoError(t, err, "Should be able to update login time in database")
+
+	// Check if only the LastLogin timestamp was updated
+	response, err = getUser(db, userID)
+	require.Nil(t, err)
+
+	require.NotEqual(t, clock.Now(), response.CreatedAt)
+	require.NotEqual(t, clock.Now(), response.UpdatedAt)
+	require.Equal(t, clock.Now(), response.LastLogin)
 }

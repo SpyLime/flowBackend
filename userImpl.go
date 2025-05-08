@@ -3,33 +3,32 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	openapi "github.com/SpyLime/flowBackend/go"
 	bolt "go.etcd.io/bbolt"
 )
 
-func updateUser(db *bolt.DB, request openapi.UpdateUserRequest) (err error) {
+func updateUser(db *bolt.DB, clock Clock, request openapi.UpdateUserRequest) (err error) {
 	// Add logging to help debug
 	fmt.Printf("Updating user with ID: %s\n", request.Id)
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		// Use the Id field instead of Username for consistency
-		err = updateUserTx(tx, request)
+		err = updateUserTx(tx, clock, request)
 		return err
 	})
 
 	return
 }
 
-func updateUserTx(tx *bolt.Tx, request openapi.UpdateUserRequest) (err error) {
+func updateUserTx(tx *bolt.Tx, clock Clock, request openapi.UpdateUserRequest) (err error) {
 	// Use the Id field for lookup
 	usersBucket, user, err := getUserAndBucketRx(tx, request.Id)
 	if err != nil {
 		return
 	}
 
-	updateUserHelper(&user, request)
+	updateUserHelper(clock, &user, request)
 
 	marshal, err := json.Marshal(user)
 	if err != nil {
@@ -63,22 +62,10 @@ func getUserAndBucketRx(tx *bolt.Tx, userId string) (usersBucket *bolt.Bucket, u
 	// Set the ID field explicitly
 	user.Id = userId
 
-	// Check if timestamps are zero values and set them to current time if they are
-	now := time.Now()
-	if user.CreatedAt.IsZero() {
-		user.CreatedAt = now
-	}
-	if user.UpdatedAt.IsZero() {
-		user.UpdatedAt = now
-	}
-	if user.LastLogin.IsZero() {
-		user.LastLogin = now
-	}
-
 	return
 }
 
-func updateUserHelper(user *openapi.UpdateUserRequest, request openapi.UpdateUserRequest) {
+func updateUserHelper(clock Clock, user *openapi.UpdateUserRequest, request openapi.UpdateUserRequest) {
 	if request.FirstName != "" {
 		user.FirstName = request.FirstName
 	}
@@ -96,8 +83,7 @@ func updateUserHelper(user *openapi.UpdateUserRequest, request openapi.UpdateUse
 	}
 
 	// Always update the timestamps
-	user.UpdatedAt = time.Now()
-	user.LastLogin = time.Now()
+	user.UpdatedAt = clock.Now()
 
 	user.IsFlagged = request.IsFlagged
 }
@@ -164,6 +150,9 @@ func getUserRx(tx *bolt.Tx, userId string) (response openapi.User, err error) {
 		Role:             user.Role,
 		Reputation:       user.Reputation,
 		IsFlagged:        user.IsFlagged,
+		CreatedAt:        user.CreatedAt,
+		UpdatedAt:        user.UpdatedAt,
+		LastLogin:        user.LastLogin,
 	}
 
 	return

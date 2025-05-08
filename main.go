@@ -71,15 +71,15 @@ func main() {
 	}
 	defer db.Close()
 
+	// Create main router
+	router, clock := createRouter(db)
+
 	// Initialize auth service
-	authService := initAuth(db, config)
+	authService := initAuth(db, clock, config)
 
 	// Get auth routes and middleware
 	authRoutes, avatarRoutes := authService.Handlers()
 	middleAuth := authService.Middleware()
-
-	// Create main router
-	router, clock := createRouter(db)
 
 	// Create a custom handler for auth callbacks
 	authCallbackHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -571,7 +571,7 @@ func createRouterClock(db *bolt.DB, clock Clock) *mux.Router {
 // 	return nil
 // }
 
-func initAuth(db *bolt.DB, config ServerConfig) *auth.Service {
+func initAuth(db *bolt.DB, clock Clock, config ServerConfig) *auth.Service {
 	// Determine the base URL for the application
 	baseURL := fmt.Sprintf("http://localhost:%d", config.ServerPort)
 
@@ -611,7 +611,7 @@ func initAuth(db *bolt.DB, config ServerConfig) *auth.Service {
 	service := auth.NewService(options)
 
 	// Configure SSO providers
-	ConfigureSSO(service, config, config.ServerPort, db)
+	ConfigureSSO(service, config, config.ServerPort, db, clock)
 
 	return service
 }

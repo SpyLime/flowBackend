@@ -88,7 +88,7 @@ func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest o
 		}
 	}
 
-	err = updateUser(s.db, updateUserRequest)
+	err = updateUser(s.db, s.clock, updateUserRequest)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}

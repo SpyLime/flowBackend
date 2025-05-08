@@ -25,13 +25,15 @@ func (t *TestClock) Now() time.Time {
 	if t.Current.IsZero() {
 		t.Current, _ = time.Parse(time.RFC3339, "2020-01-02T15:04:05Z")
 	}
-	t.Tick()
 	lgr.Printf("DEBUG current time - %v", t.Current)
 	return t.Current
 }
 
 func (t *TestClock) Tick() {
 	t.Current = t.Current.Add(time.Millisecond)
+}
+func (t *TestClock) TickOne(d time.Duration) {
+	t.Current = t.Current.Add(d)
 }
 
 func OpenTestDB(suffix string) (db *bolt.DB, teardown func()) {
