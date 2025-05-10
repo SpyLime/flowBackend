@@ -9,6 +9,7 @@ import (
 	"github.com/go-pkgz/auth"
 	"github.com/go-pkgz/auth/provider"
 	"github.com/go-pkgz/auth/token"
+	"github.com/go-pkgz/lgr"
 	"go.etcd.io/bbolt"
 	"golang.org/x/oauth2"
 )
@@ -243,9 +244,86 @@ func ConfigureSSO(service *auth.Service, config ServerConfig, serverPort int, db
 
 	// Add Twitter provider if enabled
 	if config.Providers.Twitter.Enabled {
-		service.AddProvider("twitter",
-			config.Providers.Twitter.ClientID,
-			config.Providers.Twitter.ClientSecret)
+
+		// Create a custom Twitter OAuth2 provider
+		twitterHandler := provider.CustomHandlerOpt{
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  "https://twitter.com/i/oauth2/authorize",
+				TokenURL: "https://api.twitter.com/2/oauth2/token",
+			},
+			InfoURL: "https://api.twitter.com/2/users/me?user.fields=profile_image_url,name,username,id",
+			Scopes:  []string{"users.read", "tweet.read"},
+			MapUserFn: func(data provider.UserData, rawData []byte) token.User {
+				lgr.Printf("INFO: Twitter auth callback received. Raw data: %s", string(rawData))
+				lgr.Printf("INFO: Twitter user data values: %+v", data)
+				// Twitter API v2 returns data in a nested structure
+				var userData map[string]interface{}
+
+				// Try to parse the response data
+				if rawData := data.Value("data"); rawData != "" {
+					if err := json.Unmarshal([]byte(rawData), &userData); err != nil {
+						// If we can't parse the nested data, use the top-level data
+						userData = map[string]interface{}{
+							"id":       data.Value("id"),
+							"name":     data.Value("name"),
+							"username": data.Value("username"),
+							"email":    data.Value("email"),
+						}
+					}
+				} else {
+					// If there's no nested data, use the top-level data
+					userData = map[string]interface{}{
+						"id":       data.Value("id"),
+						"name":     data.Value("name"),
+						"username": data.Value("username"),
+						"email":    data.Value("email"),
+					}
+				}
+
+				// Extract user information from the parsed data
+				id := getStringValue(userData, "id")
+				name := getStringValue(userData, "name")
+				username := getStringValue(userData, "username")
+				email := getStringValue(userData, "email")
+				profileImageURL := getStringValue(userData, "profile_image_url")
+
+				// Create a user from the Twitter data
+				user := token.User{
+					ID:   "twitter_" + token.HashID(sha1.New(), id),
+					Name: name,
+				}
+
+				// Use username if name is not available
+				if user.Name == "" {
+					user.Name = username
+				}
+
+				// Add email if available
+				if email != "" {
+					user.Email = email
+				}
+
+				// Add profile picture if available
+				if profileImageURL != "" {
+					// Remove "_normal" to get the full-size image
+					user.Picture = strings.Replace(profileImageURL, "_normal", "", 1)
+				}
+
+				// Save the user to the database
+				_ = saveOrUpdateSSOUser(db, clock, user)
+
+				return user
+			},
+		}
+
+		// Add the Twitter provider with the custom handler
+		service.AddCustomProvider("twitter",
+			auth.Client{
+				Cid:     config.Providers.Twitter.ClientID,
+				Csecret: config.Providers.Twitter.ClientSecret,
+			},
+			twitterHandler,
+		)
 	}
 
 	// Add Apple provider if enabled
@@ -268,4 +346,14 @@ func ConfigureSSO(service *auth.Service, config ServerConfig, serverPort int, db
 			_ = service.AddAppleProvider(appleConfig, privateKeyLoader)
 		}
 	}
+}
+
+// Helper function to safely extract string values from a map
+func getStringValue(data map[string]interface{}, key string) string {
+	if value, ok := data[key]; ok {
+		if strValue, ok := value.(string); ok {
+			return strValue
+		}
+	}
+	return ""
 }

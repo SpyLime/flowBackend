@@ -143,6 +143,14 @@ func main() {
 	router.Handle("/auth/facebook/callback", authCallbackHandler)
 	router.Handle("/auth/microsoft/login", authRoutes)
 	router.Handle("/auth/microsoft/callback", authCallbackHandler)
+	
+	// Use our custom Twitter OAuth handlers instead of the library's
+	router.HandleFunc("/auth/twitter/login", func(w http.ResponseWriter, r *http.Request) {
+		TwitterOAuthHandler(w, r, config)
+	})
+	router.HandleFunc("/auth/twitter/callback", func(w http.ResponseWriter, r *http.Request) {
+		TwitterCallbackHandler(w, r, config, db, clock)
+	})
 // Create a custom logout handler
 logoutHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// Custom logout handler
