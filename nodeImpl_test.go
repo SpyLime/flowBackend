@@ -62,6 +62,7 @@ func TestDeleteNodeImpl(t *testing.T) {
 	}
 
 	for i := 0; i < 5; i++ {
+		clock.Tick()
 		_, err = postNode(db, &clock, data)
 		require.Nil(t, err)
 	}

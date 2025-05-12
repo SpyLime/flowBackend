@@ -43,10 +43,12 @@ func TestUpdateUserImpl(t *testing.T) {
 	require.Nil(t, err)
 
 	modUser := openapi.UpdateUserRequest{
+		Id:       users[0],
 		LastName: "Reno",
 		Username: users[0],
 	}
 
+	clock.Tick()
 	err = updateUser(db, &clock, modUser)
 	require.Nil(t, err)
 

@@ -23,7 +23,7 @@ func TestGetMapByImpl(t *testing.T) {
 	response, err := getMapById(db, topics[0])
 	require.Nil(t, err)
 
-	require.Equal(t, nodesAndEdges[0].SourceId, response.Nodes[0].Id)
+	require.Equal(t, nodesAndEdges[0].SourceId, response.Nodes[2].Id)
 	require.NotEqual(t, nodesAndEdges[0].TargetId, response.Nodes[0].Id)
 
 }

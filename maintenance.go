@@ -84,7 +84,7 @@ func seedDbHandler(db *bolt.DB, clock *DemoClock) http.Handler {
 	})
 }
 
-func UpdateUserRoleAndReputation(db *bolt.DB, username string, isAdmin bool, reputation int32) error {
+func UpdateUserRoleAndReputation(db *bolt.DB, userId string, isAdmin bool, reputation int32) error {
 	return db.Update(func(tx *bolt.Tx) error {
 		// Get users bucket
 		usersBucket := tx.Bucket([]byte(KeyUsers))
@@ -93,9 +93,9 @@ func UpdateUserRoleAndReputation(db *bolt.DB, username string, isAdmin bool, rep
 		}
 
 		// Get user data
-		userData := usersBucket.Get([]byte(username))
+		userData := usersBucket.Get([]byte(userId))
 		if userData == nil {
-			return fmt.Errorf("user %s not found", username)
+			return fmt.Errorf("user %s not found", userId)
 		}
 
 		var user openapi.UpdateUserRequest
@@ -119,7 +119,7 @@ func UpdateUserRoleAndReputation(db *bolt.DB, username string, isAdmin bool, rep
 			return fmt.Errorf("failed to marshal updated user data: %v", err)
 		}
 
-		return usersBucket.Put([]byte(username), updatedData)
+		return usersBucket.Put([]byte(userId), updatedData)
 	})
 }
 
@@ -184,6 +184,9 @@ func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int)
 						Username: "tester",
 					},
 				}
+
+				clock.Tick()
+
 				nodeIds, err := postNodeTx(tx, clock, node)
 				if err != nil {
 					return err

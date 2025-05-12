@@ -166,33 +166,187 @@ func TestUpdateNode(t *testing.T) {
 	require.NotEqual(t, originalNode.Description, updatedNode.Description)
 }
 
-//I can't test all these endpoints until SSO is complete because I currently have no way to grab the user
-// func TestUpdateBattleVote(t *testing.T) {
-// 	clock := TestClock{}
-// 	db, tearDown := FullStartTestServer("udpateNode", 8088, "")
-// 	defer tearDown()
+func TestUpdateNodeBattleVote(t *testing.T) {
+	clock := TestClock{}
+	db, tearDown := FullStartTestServer("updateNodeBattleVote", 8088, "")
+	defer tearDown()
 
-// 	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
-// 	require.Nil(t, err)
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 2, 1, 1)
+	require.Nil(t, err)
 
-// 	client := &http.Client{}
+	// Set up the first user as logged in
+	UpdateUserRoleAndReputation(db, users[1], true, 0)
+	SetTestLoginUser(users[1])
 
-// 	modNode := openapi.NodeData{
-// 		BattleTested: 1,
-// 		Topic:        topics[0],
-// 		Id:           nodesAndEdges[0].SourceId,
-// 	}
+	client := &http.Client{}
 
-// 	marshal, err := json.Marshal(modNode)
-// 	require.Nil(t, err)
+	// Test upvoting
+	upvoteNode := openapi.NodeData{
+		Topic:        topics[0],
+		Id:           nodesAndEdges[0].SourceId,
+		BattleTested: 1,
+	}
 
-// 	req, _ := http.NewRequest(http.MethodPut,
-// 		"http://127.0.0.1:8088/api/v1/node/battleVote",
-// 		bytes.NewBuffer(marshal))
+	marshal, err := json.Marshal(upvoteNode)
+	require.Nil(t, err)
 
-// 	resp, err := client.Do(req)
-// 	require.Nil(t, err)
-// 	defer resp.Body.Close()
-// 	require.Equal(t, 200, resp.StatusCode)
+	req, _ := http.NewRequest(http.MethodPut,
+		"http://127.0.0.1:8088/api/v1/node/battleVote",
+		bytes.NewBuffer(marshal))
 
-// }
+	resp, err := client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.NotNil(t, resp)
+	require.Equal(t, 200, resp.StatusCode)
+
+	var voteCount int32
+	decoder := json.NewDecoder(resp.Body)
+	_ = decoder.Decode(&voteCount)
+	require.Equal(t, int32(1), voteCount)
+
+	// Verify node was updated in the database
+	updatedNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
+	require.Nil(t, err)
+	require.Equal(t, int32(1), updatedNode.BattleTested)
+
+	// Verify user's vote was recorded
+	user, err := getUser(db, users[1])
+	require.Nil(t, err)
+	require.Equal(t, 1, len(user.BattleTestedUp))
+	require.Equal(t, nodesAndEdges[0].SourceId, user.BattleTestedUp[0].NodeId)
+
+	// Test removing upvote (sending the same vote again)
+	req, _ = http.NewRequest(http.MethodPut,
+		"http://127.0.0.1:8088/api/v1/node/battleVote",
+		bytes.NewBuffer(marshal))
+
+	resp, err = client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.NotNil(t, resp)
+	require.Equal(t, 200, resp.StatusCode)
+
+	decoder = json.NewDecoder(resp.Body)
+	_ = decoder.Decode(&voteCount)
+	require.Equal(t, int32(0), voteCount)
+
+	// Verify node was updated in the database
+	updatedNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
+	require.Nil(t, err)
+	require.Equal(t, int32(0), updatedNode.BattleTested)
+
+	// Verify user's vote was removed
+	user, err = getUser(db, users[1])
+	require.Nil(t, err)
+	require.Equal(t, 0, len(user.BattleTestedUp))
+
+	// Test downvoting
+	downvoteNode := openapi.NodeData{
+		Topic:        topics[0],
+		Id:           nodesAndEdges[0].SourceId,
+		BattleTested: -1,
+	}
+
+	marshal, err = json.Marshal(downvoteNode)
+	require.Nil(t, err)
+
+	req, _ = http.NewRequest(http.MethodPut,
+		"http://127.0.0.1:8088/api/v1/node/battleVote",
+		bytes.NewBuffer(marshal))
+
+	resp, err = client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.NotNil(t, resp)
+	require.Equal(t, 200, resp.StatusCode)
+
+	decoder = json.NewDecoder(resp.Body)
+	_ = decoder.Decode(&voteCount)
+	require.Equal(t, int32(-1), voteCount)
+
+	// Verify node was updated in the database
+	updatedNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
+	require.Nil(t, err)
+	require.Equal(t, int32(-1), updatedNode.BattleTested)
+
+	// Verify user's vote was recorded
+	user, err = getUser(db, users[1])
+	require.Nil(t, err)
+	require.Equal(t, 1, len(user.BattleTestedDown))
+	require.Equal(t, nodesAndEdges[0].SourceId, user.BattleTestedDown[0].NodeId)
+
+	// Test switching from downvote to upvote
+	marshal, err = json.Marshal(upvoteNode)
+	require.Nil(t, err)
+
+	req, _ = http.NewRequest(http.MethodPut,
+		"http://127.0.0.1:8088/api/v1/node/battleVote",
+		bytes.NewBuffer(marshal))
+
+	resp, err = client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.NotNil(t, resp)
+	require.Equal(t, 200, resp.StatusCode)
+
+	decoder = json.NewDecoder(resp.Body)
+	_ = decoder.Decode(&voteCount)
+	require.Equal(t, int32(1), voteCount)
+
+	// Verify node was updated in the database
+	updatedNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
+	require.Nil(t, err)
+	require.Equal(t, int32(1), updatedNode.BattleTested)
+
+	// Verify user's votes were updated correctly
+	user, err = getUser(db, users[1])
+	require.Nil(t, err)
+	require.Equal(t, 0, len(user.BattleTestedDown))
+	require.Equal(t, 1, len(user.BattleTestedUp))
+	require.Equal(t, nodesAndEdges[0].SourceId, user.BattleTestedUp[0].NodeId)
+
+	// Test reputation changes when another user votes
+	// First, get the initial reputation of the node creator
+	nodeCreator, err := getUser(db, updatedNode.CreatedBy.Id)
+	require.Nil(t, err)
+	initialReputation := nodeCreator.Reputation
+
+	// Log in as the second user
+	SetTestLoginUser(users[0])
+
+	// Second user upvotes
+	req, _ = http.NewRequest(http.MethodPut,
+		"http://127.0.0.1:8088/api/v1/node/battleVote",
+		bytes.NewBuffer(marshal))
+
+	resp, err = client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.NotNil(t, resp)
+	require.Equal(t, 200, resp.StatusCode)
+
+	// Verify the node creator's reputation increased
+	nodeCreator, err = getUser(db, updatedNode.CreatedBy.Id)
+	require.Nil(t, err)
+	require.Equal(t, initialReputation+1, nodeCreator.Reputation, "Creator's reputation should increase after upvote")
+
+	// Second user downvotes (switching from upvote)
+	marshal, err = json.Marshal(downvoteNode)
+	require.Nil(t, err)
+
+	req, _ = http.NewRequest(http.MethodPut,
+		"http://127.0.0.1:8088/api/v1/node/battleVote",
+		bytes.NewBuffer(marshal))
+
+	resp, err = client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.NotNil(t, resp)
+	require.Equal(t, 200, resp.StatusCode)
+
+	// Verify the node creator's reputation decreased
+	nodeCreator, err = getUser(db, updatedNode.CreatedBy.Id)
+	require.Nil(t, err)
+	require.Equal(t, initialReputation-1, nodeCreator.Reputation, "Creator's reputation should decrease after downvote")
+}

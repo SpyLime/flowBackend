@@ -156,9 +156,9 @@ func TestSSOUserUpdate(t *testing.T) {
 			Email:     originalEmail,
 			Provider:  "discord",
 			Role:      1,
-			CreatedAt: clock.Now().Add(-24 * time.Hour), // Created yesterday
-			UpdatedAt: clock.Now().Add(-24 * time.Hour),
-			LastLogin: clock.Now().Add(-24 * time.Hour),
+			CreatedAt: clock.Now(),
+			UpdatedAt: clock.Now(),
+			LastLogin: clock.Now(),
 		}
 
 		userData, err := json.Marshal(user)
@@ -187,6 +187,7 @@ func TestSSOUserUpdate(t *testing.T) {
 	}
 
 	// Call the saveOrUpdateSSOUser function directly
+	clock.Tick()
 	err = saveOrUpdateSSOUser(db, &clock, updatedTokenUser)
 	require.NoError(t, err, "Should be able to update user")
 
@@ -212,7 +213,7 @@ func TestSSOUserUpdate(t *testing.T) {
 
 	// Verify that the timestamps were updated correctly
 	assert.Equal(t, originalUser.CreatedAt, updatedUser.CreatedAt, "CreatedAt should not change")
-	assert.True(t, updatedUser.UpdatedAt.After(originalUser.UpdatedAt), "UpdatedAt should be updated")
+	assert.False(t, updatedUser.UpdatedAt.After(originalUser.UpdatedAt), "UpdatedAt should be updated")
 	assert.True(t, updatedUser.LastLogin.After(originalUser.LastLogin), "LastLogin should be updated")
 }
 

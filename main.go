@@ -52,12 +52,25 @@ func (t *DemoClock) TickOne(d time.Duration) {
 	t.Future = t.Future + d
 }
 
+func (t *DemoClock) Tick() {
+	t.Future = t.Future + time.Millisecond
+}
+
 func (t *DemoClock) ResetNow() {
 	t.Future = time.Duration(0)
 }
 
 func (*AppClock) Now() time.Time {
 	return time.Now()
+}
+
+// Add these methods to satisfy the Clock interface
+func (*AppClock) Tick() {
+	// AppClock uses real time, so Tick does nothing
+}
+
+func (*AppClock) TickOne(d time.Duration) {
+	// AppClock uses real time, so TickOne does nothing
 }
 
 func main() {

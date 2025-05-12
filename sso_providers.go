@@ -326,26 +326,6 @@ func ConfigureSSO(service *auth.Service, config ServerConfig, serverPort int, db
 		)
 	}
 
-	// Add Apple provider if enabled
-	if config.Providers.Apple.Enabled {
-		// Skip if required fields are missing
-		if config.Providers.Apple.ClientID == "" || config.Providers.Apple.TeamID == "" ||
-			config.Providers.Apple.KeyID == "" || config.Providers.Apple.ClientSecret == "" {
-		} else {
-			// Apple requires a special setup with team ID and key ID
-			appleConfig := provider.AppleConfig{
-				ClientID: config.Providers.Apple.ClientID,
-				TeamID:   config.Providers.Apple.TeamID,
-				KeyID:    config.Providers.Apple.KeyID,
-			}
-
-			// Create a private key loader that loads the key from a string
-			privateKeyLoader := &StringPrivateKeyLoader{PrivateKey: config.Providers.Apple.ClientSecret}
-
-			// Add the Apple provider
-			_ = service.AddAppleProvider(appleConfig, privateKeyLoader)
-		}
-	}
 }
 
 // Helper function to safely extract string values from a map

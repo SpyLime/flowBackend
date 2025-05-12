@@ -9,6 +9,8 @@ import (
 // Clock is an interface that provides the current time.
 type Clock interface {
 	Now() time.Time
+	// Add Tick method to the interface
+	Tick()
 }
 
 const (
