@@ -924,6 +924,9 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 					return vote, err
 				}
 				err = usersBucket.Put([]byte(userId), marshal)
+				if err != nil {
+					return vote, err
+				}
 				vote = node.YoutubeLinks[videoIndex].Votes
 
 				// Update creator reputation
@@ -958,6 +961,9 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 					return vote, err
 				}
 				err = usersBucket.Put([]byte(userId), marshal)
+				if err != nil {
+					return vote, err
+				}
 				vote = node.YoutubeLinks[videoIndex].Votes
 
 				// Update creator reputation
@@ -999,6 +1005,9 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 					return vote, err
 				}
 				err = usersBucket.Put([]byte(userId), marshal)
+				if err != nil {
+					return vote, err
+				}
 				vote = node.YoutubeLinks[videoIndex].Votes
 
 				// Update creator reputation
@@ -1033,6 +1042,9 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 					return vote, err
 				}
 				err = usersBucket.Put([]byte(userId), marshal)
+				if err != nil {
+					return vote, err
+				}
 				vote = node.YoutubeLinks[videoIndex].Votes
 
 				// Update creator reputation
