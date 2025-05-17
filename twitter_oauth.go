@@ -51,7 +51,7 @@ func TwitterOAuthHandler(w http.ResponseWriter, r *http.Request, config ServerCo
 		}
 	}
 
-	redirectURL := fmt.Sprintf("%s/auth/google/callback", redirectHost)
+	redirectURL := fmt.Sprintf("%s/auth/twitter/callback", redirectHost)
 
 	// Build authorization URL
 	authURL := fmt.Sprintf(
@@ -85,12 +85,24 @@ func TwitterCallbackHandler(w http.ResponseWriter, r *http.Request, config Serve
 	}
 	codeVerifier := cookie.Value
 
+	var redirectHost string
+	redirectHost = fmt.Sprintf("http://localhost:%d", config.ServerPort)
+	if config.Server {
+		if config.Production {
+			redirectHost = "https://flow.schoolbucks.net"
+		} else {
+			redirectHost = "https://flow-test.schoolbucks.net"
+		}
+	}
+
+	redirectURL := fmt.Sprintf("%s/auth/twitter/callback", redirectHost)
+
 	// Exchange the authorization code for an access token
 	tokenURL := "https://api.twitter.com/2/oauth2/token"
 	data := url.Values{}
 	data.Set("code", code)
 	data.Set("grant_type", "authorization_code")
-	data.Set("redirect_uri", fmt.Sprintf("http://localhost:%d/auth/twitter/callback", config.ServerPort))
+	data.Set("redirect_uri", fmt.Sprintf(redirectURL))
 	data.Set("code_verifier", codeVerifier)
 
 	req, err := http.NewRequest("POST", tokenURL, strings.NewReader(data.Encode()))
@@ -206,7 +218,15 @@ func TwitterCallbackHandler(w http.ResponseWriter, r *http.Request, config Serve
 
 	// Redirect directly to the topics page
 	frontendURL := "http://localhost:3000"
-	redirectURL := frontendURL + "/topics"
+	// For production, use the actual domain
+	if config.Server {
+		if config.Production {
+			frontendURL = "https://flow.schoolbucks.net"
+		} else {
+			frontendURL = "https://flow-test.schoolbucks.net"
+		}
+	}
+	redirectURL = frontendURL + "/topics"
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
