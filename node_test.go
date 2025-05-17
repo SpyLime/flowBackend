@@ -196,7 +196,6 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 
 	resp, err := client.Do(req)
 	require.Nil(t, err)
-	defer resp.Body.Close()
 	require.NotNil(t, resp)
 	require.Equal(t, 200, resp.StatusCode)
 
@@ -204,6 +203,7 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 	decoder := json.NewDecoder(resp.Body)
 	_ = decoder.Decode(&voteCount)
 	require.Equal(t, int32(1), voteCount)
+	resp.Body.Close()
 
 	// Verify node was updated in the database
 	updatedNode, err := getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -223,13 +223,13 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 
 	resp, err = client.Do(req)
 	require.Nil(t, err)
-	defer resp.Body.Close()
 	require.NotNil(t, resp)
 	require.Equal(t, 200, resp.StatusCode)
 
 	decoder = json.NewDecoder(resp.Body)
 	_ = decoder.Decode(&voteCount)
 	require.Equal(t, int32(0), voteCount)
+	resp.Body.Close()
 
 	// Verify node was updated in the database
 	updatedNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -257,13 +257,13 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 
 	resp, err = client.Do(req)
 	require.Nil(t, err)
-	defer resp.Body.Close()
 	require.NotNil(t, resp)
 	require.Equal(t, 200, resp.StatusCode)
 
 	decoder = json.NewDecoder(resp.Body)
 	_ = decoder.Decode(&voteCount)
 	require.Equal(t, int32(-1), voteCount)
+	resp.Body.Close()
 
 	// Verify node was updated in the database
 	updatedNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -286,13 +286,13 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 
 	resp, err = client.Do(req)
 	require.Nil(t, err)
-	defer resp.Body.Close()
 	require.NotNil(t, resp)
 	require.Equal(t, 200, resp.StatusCode)
 
 	decoder = json.NewDecoder(resp.Body)
 	_ = decoder.Decode(&voteCount)
 	require.Equal(t, int32(1), voteCount)
+	resp.Body.Close()
 
 	// Verify node was updated in the database
 	updatedNode, err = getNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0])
@@ -322,9 +322,9 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 
 	resp, err = client.Do(req)
 	require.Nil(t, err)
-	defer resp.Body.Close()
 	require.NotNil(t, resp)
 	require.Equal(t, 200, resp.StatusCode)
+	resp.Body.Close()
 
 	// Verify the node creator's reputation increased
 	nodeCreator, err = getUser(db, updatedNode.CreatedBy.Id)
@@ -341,9 +341,9 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 
 	resp, err = client.Do(req)
 	require.Nil(t, err)
-	defer resp.Body.Close()
 	require.NotNil(t, resp)
 	require.Equal(t, 200, resp.StatusCode)
+	resp.Body.Close()
 
 	// Verify the node creator's reputation decreased
 	nodeCreator, err = getUser(db, updatedNode.CreatedBy.Id)
