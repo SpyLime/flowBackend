@@ -94,15 +94,21 @@ func main() {
 	authRoutes, avatarRoutes := authService.Handlers()
 	middleAuth := authService.Middleware()
 
+	frontendURL := "http://localhost:3000"
+	// For production, use the actual domain
+	if config.Server {
+		if config.Production {
+			frontendURL = "https://flow.schoolbucks.net"
+		} else {
+			frontendURL = "https://flow-test.schoolbucks.net"
+		}
+	}
+
 	// Create a custom handler for auth callbacks
 	authCallbackHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check if this is a callback request
 		if strings.Contains(r.URL.Path, "/callback") {
 			// Get the frontend URL for redirects
-			frontendURL := "http://localhost:3000"
-			if config.Production {
-				frontendURL = "https://flow.schoolbucks.net"
-			}
 
 			// First let the auth service handle the request and set cookies
 			responseRecorder := httptest.NewRecorder()
@@ -169,7 +175,7 @@ logoutHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// Custom logout handler
 
 	// Set CORS headers
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Origin", frontendURL)
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-XSRF-TOKEN")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -218,7 +224,7 @@ logoutHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 	// Return a success response
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Origin", frontendURL)
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-XSRF-TOKEN")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -426,7 +432,7 @@ router.Handle("/auth/logout", logoutHandler)
 		}
 
 		// Set CORS headers explicitly
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Header().Set("Access-Control-Allow-Origin", frontendURL)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-XSRF-TOKEN")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
