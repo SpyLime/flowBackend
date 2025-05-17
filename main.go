@@ -597,8 +597,12 @@ func initAuth(db *bolt.DB, clock Clock, config ServerConfig) *auth.Service {
 	baseURL := fmt.Sprintf("http://localhost:%d", config.ServerPort)
 
 	// For production, use the actual domain
-	if config.Production {
-		baseURL = "https://flow.schoolbucks.net"
+	if config.Server {
+		if config.Production {
+			baseURL = "https://flow.schoolbucks.net"
+		} else {
+			baseURL = "https://flow-test.schoolbucks.net"
+		}
 	}
 
 	// Note: We can't set the redirect URL directly in the options

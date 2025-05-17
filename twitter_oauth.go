@@ -41,11 +41,23 @@ func TwitterOAuthHandler(w http.ResponseWriter, r *http.Request, config ServerCo
 	// Generate code challenge (SHA256 hash of verifier, base64url encoded)
 	codeChallenge := generateCodeChallenge(codeVerifier)
 
+	var redirectHost string
+	redirectHost = fmt.Sprintf("http://localhost:%d", config.ServerPort)
+	if config.Server {
+		if config.Production {
+			redirectHost = "https://flow.schoolbucks.net"
+		} else {
+			redirectHost = "https://flow-test.schoolbucks.net"
+		}
+	}
+
+	redirectURL := fmt.Sprintf("%s/auth/google/callback", redirectHost)
+
 	// Build authorization URL
 	authURL := fmt.Sprintf(
 		"https://twitter.com/i/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s&scope=%s&state=%s&code_challenge=%s&code_challenge_method=S256",
 		url.QueryEscape(config.Providers.Twitter.ClientID),
-		url.QueryEscape(fmt.Sprintf("http://localhost:%d/auth/twitter/callback", config.ServerPort)),
+		url.QueryEscape(redirectURL),
 		url.QueryEscape("users.read tweet.read"),
 		url.QueryEscape("twitter_state"), // In production, use a secure random state
 		url.QueryEscape(codeChallenge),
