@@ -9,15 +9,16 @@ import (
 
 // ServerConfig represents the server configuration
 type ServerConfig struct {
-	AdminPassword string         `yaml:"adminpassword"`
-	SecureCookies bool           `yaml:"securecookies"`
-	EnableXSRF    bool           `yaml:"enablexsrf"`
-	SecretKey     string         `yaml:"secretkey"`
-	ServerPort    int            `yaml:"serverport"`
-	SeedPassword  string         `yaml:"seedpassword"`
-	EmailSMTP     string         `yaml:"emailsmtp"`
-	PasswordSMTP  string         `yaml:"passwordsmtp"`
-	Production    bool           `yaml:"production"`
+	AdminPassword string          `yaml:"adminpassword"`
+	SecureCookies bool            `yaml:"securecookies"`
+	EnableXSRF    bool            `yaml:"enablexsrf"`
+	SecretKey     string          `yaml:"secretkey"`
+	ServerPort    int             `yaml:"serverport"`
+	SeedPassword  string          `yaml:"seedpassword"`
+	EmailSMTP     string          `yaml:"emailsmtp"`
+	PasswordSMTP  string          `yaml:"passwordsmtp"`
+	Server        bool            `yaml:"server"` // server is true if the server is running on the server
+	Production    bool            `yaml:"production"`
 	Providers     ProvidersConfig `yaml:"providers"`
 }
 
