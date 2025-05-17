@@ -24,7 +24,7 @@ type UpdateNodeRequest struct {
 
 	Target time.Time `json:"target"`
 
-	Topic time.Time `json:"topic"`
+	Topic string `json:"topic"`
 }
 
 // AssertUpdateNodeRequestRequired checks if the required fields are not zero-ed

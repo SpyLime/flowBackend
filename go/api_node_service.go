@@ -42,26 +42,6 @@ func (s *NodeAPIService) GetNode(ctx context.Context, nodeId string, tid string)
 	return Response(http.StatusNotImplemented, nil), errors.New("GetNode method not implemented")
 }
 
-// UpdateNode - Update an node
-func (s *NodeAPIService) UpdateNode(ctx context.Context, updateNodeRequest UpdateNodeRequest) (ImplResponse, error) {
-	// TODO - update UpdateNode with the required logic for this service method.
-	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	// TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	// return Response(200, nil),nil
-
-	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	// return Response(400, nil),nil
-
-	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	// return Response(404, nil),nil
-
-	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
-	// return Response(405, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("UpdateNode method not implemented")
-}
-
 // AddNode - Add a new node
 func (s *NodeAPIService) AddNode(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
 	// TODO - update AddNode with the required logic for this service method.
@@ -94,4 +74,124 @@ func (s *NodeAPIService) DeleteNode(ctx context.Context, nodeId string, tid stri
 	// return Response(404, nil),nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("DeleteNode method not implemented")
+}
+
+// UpdateNodeTitle - Update a nodes title and description
+func (s *NodeAPIService) UpdateNodeTitle(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+	// TODO - update UpdateNodeTitle with the required logic for this service method.
+	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(200, bool{}) or use other options such as http.Ok ...
+	// return Response(200, bool{}), nil
+
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
+	// return Response(405, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("UpdateNodeTitle method not implemented")
+}
+
+// UpdateNodeVideoVote - Update a nodes video votes
+func (s *NodeAPIService) UpdateNodeVideoVote(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+	// TODO - update UpdateNodeVideoVote with the required logic for this service method.
+	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(200, int32{}) or use other options such as http.Ok ...
+	// return Response(200, int32{}), nil
+
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
+	// return Response(405, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("UpdateNodeVideoVote method not implemented")
+}
+
+// UpdateNodeVideoEdit - add or remove videos from a node
+func (s *NodeAPIService) UpdateNodeVideoEdit(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+	// TODO - update UpdateNodeVideoEdit with the required logic for this service method.
+	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
+	// return Response(200, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
+	// return Response(405, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("UpdateNodeVideoEdit method not implemented")
+}
+
+// UpdateNodeBattleVote - battle vote a node
+func (s *NodeAPIService) UpdateNodeBattleVote(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+	// TODO - update UpdateNodeBattleVote with the required logic for this service method.
+	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(200, int32{}) or use other options such as http.Ok ...
+	// return Response(200, int32{}), nil
+
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
+	// return Response(405, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("UpdateNodeBattleVote method not implemented")
+}
+
+// UpdateNodeFreshVote - fresh vote a node
+func (s *NodeAPIService) UpdateNodeFreshVote(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+	// TODO - update UpdateNodeFreshVote with the required logic for this service method.
+	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(200, int32{}) or use other options such as http.Ok ...
+	// return Response(200, int32{}), nil
+
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
+	// return Response(405, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("UpdateNodeFreshVote method not implemented")
+}
+
+// UpdateNodeFlag - fresh vote a node
+func (s *NodeAPIService) UpdateNodeFlag(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+	// TODO - update UpdateNodeFlag with the required logic for this service method.
+	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
+	// return Response(200, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
+	// return Response(405, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("UpdateNodeFlag method not implemented")
 }

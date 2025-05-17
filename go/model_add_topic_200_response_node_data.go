@@ -24,7 +24,7 @@ type AddTopic200ResponseNodeData struct {
 
 	Title string `json:"title,omitempty"`
 
-	Topic time.Time `json:"topic,omitempty"`
+	Topic string `json:"topic,omitempty"`
 
 	BattleTested int32 `json:"battleTested,omitempty"`
 
@@ -38,15 +38,23 @@ type AddTopic200ResponseNodeData struct {
 
 	YoutubeLinks []AddTopic200ResponseNodeDataYoutubeLinksInner `json:"youtubeLinks,omitempty"`
 
-	CreatedBy string `json:"createdBy,omitempty"`
+	CreatedBy AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy `json:"createdBy,omitempty"`
 
-	EditedBy []string `json:"editedBy,omitempty"`
+	EditedBy []AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy `json:"editedBy,omitempty"`
 }
 
 // AssertAddTopic200ResponseNodeDataRequired checks if the required fields are not zero-ed
 func AssertAddTopic200ResponseNodeDataRequired(obj AddTopic200ResponseNodeData) error {
 	for _, el := range obj.YoutubeLinks {
 		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerRequired(el); err != nil {
+			return err
+		}
+	}
+	if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByRequired(obj.CreatedBy); err != nil {
+		return err
+	}
+	for _, el := range obj.EditedBy {
+		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByRequired(el); err != nil {
 			return err
 		}
 	}
@@ -57,6 +65,14 @@ func AssertAddTopic200ResponseNodeDataRequired(obj AddTopic200ResponseNodeData) 
 func AssertAddTopic200ResponseNodeDataConstraints(obj AddTopic200ResponseNodeData) error {
 	for _, el := range obj.YoutubeLinks {
 		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerConstraints(el); err != nil {
+			return err
+		}
+	}
+	if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByConstraints(obj.CreatedBy); err != nil {
+		return err
+	}
+	for _, el := range obj.EditedBy {
+		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByConstraints(el); err != nil {
 			return err
 		}
 	}

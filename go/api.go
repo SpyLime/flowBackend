@@ -24,15 +24,21 @@ import (
 type MapAPIRouter interface { 
 	GetMapById(http.ResponseWriter, *http.Request)
 	AddEdge(http.ResponseWriter, *http.Request)
+	DeleteEdge(http.ResponseWriter, *http.Request)
 }
 // NodeAPIRouter defines the required methods for binding the api requests to a responses for the NodeAPI
 // The NodeAPIRouter implementation should parse necessary information from the http request,
 // pass the data to a NodeAPIServicer to perform the required actions, then write the service results to the http response.
 type NodeAPIRouter interface { 
 	GetNode(http.ResponseWriter, *http.Request)
-	UpdateNode(http.ResponseWriter, *http.Request)
 	AddNode(http.ResponseWriter, *http.Request)
 	DeleteNode(http.ResponseWriter, *http.Request)
+	UpdateNodeTitle(http.ResponseWriter, *http.Request)
+	UpdateNodeVideoVote(http.ResponseWriter, *http.Request)
+	UpdateNodeVideoEdit(http.ResponseWriter, *http.Request)
+	UpdateNodeBattleVote(http.ResponseWriter, *http.Request)
+	UpdateNodeFreshVote(http.ResponseWriter, *http.Request)
+	UpdateNodeFlag(http.ResponseWriter, *http.Request)
 }
 // TopicAPIRouter defines the required methods for binding the api requests to a responses for the TopicAPI
 // The TopicAPIRouter implementation should parse necessary information from the http request,
@@ -47,6 +53,7 @@ type TopicAPIRouter interface {
 // The UserAPIRouter implementation should parse necessary information from the http request,
 // pass the data to a UserAPIServicer to perform the required actions, then write the service results to the http response.
 type UserAPIRouter interface { 
+	AuthUser(http.ResponseWriter, *http.Request)
 	LoginUser(http.ResponseWriter, *http.Request)
 	LogoutUser(http.ResponseWriter, *http.Request)
 	UpdateUser(http.ResponseWriter, *http.Request)
@@ -62,6 +69,7 @@ type UserAPIRouter interface {
 type MapAPIServicer interface { 
 	GetMapById(context.Context, string) (ImplResponse, error)
 	AddEdge(context.Context, string, GetMapById200ResponseEdgesInner) (ImplResponse, error)
+	DeleteEdge(context.Context, string, string) (ImplResponse, error)
 }
 
 
@@ -71,9 +79,14 @@ type MapAPIServicer interface {
 // and updated with the logic required for the API.
 type NodeAPIServicer interface { 
 	GetNode(context.Context, string, string) (ImplResponse, error)
-	UpdateNode(context.Context, UpdateNodeRequest) (ImplResponse, error)
 	AddNode(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
 	DeleteNode(context.Context, string, string) (ImplResponse, error)
+	UpdateNodeTitle(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	UpdateNodeVideoVote(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	UpdateNodeVideoEdit(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	UpdateNodeBattleVote(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	UpdateNodeFreshVote(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	UpdateNodeFlag(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
 }
 
 
@@ -94,6 +107,7 @@ type TopicAPIServicer interface {
 // while the service implementation can be ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
 type UserAPIServicer interface { 
+	AuthUser(context.Context) (ImplResponse, error)
 	LoginUser(context.Context, LoginUserRequest) (ImplResponse, error)
 	LogoutUser(context.Context) (ImplResponse, error)
 	UpdateUser(context.Context, UpdateUserRequest) (ImplResponse, error)

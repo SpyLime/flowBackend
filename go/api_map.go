@@ -62,6 +62,11 @@ func (c *MapAPIController) Routes() Routes {
 			"/api/v1/map/{topicId}/edge",
 			c.AddEdge,
 		},
+		"DeleteEdge": Route{
+			strings.ToUpper("Delete"),
+			"/api/v1/map/{topicId}/edge",
+			c.DeleteEdge,
+		},
 	}
 }
 
@@ -107,6 +112,38 @@ func (c *MapAPIController) AddEdge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result, err := c.service.AddEdge(r.Context(), topicIdParam, getMapById200ResponseEdgesInnerParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// DeleteEdge - delete edge
+func (c *MapAPIController) DeleteEdge(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	query, err := parseQuery(r.URL.RawQuery)
+	if err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	topicIdParam := params["topicId"]
+	if topicIdParam == "" {
+		c.errorHandler(w, r, &RequiredError{"topicId"}, nil)
+		return
+	}
+	var edgeIdParam string
+	if query.Has("edgeId") {
+		param := query.Get("edgeId")
+
+		edgeIdParam = param
+	} else {
+		c.errorHandler(w, r, &RequiredError{Field: "edgeId"}, nil)
+		return
+	}
+	result, err := c.service.DeleteEdge(r.Context(), topicIdParam, edgeIdParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

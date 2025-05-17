@@ -33,9 +33,6 @@ paths:
           description: Successful operation
         "404":
           description: Topics not found
-      security:
-      - flow_auth:
-        - read:topics
       summary: get all topics
       tags:
       - topic
@@ -58,9 +55,6 @@ paths:
           description: Successful operation
         "405":
           description: Invalid input
-      security:
-      - flow_auth:
-        - write:topics
       summary: Add a new topic
       tags:
       - topic
@@ -83,9 +77,6 @@ paths:
           description: Topic not found
         "405":
           description: Validation exception
-      security:
-      - flow_auth:
-        - write:topic
       summary: Update an existing topic
       tags:
       - topic
@@ -111,9 +102,6 @@ paths:
           description: Forbidden
         "404":
           description: topic not found
-      security:
-      - flow_auth:
-        - write:topic
       summary: Delete a node
       tags:
       - topic
@@ -141,13 +129,37 @@ paths:
           description: Invalid ID supplied
         "404":
           description: Topic not found
-      security:
-      - flow_auth:
-        - read:map
       summary: Find map by ID
       tags:
       - map
   /map/{topicId}/edge:
+    delete:
+      description: delete edge
+      operationId: deleteEdge
+      parameters:
+      - description: ID of topic to return a map for
+        explode: false
+        in: path
+        name: topicId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: edgeId
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "204":
+          description: Successful operation
+        "405":
+          description: Invalid input
+      summary: delete edge
+      tags:
+      - map
     post:
       description: Add a new edge
       operationId: addEdge
@@ -172,9 +184,6 @@ paths:
           description: Successful operation
         "405":
           description: Invalid input
-      security:
-      - flow_auth:
-        - write:edge
       summary: Add a new edge
       tags:
       - map
@@ -206,9 +215,6 @@ paths:
           description: Forbidden
         "404":
           description: Node not found
-      security:
-      - flow_auth:
-        - write:node
       summary: Delete a node
       tags:
       - node
@@ -239,9 +245,6 @@ paths:
           description: Successful operation
         "404":
           description: Topics not found
-      security:
-      - flow_auth:
-        - read:node
       summary: get wiki node
       tags:
       - node
@@ -264,20 +267,74 @@ paths:
           description: Successful operation
         "405":
           description: Invalid input
-      security:
-      - flow_auth:
-        - write:node
       summary: Add a new node
       tags:
       - node
+  /node/title:
     put:
       description: Update an existing node
-      operationId: updateNode
+      operationId: updateNodeTitle
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/updateNode_request'
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+        description: Update an existent node
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+        "405":
+          description: Validation exception
+      summary: Update a nodes title and description
+      tags:
+      - node
+  /node/videoVote:
+    put:
+      description: Update an existing node
+      operationId: updateNodeVideoVote
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+        description: Update an existent node
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: The updated video vote count (or some other relevant
+                  integer value).
+                type: integer
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+        "405":
+          description: Validation exception
+      summary: Update a nodes video votes
+      tags:
+      - node
+  /node/videoEdit:
+    put:
+      description: Update an existing node
+      operationId: updateNodeVideoEdit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
         description: Update an existent node
         required: true
       responses:
@@ -289,12 +346,110 @@ paths:
           description: Node not found
         "405":
           description: Validation exception
-      security:
-      - flow_auth:
-        - write:node
-      summary: Update an node
+      summary: add or remove videos from a node
       tags:
       - node
+  /node/battleVote:
+    put:
+      description: Update an existing node
+      operationId: updateNodeBattleVote
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+        description: Update an existent node
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: The updated battle vote count (or some other relevant
+                  integer value).
+                type: integer
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+        "405":
+          description: Validation exception
+      summary: battle vote a node
+      tags:
+      - node
+  /node/freshVote:
+    put:
+      description: Update an existing node
+      operationId: updateNodeFreshVote
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+        description: Update an existent node
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: The updated fresh vote count (or some other relevant
+                  integer value).
+                type: integer
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+        "405":
+          description: Validation exception
+      summary: fresh vote a node
+      tags:
+      - node
+  /node/flag:
+    put:
+      description: Update an existing node
+      operationId: updateNodeFlag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+        description: Update an existent node
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Node not found
+        "405":
+          description: Validation exception
+      summary: fresh vote a node
+      tags:
+      - node
+  /users/auth:
+    get:
+      description: return user
+      operationId: AuthUser
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser_200_response'
+          description: students matching criteria
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser_404_response'
+          description: No user found with that data
+      summary: return authenticated user details
+      tags:
+      - user
   /user/login:
     post:
       description: Login using SSO
@@ -320,9 +475,6 @@ paths:
           description: SSO provider
         "401":
           description: Authentication failed
-      security:
-      - flow_auth:
-        - write:user
       summary: Login to the system or create account
       tags:
       - user
@@ -335,9 +487,6 @@ paths:
           description: User logged out successfully
         "401":
           description: Unauthorized access
-      security:
-      - flow_auth:
-        - write:user
       summary: Log the user out of the system
       tags:
       - user
@@ -357,9 +506,6 @@ paths:
           description: Successful operation
         "400":
           description: Invalid ID supplied
-      security:
-      - flow_auth:
-        - write:user
       summary: Update user
       tags:
       - user
@@ -383,9 +529,6 @@ paths:
           description: Invalid username supplied
         "404":
           description: User not found
-      security:
-      - flow_auth:
-        - write:user
       summary: Delete user
       tags:
       - user
@@ -412,9 +555,6 @@ paths:
           description: Invalid username supplied
         "404":
           description: User not found
-      security:
-      - flow_auth:
-        - read:user
       summary: Get user by user name
       tags:
       - user
@@ -430,8 +570,7 @@ components:
           example: a ninja attack
           type: string
         topic:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
+          example: bjj
           type: string
         battleTested:
           example: 44
@@ -456,14 +595,10 @@ components:
             $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
           type: array
         createdBy:
-          example: super1
-          type: string
+          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
         editedBy:
-          example:
-          - super1
-          - super2
           items:
-            type: string
+            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
           type: array
     LinkData:
       properties:
@@ -476,8 +611,7 @@ components:
           format: int32
           type: integer
         addedBy:
-          example: Mike21
-          type: string
+          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
         dateAdded:
           example: 2024-08-19T19:25:42.568Z
           format: date-time
@@ -499,6 +633,7 @@ components:
       properties:
         id:
           example: 2024-12-09T04:10:00.350Z
+          format: date-time
           type: string
         position:
           $ref: '#/components/schemas/getMapById_200_response_nodes_inner_position'
@@ -515,6 +650,21 @@ components:
           $ref: '#/components/schemas/getMapById_200_response_nodes_inner_data'
     User:
       properties:
+        provider:
+          example: google
+          type: string
+        id:
+          example: 2451632
+          type: string
+        lastLogin:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        createdAt:
+          format: date-time
+          type: string
         username:
           example: theUser
           type: string
@@ -569,19 +719,24 @@ components:
           type: array
         linked:
           items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
+          type: array
+        videoUp:
+          items:
+            example: www.youtube.com
+            type: string
+          type: array
+        videoDown:
+          items:
+            example: www.youtube.com
+            type: string
           type: array
     Topic:
       properties:
-        id:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
         title:
           example: bjj
           type: string
       required:
-      - id
       - title
     RequestPostNode:
       properties:
@@ -594,8 +749,7 @@ components:
           format: date-time
           type: string
         topic:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
+          example: bjj
           type: string
       required:
       - source
@@ -627,6 +781,29 @@ components:
       items:
         $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
       type: array
+    ResponseAuth2:
+      properties:
+        isAuth:
+          type: boolean
+        role:
+          example: 0
+          type: integer
+      required:
+      - isAuth
+      - role
+    ResponseAuth4:
+      properties:
+        isAuth:
+          example: "False"
+          type: boolean
+        error:
+          type: boolean
+    ResponseCookie:
+      properties:
+        w_authExp:
+          type: string
+        w_auth:
+          type: string
     MapData:
       properties:
         nodes:
@@ -637,6 +814,9 @@ components:
           items:
             $ref: '#/components/schemas/getMapById_200_response_edges_inner'
           type: array
+      required:
+      - edges
+      - nodes
     Login:
       properties:
         ssoProvider:
@@ -648,24 +828,39 @@ components:
           - apple
           - discord
           type: string
+    UserIdentifier:
+      properties:
+        username:
+          example: super123
+          type: string
+        id:
+          example: dkd94njd
+          type: string
     getTopics_200_response_inner:
       example:
-        id: 2024-12-09T04:10:00.350Z
         title: bjj
       properties:
-        id:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
         title:
           example: bjj
           type: string
       required:
-      - id
       - title
+    addTopic_200_response_nodeData_youtubeLinks_inner_addedBy:
+      example:
+        id: dkd94njd
+        username: super123
+      properties:
+        username:
+          example: super123
+          type: string
+        id:
+          example: dkd94njd
+          type: string
     addTopic_200_response_nodeData_youtubeLinks_inner:
       example:
-        addedBy: Mike21
+        addedBy:
+          id: dkd94njd
+          username: super123
         link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
         votes: 21
         dateAdded: 2024-08-19T19:25:42.568Z
@@ -679,8 +874,7 @@ components:
           format: int32
           type: integer
         addedBy:
-          example: Mike21
-          type: string
+          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
         dateAdded:
           example: 2024-08-19T19:25:42.568Z
           format: date-time
@@ -688,10 +882,14 @@ components:
     addTopic_200_response_nodeData:
       example:
         editedBy:
-        - super1
-        - super2
-        createdBy: super1
-        topic: 2024-12-09T04:10:00.350Z
+        - id: dkd94njd
+          username: super123
+        - id: dkd94njd
+          username: super123
+        createdBy:
+          id: dkd94njd
+          username: super123
+        topic: bjj
         description: used to attack ninjas on Friday
         battleTested: 44
         id: 2024-12-09T04:10:00.350Z
@@ -700,11 +898,15 @@ components:
         speed: 55
         isFlagged: true
         youtubeLinks:
-        - addedBy: Mike21
+        - addedBy:
+            id: dkd94njd
+            username: super123
           link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
           votes: 21
           dateAdded: 2024-08-19T19:25:42.568Z
-        - addedBy: Mike21
+        - addedBy:
+            id: dkd94njd
+            username: super123
           link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
           votes: 21
           dateAdded: 2024-08-19T19:25:42.568Z
@@ -717,8 +919,7 @@ components:
           example: a ninja attack
           type: string
         topic:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
+          example: bjj
           type: string
         battleTested:
           example: 44
@@ -743,23 +944,23 @@ components:
             $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
           type: array
         createdBy:
-          example: super1
-          type: string
+          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
         editedBy:
-          example:
-          - super1
-          - super2
           items:
-            type: string
+            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
           type: array
     addTopic_200_response:
       example:
         nodeData:
           editedBy:
-          - super1
-          - super2
-          createdBy: super1
-          topic: 2024-12-09T04:10:00.350Z
+          - id: dkd94njd
+            username: super123
+          - id: dkd94njd
+            username: super123
+          createdBy:
+            id: dkd94njd
+            username: super123
+          topic: bjj
           description: used to attack ninjas on Friday
           battleTested: 44
           id: 2024-12-09T04:10:00.350Z
@@ -768,16 +969,19 @@ components:
           speed: 55
           isFlagged: true
           youtubeLinks:
-          - addedBy: Mike21
+          - addedBy:
+              id: dkd94njd
+              username: super123
             link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
             votes: 21
             dateAdded: 2024-08-19T19:25:42.568Z
-          - addedBy: Mike21
+          - addedBy:
+              id: dkd94njd
+              username: super123
             link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
             votes: 21
             dateAdded: 2024-08-19T19:25:42.568Z
         topic:
-          id: 2024-12-09T04:10:00.350Z
           title: bjj
       properties:
         topic:
@@ -812,11 +1016,11 @@ components:
           type: string
         battleTested:
           example: 200
-          format: int64
+          format: int32
           type: integer
         fresh:
           example: 200
-          format: int64
+          format: int32
           type: integer
         speed:
           example: 75
@@ -839,6 +1043,7 @@ components:
       properties:
         id:
           example: 2024-12-09T04:10:00.350Z
+          format: date-time
           type: string
         position:
           $ref: '#/components/schemas/getMapById_200_response_nodes_inner_position'
@@ -913,24 +1118,9 @@ components:
           items:
             $ref: '#/components/schemas/getMapById_200_response_edges_inner'
           type: array
-    updateNode_request:
-      properties:
-        source:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        target:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        topic:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
       required:
-      - source
-      - target
-      - topic
+      - edges
+      - nodes
     addNode_200_response:
       example:
         sourceId: 2024-12-09T04:10:00.350Z
@@ -947,6 +1137,30 @@ components:
       required:
       - sourceId
       - targetId
+    AuthUser_200_response:
+      example:
+        isAuth: true
+        role: 0
+      properties:
+        isAuth:
+          type: boolean
+        role:
+          example: 0
+          type: integer
+      required:
+      - isAdmin
+      - isAuth
+      - role
+    AuthUser_404_response:
+      example:
+        isAuth: "False"
+        error: true
+      properties:
+        isAuth:
+          example: "False"
+          type: boolean
+        error:
+          type: boolean
     loginUser_request:
       properties:
         ssoProvider:
@@ -961,9 +1175,8 @@ components:
     updateUser_request_battleTestedUp_inner:
       example:
         topic: bjj
-        id: 2024-12-09T04:10:00.350Z
         title: armbar
-        tid: 2024-12-09T04:10:00.350Z
+        nodeId: 2024-12-09T04:10:00.350Z
       properties:
         topic:
           example: bjj
@@ -971,11 +1184,7 @@ components:
         title:
           example: armbar
           type: string
-        tid:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        id:
+        nodeId:
           example: 2024-12-09T04:10:00.350Z
           format: date-time
           type: string
@@ -983,77 +1192,95 @@ components:
       example:
         freshUp:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
+        lastLogin: 2000-01-23T04:56:07.000+00:00
         lastName: James
         role: 1
         edited:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         created:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         freshDown:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         reputation: 34
         description: engineer
+        videoUp:
+        - www.youtube.com
+        - www.youtube.com
         battleTestedUp:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         isFlagged: true
+        createdAt: 2000-01-23T04:56:07.000+00:00
         firstName: John
+        provider: google
+        videoDown:
+        - www.youtube.com
+        - www.youtube.com
         battleTestedDown:
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
           title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+          nodeId: 2024-12-09T04:10:00.350Z
         location: Austin TX
+        id: 2451632
         email: john@email.com
+        updatedAt: 2000-01-23T04:56:07.000+00:00
         username: theUser
         linked:
-        - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
-          title: armbar
-          tid: 2024-12-09T04:10:00.350Z
-        - topic: bjj
-          id: 2024-12-09T04:10:00.350Z
-          title: armbar
-          tid: 2024-12-09T04:10:00.350Z
+        - addedBy:
+            id: dkd94njd
+            username: super123
+          link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+          votes: 21
+          dateAdded: 2024-08-19T19:25:42.568Z
+        - addedBy:
+            id: dkd94njd
+            username: super123
+          link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+          votes: 21
+          dateAdded: 2024-08-19T19:25:42.568Z
       properties:
+        provider:
+          example: google
+          type: string
+        id:
+          example: 2451632
+          type: string
+        lastLogin:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        createdAt:
+          format: date-time
+          type: string
         username:
           example: theUser
           type: string
@@ -1108,13 +1335,15 @@ components:
           type: array
         linked:
           items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
           type: array
-  securitySchemes:
-    flow_auth:
-      flows:
-        implicit:
-          authorizationUrl: https://flowLearning.com/oauth/authorize
-          scopes:
-            write:user: modify user in your account
-      type: oauth2
+        videoUp:
+          items:
+            example: www.youtube.com
+            type: string
+          type: array
+        videoDown:
+          items:
+            example: www.youtube.com
+            type: string
+          type: array

@@ -28,6 +28,20 @@ func NewUserAPIService() *UserAPIService {
 	return &UserAPIService{}
 }
 
+// AuthUser - return authenticated user details
+func (s *UserAPIService) AuthUser(ctx context.Context) (ImplResponse, error) {
+	// TODO - update AuthUser with the required logic for this service method.
+	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(200, AuthUser200Response{}) or use other options such as http.Ok ...
+	// return Response(200, AuthUser200Response{}), nil
+
+	// TODO: Uncomment the next line to return response Response(404, AuthUser404Response{}) or use other options such as http.Ok ...
+	// return Response(404, AuthUser404Response{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("AuthUser method not implemented")
+}
+
 // LoginUser - Login to the system or create account
 func (s *UserAPIService) LoginUser(ctx context.Context, loginUserRequest LoginUserRequest) (ImplResponse, error) {
 	// TODO - update LoginUser with the required logic for this service method.

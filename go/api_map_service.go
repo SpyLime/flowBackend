@@ -58,3 +58,17 @@ func (s *MapAPIService) AddEdge(ctx context.Context, topicId string, getMapById2
 
 	return Response(http.StatusNotImplemented, nil), errors.New("AddEdge method not implemented")
 }
+
+// DeleteEdge - delete edge
+func (s *MapAPIService) DeleteEdge(ctx context.Context, topicId string, edgeId string) (ImplResponse, error) {
+	// TODO - update DeleteEdge with the required logic for this service method.
+	// Add api_map_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(204, {}) or use other options such as http.Ok ...
+	// return Response(204, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
+	// return Response(405, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("DeleteEdge method not implemented")
+}

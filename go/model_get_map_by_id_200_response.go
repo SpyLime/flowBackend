@@ -16,13 +16,23 @@ package openapi
 
 type GetMapById200Response struct {
 
-	Nodes []GetMapById200ResponseNodesInner `json:"nodes,omitempty"`
+	Nodes []GetMapById200ResponseNodesInner `json:"nodes"`
 
-	Edges []GetMapById200ResponseEdgesInner `json:"edges,omitempty"`
+	Edges []GetMapById200ResponseEdgesInner `json:"edges"`
 }
 
 // AssertGetMapById200ResponseRequired checks if the required fields are not zero-ed
 func AssertGetMapById200ResponseRequired(obj GetMapById200Response) error {
+	elements := map[string]interface{}{
+		"nodes": obj.Nodes,
+		"edges": obj.Edges,
+	}
+	for name, el := range elements {
+		if isZero := IsZeroValue(el); isZero {
+			return &RequiredError{Field: name}
+		}
+	}
+
 	for _, el := range obj.Nodes {
 		if err := AssertGetMapById200ResponseNodesInnerRequired(el); err != nil {
 			return err

@@ -12,15 +12,9 @@
 package openapi
 
 
-import (
-	"time"
-)
-
 
 
 type GetTopics200ResponseInner struct {
-
-	Id time.Time `json:"id"`
 
 	Title string `json:"title"`
 }
@@ -28,7 +22,6 @@ type GetTopics200ResponseInner struct {
 // AssertGetTopics200ResponseInnerRequired checks if the required fields are not zero-ed
 func AssertGetTopics200ResponseInnerRequired(obj GetTopics200ResponseInner) error {
 	elements := map[string]interface{}{
-		"id": obj.Id,
 		"title": obj.Title,
 	}
 	for name, el := range elements {

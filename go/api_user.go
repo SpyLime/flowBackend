@@ -52,6 +52,11 @@ func NewUserAPIController(s UserAPIServicer, opts ...UserAPIOption) *UserAPICont
 // Routes returns all the api routes for the UserAPIController
 func (c *UserAPIController) Routes() Routes {
 	return Routes{
+		"AuthUser": Route{
+			strings.ToUpper("Get"),
+			"/api/v1/users/auth",
+			c.AuthUser,
+		},
 		"LoginUser": Route{
 			strings.ToUpper("Post"),
 			"/api/v1/user/login",
@@ -78,6 +83,18 @@ func (c *UserAPIController) Routes() Routes {
 			c.DeleteUser,
 		},
 	}
+}
+
+// AuthUser - return authenticated user details
+func (c *UserAPIController) AuthUser(w http.ResponseWriter, r *http.Request) {
+	result, err := c.service.AuthUser(r.Context())
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
 }
 
 // LoginUser - Login to the system or create account
