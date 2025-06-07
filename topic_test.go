@@ -15,10 +15,8 @@ func TestGetTopics(t *testing.T) {
 	db, tearDown := FullStartTestServer("getUserByName", 8088, "")
 	defer tearDown()
 
-	users, topics, _, err := CreateTestData(db, &clock, 1, 4, 0)
+	_, topics, _, err := CreateTestData(db, &clock, 1, 4, 0)
 	require.Nil(t, err)
-
-	SetTestLoginUser(users[0])
 
 	client := &http.Client{}
 

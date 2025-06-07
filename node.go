@@ -144,11 +144,6 @@ func (s *NodeAPIServiceImpl) UpdateNodeFreshVote(ctx context.Context, updateNode
 
 // GetNode - get wiki node
 func (s *NodeAPIServiceImpl) GetNode(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
-	_, ok := ctx.Value(userInfoKey).(token.User)
-	if !ok {
-		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
-	}
-
 	node, err := getNode(s.db, nodeId, tid)
 	if err != nil {
 		return openapi.Response(404, nil), err

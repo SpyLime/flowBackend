@@ -23,11 +23,6 @@ func NewMapAPIServiceImpl(db *bolt.DB, clock Clock) openapi.MapAPIServicer {
 
 // GetMapById - Find map by ID
 func (s *MapAPIServiceImpl) GetMapById(ctx context.Context, topicId string) (openapi.ImplResponse, error) {
-	_, ok := ctx.Value(userInfoKey).(token.User)
-	if !ok {
-		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
-	}
-
 	response, err := getMapById(s.db, topicId)
 	if err != nil {
 		return openapi.Response(400, nil), err
