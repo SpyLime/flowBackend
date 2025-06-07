@@ -653,27 +653,34 @@ func buildAuthMiddleware(m middleware.Authenticator) func(http.Handler) http.Han
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			// if not authentication related pass through auth
-			if strings.HasPrefix(r.URL.Path, "/auth") {
-				handler.ServeHTTP(w, r)
-			} else if r.URL.Path == "/api/v1/users/register" || r.URL.Path == "/api/v1/users/auth" || r.URL.Path == "/users/auth" {
-				// or auth-free endpoints
-				handler.ServeHTTP(w, r)
+			// Allow public auth-related endpoints
+			if strings.HasPrefix(r.URL.Path, "/auth") ||
+				r.URL.Path == "/api/v1/users/register" ||
+				r.URL.Path == "/api/v1/users/auth" ||
+				r.URL.Path == "/users/auth" {
 
-			} else {
-				h := m.Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					userInfo, err := token.GetUserInfo(r)
-					if err != nil {
-						lgr.Printf("failed to get user info, %s", err)
-						w.WriteHeader(http.StatusForbidden)
-						return
-					}
-					ctx := context.WithValue(r.Context(), userInfoKey, userInfo)
-					handler.ServeHTTP(w, r.WithContext(ctx))
-				}))
-				h.ServeHTTP(w, r)
+				handler.ServeHTTP(w, r)
+				return
 			}
-			return
+
+			// Allow all GET requests
+			if r.Method == http.MethodGet {
+				handler.ServeHTTP(w, r)
+				return
+			}
+
+			// All other requests require authentication
+			h := m.Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				userInfo, err := token.GetUserInfo(r)
+				if err != nil {
+					lgr.Printf("failed to get user info, %s", err)
+					w.WriteHeader(http.StatusForbidden)
+					return
+				}
+				ctx := context.WithValue(r.Context(), userInfoKey, userInfo)
+				handler.ServeHTTP(w, r.WithContext(ctx))
+			}))
+			h.ServeHTTP(w, r)
 		})
 	}
 

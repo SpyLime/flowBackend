@@ -28,11 +28,6 @@ func NewTopicAPIServiceImpl(db *bolt.DB, clock Clock) openapi.TopicAPIServicer {
 
 // GetTopics - get all topics
 func (s *TopicAPIServiceImpl) GetTopics(ctx context.Context) (openapi.ImplResponse, error) {
-	_, ok := ctx.Value(userInfoKey).(token.User)
-	if !ok {
-		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
-	}
-
 	response, err := getTopics(s.db)
 	if err != nil {
 		return openapi.Response(404, nil), err

@@ -98,11 +98,6 @@ func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest o
 
 // GetUserByName - Get user by user name
 func (s *UserAPIServiceImpl) GetUserByName(ctx context.Context, userId string) (openapi.ImplResponse, error) {
-	_, ok := ctx.Value(userInfoKey).(token.User)
-	if !ok {
-		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
-	}
-
 	response, err := getUser(s.db, userId)
 	if err != nil {
 		return openapi.Response(400, nil), err
