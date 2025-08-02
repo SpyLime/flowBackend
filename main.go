@@ -14,10 +14,10 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"fmt"
 	"strings"
 	"time"
 
@@ -98,9 +98,9 @@ func main() {
 	// For production, use the actual domain
 	if config.Server {
 		if config.Production {
-			frontendURL = "https://flow.schoolbucks.net"
+			frontendURL = "https://flow.ubuck.org
 		} else {
-			frontendURL = "https://flow-test.schoolbucks.net"
+			frontendURL = "https://flow-test.ubuck.org"
 		}
 	}
 
@@ -162,7 +162,7 @@ func main() {
 	router.Handle("/auth/facebook/callback", authCallbackHandler)
 	router.Handle("/auth/microsoft/login", authRoutes)
 	router.Handle("/auth/microsoft/callback", authCallbackHandler)
-	
+
 	// Use our custom Twitter OAuth handlers instead of the library's
 	router.HandleFunc("/auth/twitter/login", func(w http.ResponseWriter, r *http.Request) {
 		TwitterOAuthHandler(w, r, config)
@@ -170,69 +170,69 @@ func main() {
 	router.HandleFunc("/auth/twitter/callback", func(w http.ResponseWriter, r *http.Request) {
 		TwitterCallbackHandler(w, r, config, db, clock)
 	})
-// Create a custom logout handler
-logoutHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// Custom logout handler
+	// Create a custom logout handler
+	logoutHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Custom logout handler
 
-	// Set CORS headers
-	w.Header().Set("Access-Control-Allow-Origin", frontendURL)
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-XSRF-TOKEN")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", frontendURL)
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-XSRF-TOKEN")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
-	// Handle preflight requests
-	if r.Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 
-	// Clear the JWT cookie
-	flowJwtCookie := &http.Cookie{
-		Name:     "flow_jwt",
-		Value:    "",
-		Path:     "/",
-		MaxAge:   -1,
-		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
-		SameSite: http.SameSiteLaxMode,
-	}
-	http.SetCookie(w, flowJwtCookie)
+		// Clear the JWT cookie
+		flowJwtCookie := &http.Cookie{
+			Name:     "flow_jwt",
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+			Secure:   false, // Set to true in production with HTTPS
+			SameSite: http.SameSiteLaxMode,
+		}
+		http.SetCookie(w, flowJwtCookie)
 
-	// Clear the JWT cookie
-	jwtCookie := &http.Cookie{
-		Name:     "JWT",
-		Value:    "",
-		Path:     "/",
-		MaxAge:   -1,
-		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
-		SameSite: http.SameSiteLaxMode,
-	}
-	http.SetCookie(w, jwtCookie)
+		// Clear the JWT cookie
+		jwtCookie := &http.Cookie{
+			Name:     "JWT",
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+			Secure:   false, // Set to true in production with HTTPS
+			SameSite: http.SameSiteLaxMode,
+		}
+		http.SetCookie(w, jwtCookie)
 
-	// Clear the XSRF token cookie
-	xsrfCookie := &http.Cookie{
-		Name:     "XSRF-TOKEN",
-		Value:    "",
-		Path:     "/",
-		MaxAge:   -1,
-		HttpOnly: false,
-		Secure:   false, // Set to true in production with HTTPS
-		SameSite: http.SameSiteLaxMode,
-	}
-	http.SetCookie(w, xsrfCookie)
+		// Clear the XSRF token cookie
+		xsrfCookie := &http.Cookie{
+			Name:     "XSRF-TOKEN",
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: false,
+			Secure:   false, // Set to true in production with HTTPS
+			SameSite: http.SameSiteLaxMode,
+		}
+		http.SetCookie(w, xsrfCookie)
 
-	// Return a success response
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", frontendURL)
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-XSRF-TOKEN")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
-	w.Write([]byte(`{"success":true}`));
-})
+		// Return a success response
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", frontendURL)
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-XSRF-TOKEN")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Write([]byte(`{"success":true}`))
+	})
 
-// Mount the custom logout handler
-router.Handle("/auth/logout", logoutHandler)
+	// Mount the custom logout handler
+	router.Handle("/auth/logout", logoutHandler)
 
 	// Mount avatar routes if needed
 	router.PathPrefix("/avatar").Handler(avatarRoutes)
@@ -259,7 +259,7 @@ router.Handle("/auth/logout", logoutHandler)
 			if err == nil {
 				// Use the user info from the JWT cookie
 				response.IsAuth = true
-				
+
 				// Get the user's role from the database instead of hardcoding KeyUser
 				userDetails, userErr := getUser(db, jwtPayload.User.ID)
 				if userErr == nil {
@@ -268,7 +268,7 @@ router.Handle("/auth/logout", logoutHandler)
 					// Fallback to default role if user not found in database
 					response.Role = KeyUser
 				}
-				
+
 				response.Name = jwtPayload.User.Name
 				response.Email = jwtPayload.User.Email
 				response.ID = jwtPayload.User.ID
@@ -493,7 +493,6 @@ router.Handle("/auth/logout", logoutHandler)
 	// //reset clock to current time
 	// router.Handle("/admin/resetClock", resetClockHandler(clock))
 
-
 	// Apply CORS middleware first to ensure CORS headers are set for all routes
 	router.Use(buildCORSMiddleware())
 
@@ -605,9 +604,9 @@ func initAuth(db *bolt.DB, clock Clock, config ServerConfig) *auth.Service {
 	// For production, use the actual domain
 	if config.Server {
 		if config.Production {
-			baseURL = "https://flow.schoolbucks.net"
+			baseURL = "https://flow.ubuck.org"
 		} else {
-			baseURL = "https://flow-test.schoolbucks.net"
+			baseURL = "https://flow-test.ubuck.org"
 		}
 	}
 
@@ -627,8 +626,8 @@ func initAuth(db *bolt.DB, clock Clock, config ServerConfig) *auth.Service {
 		URL:            baseURL,
 		AvatarStore:    avatar.NewNoOp(),
 		// Custom JWT settings
-		JWTCookieName:  "flow_jwt",         // Custom JWT cookie name
-		JWTQuery:       "token",            // Query parameter name for JWT
+		JWTCookieName: "flow_jwt", // Custom JWT cookie name
+		JWTQuery:      "token",    // Query parameter name for JWT
 		Validator: token.ValidatorFunc(func(_ string, claims token.Claims) bool {
 			// Allow all authenticated users
 			return true
@@ -646,8 +645,6 @@ func initAuth(db *bolt.DB, clock Clock, config ServerConfig) *auth.Service {
 
 	return service
 }
-
-
 
 func buildAuthMiddleware(m middleware.Authenticator) func(http.Handler) http.Handler {
 	return func(handler http.Handler) http.Handler {
@@ -684,8 +681,7 @@ func buildAuthMiddleware(m middleware.Authenticator) func(http.Handler) http.Han
 		})
 	}
 
+	// loadConfig function moved to config.go
 
-// loadConfig function moved to config.go
-
-// ErrorHandler moved to error_handler.go
+	// ErrorHandler moved to error_handler.go
 }

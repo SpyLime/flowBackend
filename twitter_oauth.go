@@ -45,9 +45,9 @@ func TwitterOAuthHandler(w http.ResponseWriter, r *http.Request, config ServerCo
 	redirectHost = fmt.Sprintf("http://localhost:%d", config.ServerPort)
 	if config.Server {
 		if config.Production {
-			redirectHost = "https://flow.schoolbucks.net"
+			redirectHost = "https://flow.ubuck.org"
 		} else {
-			redirectHost = "https://flow-test.schoolbucks.net"
+			redirectHost = "https://flow-test.ubuck.org"
 		}
 	}
 
@@ -89,9 +89,9 @@ func TwitterCallbackHandler(w http.ResponseWriter, r *http.Request, config Serve
 	redirectHost = fmt.Sprintf("http://localhost:%d", config.ServerPort)
 	if config.Server {
 		if config.Production {
-			redirectHost = "https://flow.schoolbucks.net"
+			redirectHost = "https://flow.ubuck.org"
 		} else {
-			redirectHost = "https://flow-test.schoolbucks.net"
+			redirectHost = "https://flow-test.ubuck.org"
 		}
 	}
 
@@ -221,9 +221,9 @@ func TwitterCallbackHandler(w http.ResponseWriter, r *http.Request, config Serve
 	// For production, use the actual domain
 	if config.Server {
 		if config.Production {
-			frontendURL = "https://flow.schoolbucks.net"
+			frontendURL = "https://flow.ubuck.org"
 		} else {
-			frontendURL = "https://flow-test.schoolbucks.net"
+			frontendURL = "https://flow-test.ubuck.org"
 		}
 	}
 	redirectURL = frontendURL + "/topics"
