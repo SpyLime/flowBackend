@@ -98,7 +98,7 @@ func main() {
 	// For production, use the actual domain
 	if config.Server {
 		if config.Production {
-			frontendURL = "https://flow.ubuck.org
+			frontendURL = "https://flow.ubuck.org"
 		} else {
 			frontendURL = "https://flow-test.ubuck.org"
 		}
