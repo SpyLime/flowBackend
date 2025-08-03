@@ -40,26 +40,6 @@ var build_date string
 type AppClock struct {
 }
 
-type DemoClock struct {
-	Future time.Duration
-}
-
-func (t *DemoClock) Now() time.Time {
-	lgr.Printf("DEBUG current time - %v", time.Now().Add(t.Future))
-	return time.Now().Add(t.Future)
-}
-func (t *DemoClock) TickOne(d time.Duration) {
-	t.Future = t.Future + d
-}
-
-func (t *DemoClock) Tick() {
-	t.Future = t.Future + time.Millisecond
-}
-
-func (t *DemoClock) ResetNow() {
-	t.Future = time.Duration(0)
-}
-
 func (*AppClock) Now() time.Time {
 	return time.Now()
 }
@@ -468,30 +448,6 @@ func main() {
 		writer.Header().Set("Content-Type", "application/octet-stream")
 		writer.Write([]byte(build_date))
 	})
-	// //new school
-	// router.Handle("/admin/new-school", newSchoolHandler(db, &AppClock{}))
-	// //reset staff password
-	// router.Handle("/admin/resetPassword", resetPasswordHandler(db))
-	// //add job details
-	// router.Handle("/admin/addJobs", addJobsHandler(db))
-	// //add life event
-	// router.Handle("/admin/addEvents", addEventsHandler(db))
-	// //add admin
-	// router.Handle("/admin/addAdmin", addAdminHandler(db))
-	//seed db, dev only
-	router.Handle("/admin/seedDb", seedDbHandler(db, clock))
-	// //advance clock 15 days, dev only
-	// router.Handle("/admin/nextCollege", nextCollegeHandler(clock))
-	// //advance clock 5 days, dev only
-	// router.Handle("/admin/nextCareer", nextCareerHandler(clock))
-	// //advance clock 24 hours, dev only
-	// router.Handle("/admin/nextDay", nextDayHandler(clock))
-	// //advance clock 1 hour, dev only
-	// router.Handle("/admin/nextHour", nextHourHandler(clock))
-	// //advance clock 10 minutes, dev only
-	// router.Handle("/admin/nextMinutes", nextMinutesHandler(clock))
-	// //reset clock to current time
-	// router.Handle("/admin/resetClock", resetClockHandler(clock))
 
 	// Apply CORS middleware first to ensure CORS headers are set for all routes
 	router.Use(buildCORSMiddleware())
@@ -504,14 +460,9 @@ func main() {
 
 }
 
-func createRouter(db *bolt.DB) (*mux.Router, *DemoClock) {
-	serverConfig := LoadConfig()
-	if serverConfig.Production {
-		clock := &AppClock{}
-		return createRouterClock(db, clock), nil
-	}
+func createRouter(db *bolt.DB) (*mux.Router, *AppClock) {
+	clock := &AppClock{}
 
-	clock := &DemoClock{}
 	return createRouterClock(db, clock), clock
 }
 
@@ -535,67 +486,6 @@ func createRouterClock(db *bolt.DB, clock Clock) *mux.Router {
 		UserAPIController)
 
 }
-
-// func InitDefaultAccounts(db *bolt.DB, clock Clock) {
-// 	newSchoolRequest := NewSchoolRequest{
-// 		School:    "test school",
-// 		FirstName: "test",
-// 		LastName:  "admin",
-// 		Email:     "test@admin.com",
-// 		City:      "Stockton",
-// 		Zip:       95336,
-// 	}
-// 	_ = createNewSchool(db, clock, newSchoolRequest, "123qwe")
-// }
-
-// func createNewSchool(db *bolt.DB, clock Clock, newSchoolRequest NewSchoolRequest, adminPassword string) error {
-
-// 	schoolId, err := FindOrCreateSchool(db, clock, newSchoolRequest.School, newSchoolRequest.City, newSchoolRequest.Zip)
-// 	if err != nil {
-// 		lgr.Printf("ERROR school does not exist: %v", err)
-// 	}
-
-// 	lgr.Printf("INFO test school id - %s", schoolId)
-
-// 	admin := UserInfo{
-// 		Name:        newSchoolRequest.Email,
-// 		Email:       newSchoolRequest.Email,
-// 		PasswordSha: EncodePassword(adminPassword),
-// 		FirstName:   newSchoolRequest.FirstName,
-// 		LastName:    newSchoolRequest.LastName,
-// 		Role:        UserRoleAdmin,
-// 		SchoolId:    schoolId,
-// 	}
-
-// 	_, err = CreateSchoolAdmin(db, admin)
-// 	if err != nil {
-// 		lgr.Printf("ERROR school admin is not created: %v", err)
-// 		return err
-// 	}
-
-// 	tEmail := newSchoolRequest.Email[:1] + "." + newSchoolRequest.Email[1:]
-// 	lgr.Printf("INFO teacher's email: %s", tEmail)
-
-// 	teacher := UserInfo{
-// 		Name:        tEmail,
-// 		Email:       tEmail,
-// 		PasswordSha: EncodePassword(adminPassword),
-// 		FirstName:   newSchoolRequest.FirstName,
-// 		LastName:    newSchoolRequest.LastName,
-// 		Role:        UserRoleTeacher,
-// 		SchoolId:    schoolId,
-// 		Settings: TeacherSettings{
-// 			CurrencyLock: false,
-// 		},
-// 	}
-
-// 	err = createTeacher(db, teacher)
-// 	if err != nil {
-// 		lgr.Printf("ERROR teacher user is not created")
-// 	}
-
-// 	return nil
-// }
 
 func initAuth(db *bolt.DB, clock Clock, config ServerConfig) *auth.Service {
 	// Determine the base URL for the application
