@@ -221,6 +221,7 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 		"http://127.0.0.1:8088/api/v1/node/battleVote",
 		bytes.NewBuffer(marshal))
 
+	time.Sleep(35 * time.Millisecond)
 	resp, err = client.Do(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
@@ -255,6 +256,7 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 		"http://127.0.0.1:8088/api/v1/node/battleVote",
 		bytes.NewBuffer(marshal))
 
+	time.Sleep(35 * time.Millisecond)
 	resp, err = client.Do(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
@@ -284,6 +286,7 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 		"http://127.0.0.1:8088/api/v1/node/battleVote",
 		bytes.NewBuffer(marshal))
 
+	time.Sleep(35 * time.Millisecond)
 	resp, err = client.Do(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
@@ -320,6 +323,7 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 		"http://127.0.0.1:8088/api/v1/node/battleVote",
 		bytes.NewBuffer(marshal))
 
+	time.Sleep(35 * time.Millisecond)
 	resp, err = client.Do(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
@@ -339,6 +343,7 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 		"http://127.0.0.1:8088/api/v1/node/battleVote",
 		bytes.NewBuffer(marshal))
 
+	time.Sleep(35 * time.Millisecond)
 	resp, err = client.Do(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
