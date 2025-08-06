@@ -843,9 +843,11 @@ func removeVideoFromUsersVotersTx(tx *bolt.Tx, videoLink string) (err error) {
 		return fmt.Errorf("users bucket not found")
 	}
 
-	// Iterate over all users
-	err = usersBucket.ForEach(func(k, v []byte) error {
-		var user openapi.User
+	c := usersBucket.Cursor()
+	for k, v := c.First(); k != nil; k, v = c.Next() {
+		var user openapi.UpdateUserRequest
+
+		// Unmarshal the user JSON
 		if err := json.Unmarshal(v, &user); err != nil {
 			return err
 		}
@@ -866,14 +868,17 @@ func removeVideoFromUsersVotersTx(tx *bolt.Tx, videoLink string) (err error) {
 			}
 		}
 
-		// Save updated user
-		marshal, err := json.Marshal(user)
+		// Marshal back to JSON
+		marshaled, err := json.Marshal(user)
 		if err != nil {
 			return err
 		}
 
-		return usersBucket.Put(k, marshal)
-	})
+		// Save updated user
+		if err := usersBucket.Put(k, marshaled); err != nil {
+			return err
+		}
+	}
 
 	return
 }
