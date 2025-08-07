@@ -3,12 +3,37 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
 	openapi "github.com/SpyLime/flowBackend/go"
 	bolt "go.etcd.io/bbolt"
 )
+
+// areSameYouTubeVideo returns true if two YouTube URLs point to the same video.
+func areSameYouTubeVideo(link1, link2 string) bool {
+	return extractYouTubeID(link1) == extractYouTubeID(link2)
+}
+
+// extractYouTubeID extracts the video ID from a YouTube URL (short or full).
+func extractYouTubeID(link string) string {
+	u, err := url.Parse(link)
+	if err != nil {
+		return ""
+	}
+
+	switch u.Host {
+	case "youtu.be":
+		// Short URL: video ID is the path without leading '/'
+		return strings.TrimPrefix(u.Path, "/")
+	case "www.youtube.com", "youtube.com", "m.youtube.com":
+		// Full URL: video ID is in 'v' query parameter
+		return u.Query().Get("v")
+	}
+
+	return ""
+}
 
 func getNode(db *bolt.DB, nodeId, topicId string) (response openapi.AddTopic200ResponseNodeData, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
@@ -241,20 +266,20 @@ func removeNodeFromAllUsersTx(tx *bolt.Tx, nodeId string, topicId string) error 
 		// We need to check if any of the node's videos are in the user's video votes
 		for _, video := range node.YoutubeLinks {
 			for _, userVideo := range user.VideoUp {
-				if userVideo == video.Link {
+				if areSameYouTubeVideo(userVideo, video.Link) {
 					userIds[string(k)] = true
 				}
 			}
 
 			for _, userVideo := range user.VideoDown {
-				if userVideo == video.Link {
+				if areSameYouTubeVideo(userVideo, video.Link) {
 					userIds[string(k)] = true
 				}
 			}
 
 			// Check linked videos
 			for _, linked := range user.Linked {
-				if linked.Link == video.Link {
+				if areSameYouTubeVideo(linked.Link, video.Link) {
 					userIds[string(k)] = true
 				}
 			}
@@ -329,7 +354,7 @@ func removeNodeFromUserTx(tx *bolt.Tx, userId string, nodeId string, topicId str
 	for _, video := range videos {
 		// Remove from video up votes
 		for i, link := range user.VideoUp {
-			if link == video.Link {
+			if areSameYouTubeVideo(link, video.Link) {
 				user.VideoUp = append(user.VideoUp[:i], user.VideoUp[i+1:]...)
 				break
 			}
@@ -337,7 +362,7 @@ func removeNodeFromUserTx(tx *bolt.Tx, userId string, nodeId string, topicId str
 
 		// Remove from video down votes
 		for i, link := range user.VideoDown {
-			if link == video.Link {
+			if areSameYouTubeVideo(link, video.Link) {
 				user.VideoDown = append(user.VideoDown[:i], user.VideoDown[i+1:]...)
 				break
 			}
@@ -345,7 +370,7 @@ func removeNodeFromUserTx(tx *bolt.Tx, userId string, nodeId string, topicId str
 
 		// Remove from linked videos
 		for i, linked := range user.Linked {
-			if linked.Link == video.Link {
+			if areSameYouTubeVideo(linked.Link, video.Link) {
 				user.Linked = append(user.Linked[:i], user.Linked[i+1:]...)
 				break
 			}
@@ -751,7 +776,9 @@ func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200
 	}
 
 	for i, item := range node.YoutubeLinks {
-		if item.Link == request.YoutubeLinks[0].Link { // Check if ID matches
+
+		if areSameYouTubeVideo(item.Link, request.YoutubeLinks[0].Link) { // Check if ID matches
+
 			if request.YoutubeLinks[0].Votes > 0 {
 				return fmt.Errorf("this video is already added")
 			} else {
@@ -768,7 +795,14 @@ func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200
 				return err
 			}
 
-			err = userVideoEditTx(tx, clock, user.Id, request)
+			err = userVideoEditTx(tx, clock, item.AddedBy.Id, request) //remove the video from the user that added it linked field
+			if err != nil {
+				return err
+			}
+			err = removeVideoFromUsersVotersTx(tx, request.YoutubeLinks[0].Link) //remove the video from every user that voted on it
+			if err != nil {
+				return err
+			}
 
 			return err
 		}
@@ -798,7 +832,53 @@ func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200
 		return
 	}
 
-	err = userVideoEditTx(tx, clock, user.Id, request)
+	err = userVideoEditTx(tx, clock, user.Id, request) //add the video to the user that added it linked field
+
+	return
+}
+
+func removeVideoFromUsersVotersTx(tx *bolt.Tx, videoLink string) (err error) {
+	usersBucket := tx.Bucket([]byte(KeyUsers))
+	if usersBucket == nil {
+		return fmt.Errorf("users bucket not found")
+	}
+
+	c := usersBucket.Cursor()
+	for k, v := c.First(); k != nil; k, v = c.Next() {
+		var user openapi.UpdateUserRequest
+
+		// Unmarshal the user JSON
+		if err := json.Unmarshal(v, &user); err != nil {
+			return err
+		}
+
+		// Remove from video up votes
+		for i, link := range user.VideoUp {
+			if areSameYouTubeVideo(link, videoLink) {
+				user.VideoUp = append(user.VideoUp[:i], user.VideoUp[i+1:]...)
+				break
+			}
+		}
+
+		// Remove from video down votes
+		for i, link := range user.VideoDown {
+			if areSameYouTubeVideo(link, videoLink) {
+				user.VideoDown = append(user.VideoDown[:i], user.VideoDown[i+1:]...)
+				break
+			}
+		}
+
+		// Marshal back to JSON
+		marshaled, err := json.Marshal(user)
+		if err != nil {
+			return err
+		}
+
+		// Save updated user
+		if err := usersBucket.Put(k, marshaled); err != nil {
+			return err
+		}
+	}
 
 	return
 }
@@ -810,7 +890,8 @@ func userVideoEditTx(tx *bolt.Tx, clock Clock, userId string, request openapi.Ad
 	}
 
 	for i, item := range user.Linked {
-		if item.Link == request.YoutubeLinks[0].Link {
+		if areSameYouTubeVideo(item.Link, request.YoutubeLinks[0].Link) {
+
 			if request.YoutubeLinks[0].Votes > 0 {
 				//already added
 				return nil
@@ -881,7 +962,7 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 	// Find the video link
 	var videoIndex = -1
 	for i, video := range node.YoutubeLinks {
-		if video.Link == request.YoutubeLinks[0].Link {
+		if areSameYouTubeVideo(video.Link, request.YoutubeLinks[0].Link) {
 			videoIndex = i
 			break
 		}
@@ -909,7 +990,7 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 	if request.YoutubeLinks[0].Votes > 0 {
 		// Check if user already upvoted
 		for i, item := range user.VideoUp {
-			if item == request.YoutubeLinks[0].Link {
+			if areSameYouTubeVideo(item, request.YoutubeLinks[0].Link) {
 				// Remove upvote
 				user.VideoUp = append(user.VideoUp[:i], user.VideoUp[i+1:]...)
 				node.YoutubeLinks[videoIndex].Votes--
@@ -944,7 +1025,7 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 
 		// Check if user already downvoted
 		for i, item := range user.VideoDown {
-			if item == request.YoutubeLinks[0].Link {
+			if areSameYouTubeVideo(item, request.YoutubeLinks[0].Link) {
 				// Remove downvote and add upvote (switch vote)
 				user.VideoDown = append(user.VideoDown[:i], user.VideoDown[i+1:]...)
 				node.YoutubeLinks[videoIndex].Votes += 2 // +1 for removing downvote, +1 for adding upvote
@@ -990,7 +1071,7 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 	} else if request.YoutubeLinks[0].Votes < 0 {
 		// Handle downvote
 		for i, item := range user.VideoDown {
-			if item == request.YoutubeLinks[0].Link {
+			if areSameYouTubeVideo(item, request.YoutubeLinks[0].Link) {
 				// Remove downvote
 				user.VideoDown = append(user.VideoDown[:i], user.VideoDown[i+1:]...)
 				node.YoutubeLinks[videoIndex].Votes++
@@ -1025,7 +1106,7 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 
 		// Check if user already upvoted
 		for i, item := range user.VideoUp {
-			if item == request.YoutubeLinks[0].Link {
+			if areSameYouTubeVideo(item, request.YoutubeLinks[0].Link) {
 				// Remove upvote and add downvote (switch vote)
 				user.VideoUp = append(user.VideoUp[:i], user.VideoUp[i+1:]...)
 				node.YoutubeLinks[videoIndex].Votes -= 2 // -1 for removing upvote, -1 for adding downvote
@@ -1102,7 +1183,7 @@ func userVideoVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Resp
 
 	if request.YoutubeLinks[0].Votes > 0 {
 		for i, item := range user.VideoUp {
-			if item == request.YoutubeLinks[0].Link {
+			if areSameYouTubeVideo(item, request.YoutubeLinks[0].Link) {
 				user.VideoUp = append(user.VideoUp[:i], user.VideoUp[i+1:]...)
 				vote--
 				marshal, err := json.Marshal(user)
@@ -1121,7 +1202,7 @@ func userVideoVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Resp
 		vote++
 
 		for i, item := range user.VideoDown {
-			if item == request.YoutubeLinks[0].Link {
+			if areSameYouTubeVideo(item, request.YoutubeLinks[0].Link) {
 				user.VideoDown = append(user.VideoDown[:i], user.VideoDown[i+1:]...)
 				vote++
 				break
@@ -1130,7 +1211,7 @@ func userVideoVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Resp
 
 	} else {
 		for i, item := range user.VideoDown {
-			if item == request.YoutubeLinks[0].Link {
+			if areSameYouTubeVideo(item, request.YoutubeLinks[0].Link) {
 				user.VideoDown = append(user.VideoDown[:i], user.VideoDown[i+1:]...)
 				vote++
 				marshal, err := json.Marshal(user)
@@ -1149,7 +1230,7 @@ func userVideoVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Resp
 		vote--
 
 		for i, item := range user.VideoUp {
-			if item == request.YoutubeLinks[0].Link {
+			if areSameYouTubeVideo(item, request.YoutubeLinks[0].Link) {
 				user.VideoUp = append(user.VideoUp[:i], user.VideoUp[i+1:]...)
 				vote--
 				break

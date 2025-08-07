@@ -823,6 +823,87 @@ func TestUpdateNodeVideoEditImpl(t *testing.T) {
 
 }
 
+func TestVideoDeletedFromAnotherUser(t *testing.T) {
+	clock := TestClock{}
+	lgr.Printf("INFO TestVideoDeletedFromAnotherUser")
+	t.Log("INFO TestVideoDeletedFromAnotherUser")
+
+	db, dbTearDown := OpenTestDB("VideoDeletedFromAnotherUser")
+	defer dbTearDown()
+
+	// Create 2 users, 1 topic, 1 node
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 2, 1, 1)
+	require.Nil(t, err)
+
+	userAId := users[0]
+	userBId := users[1]
+	topic := topics[0]
+	nodeId := nodesAndEdges[0].SourceId
+
+	// Get userB (to simulate video add)
+	userB, err := getUser(db, userBId)
+	require.Nil(t, err)
+
+	// User B adds a video to the node
+	addVideo := openapi.AddTopic200ResponseNodeData{
+		Topic: topic,
+		Id:    nodeId,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "https://www.youtube.com/watch?v=abc123",
+			Votes: 1,
+		}},
+	}
+
+	err = updateNodeVideoEdit(db, &clock, addVideo, userB)
+	require.Nil(t, err)
+
+	// Verify video added
+	nodeAfterAdd, err := getNode(db, nodeId.Format(time.RFC3339Nano), topic)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(nodeAfterAdd.YoutubeLinks))
+	require.Equal(t, "https://www.youtube.com/watch?v=abc123", nodeAfterAdd.YoutubeLinks[0].Link)
+
+	// User A upvotes the video
+
+	upvoteVideo := openapi.AddTopic200ResponseNodeData{
+		Topic: topic,
+		Id:    nodeId,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "https://www.youtube.com/watch?v=abc123",
+			Votes: 1,
+		}},
+	}
+
+	_, err = updateNodeVideoVote(db, upvoteVideo, userAId)
+	require.Nil(t, err)
+
+	// User A deletes the video
+	deleteVideo := openapi.AddTopic200ResponseNodeData{
+		Topic: topic,
+		Id:    nodeId,
+		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+			Link:  "https://www.youtube.com/watch?v=abc123",
+			Votes: -1,
+		}},
+	}
+
+	userA, err := getUser(db, userAId)
+	require.Nil(t, err)
+
+	err = updateNodeVideoEdit(db, &clock, deleteVideo, userA)
+	require.Nil(t, err)
+
+	// Verify video is removed from node
+	nodeAfterDelete, err := getNode(db, nodeId.Format(time.RFC3339Nano), topic)
+	require.Nil(t, err)
+	require.Zero(t, len(nodeAfterDelete.YoutubeLinks))
+
+	// Optional: check userA doesn't have it in downvoted list
+	userAAfter, err := getUser(db, userAId)
+	require.Nil(t, err)
+	require.Zero(t, len(userAAfter.VideoDown))
+}
+
 func TestUpdateNodeVideoVoteReputationImpl(t *testing.T) {
 	clock := TestClock{}
 	lgr.Printf("INFO TestUpdateNodeVideoVoteReputationImpl")
