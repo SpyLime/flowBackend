@@ -23,11 +23,16 @@ func extractYouTubeID(link string) string {
 		return ""
 	}
 
-	switch u.Host {
+	host := strings.TrimPrefix(u.Host, "www.") // normalize
+	switch host {
 	case "youtu.be":
 		// Short URL: video ID is the path without leading '/'
 		return strings.TrimPrefix(u.Path, "/")
-	case "www.youtube.com", "youtube.com", "m.youtube.com":
+	case "youtube.com", "m.youtube.com":
+		// Shorts URL: video ID is path segment after /shorts/
+		if strings.HasPrefix(u.Path, "/shorts/") {
+			return strings.TrimPrefix(u.Path, "/shorts/")
+		}
 		// Full URL: video ID is in 'v' query parameter
 		return u.Query().Get("v")
 	}
