@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -13,31 +12,7 @@ import (
 
 // areSameYouTubeVideo returns true if two YouTube URLs point to the same video.
 func areSameYouTubeVideo(link1, link2 string) bool {
-	return extractYouTubeID(link1) == extractYouTubeID(link2)
-}
-
-// extractYouTubeID extracts the video ID from a YouTube URL (short or full).
-func extractYouTubeID(link string) string {
-	u, err := url.Parse(link)
-	if err != nil {
-		return ""
-	}
-
-	host := strings.TrimPrefix(u.Host, "www.") // normalize
-	switch host {
-	case "youtu.be":
-		// Short URL: video ID is the path without leading '/'
-		return strings.TrimPrefix(u.Path, "/")
-	case "youtube.com", "m.youtube.com":
-		// Shorts URL: video ID is path segment after /shorts/
-		if strings.HasPrefix(u.Path, "/shorts/") {
-			return strings.TrimPrefix(u.Path, "/shorts/")
-		}
-		// Full URL: video ID is in 'v' query parameter
-		return u.Query().Get("v")
-	}
-
-	return ""
+	return link1 == link2
 }
 
 func getNode(db *bolt.DB, nodeId, topicId string) (response openapi.AddTopic200ResponseNodeData, err error) {
