@@ -37,7 +37,7 @@ func (s *TopicAPIServiceImpl) GetTopics(ctx context.Context) (openapi.ImplRespon
 }
 
 // UpdateTopic - Update an existing topic
-func (s *TopicAPIServiceImpl) UpdateTopic(ctx context.Context, getTopics200ResponseInner openapi.GetTopics200ResponseInner) (openapi.ImplResponse, error) {
+func (s *TopicAPIServiceImpl) UpdateTopic(ctx context.Context, topic openapi.Topic) (openapi.ImplResponse, error) {
 	// TODO - update UpdateTopic with the required logic for this service method.
 	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -62,7 +62,7 @@ func (s *TopicAPIServiceImpl) UpdateTopic(ctx context.Context, getTopics200Respo
 }
 
 // AddTopic - Add a new topic
-func (s *TopicAPIServiceImpl) AddTopic(ctx context.Context, getTopics200ResponseInner openapi.GetTopics200ResponseInner) (openapi.ImplResponse, error) {
+func (s *TopicAPIServiceImpl) AddTopic(ctx context.Context, topic openapi.Topic) (openapi.ImplResponse, error) {
 	// Extract user information from context
 	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
@@ -78,12 +78,12 @@ func (s *TopicAPIServiceImpl) AddTopic(ctx context.Context, getTopics200Response
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Deleter)")
 	}
 
-	responsePostTopic, err := postTopic(s.db, s.clock, getTopics200ResponseInner, userDetails)
+	responsePostTopic, err := postTopic(s.db, s.clock, topic, userDetails)
 	if err != nil {
 		return openapi.Response(405, nil), err
 	}
 
-	response := openapi.AddTopic200Response(responsePostTopic)
+	response := responsePostTopic
 	return openapi.Response(200, response), nil
 }
 

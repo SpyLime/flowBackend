@@ -36,25 +36,25 @@ type NodeData struct {
 
 	IsFlagged bool `json:"isFlagged,omitempty"`
 
-	YoutubeLinks []AddTopic200ResponseNodeDataYoutubeLinksInner `json:"youtubeLinks,omitempty"`
+	YoutubeLinks []LinkData `json:"youtubeLinks,omitempty"`
 
-	CreatedBy AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy `json:"createdBy,omitempty"`
+	CreatedBy UserIdentifier `json:"createdBy,omitempty"`
 
-	EditedBy []AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy `json:"editedBy,omitempty"`
+	EditedBy []UserIdentifier `json:"editedBy,omitempty"`
 }
 
 // AssertNodeDataRequired checks if the required fields are not zero-ed
 func AssertNodeDataRequired(obj NodeData) error {
 	for _, el := range obj.YoutubeLinks {
-		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerRequired(el); err != nil {
+		if err := AssertLinkDataRequired(el); err != nil {
 			return err
 		}
 	}
-	if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByRequired(obj.CreatedBy); err != nil {
+	if err := AssertUserIdentifierRequired(obj.CreatedBy); err != nil {
 		return err
 	}
 	for _, el := range obj.EditedBy {
-		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByRequired(el); err != nil {
+		if err := AssertUserIdentifierRequired(el); err != nil {
 			return err
 		}
 	}
@@ -64,15 +64,15 @@ func AssertNodeDataRequired(obj NodeData) error {
 // AssertNodeDataConstraints checks if the values respects the defined constraints
 func AssertNodeDataConstraints(obj NodeData) error {
 	for _, el := range obj.YoutubeLinks {
-		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerConstraints(el); err != nil {
+		if err := AssertLinkDataConstraints(el); err != nil {
 			return err
 		}
 	}
-	if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByConstraints(obj.CreatedBy); err != nil {
+	if err := AssertUserIdentifierConstraints(obj.CreatedBy); err != nil {
 		return err
 	}
 	for _, el := range obj.EditedBy {
-		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByConstraints(el); err != nil {
+		if err := AssertUserIdentifierConstraints(el); err != nil {
 			return err
 		}
 	}

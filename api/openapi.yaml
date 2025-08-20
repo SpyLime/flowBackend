@@ -3,11 +3,11 @@ info:
   contact:
     email: floTeam@gmail.com
   description: api for flow learning
-  termsOfService: http://flowLearning.com/terms/
+  termsOfService: http://flow.schoolbucks.net/terms-of-service
   title: Flow Learning - OpenAPI 3.1
   version: 1.0.0
 servers:
-- url: https://floLearning.com/api/v1
+- url: https://flow.schoolbucks.net/api/v1
 tags:
 - description: Everything about topics
   name: topic
@@ -18,6 +18,30 @@ tags:
 - description: "Operations about wiki page, which is all individual node data"
   name: node
 paths:
+  /clip/{clipUrl}:
+    get:
+      operationId: clipImage
+      parameters:
+      - description: url of clip
+        explode: false
+        in: path
+        name: clipUrl
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: got the image address
+        "400":
+          description: failed to get the image address
+      summary: gets clip image
+      tags:
+      - all
   /topic:
     get:
       description: get all topics
@@ -28,7 +52,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/getTopics_200_response_inner'
+                  $ref: '#/components/schemas/Topic'
                 type: array
           description: Successful operation
         "404":
@@ -43,7 +67,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/getTopics_200_response_inner'
+              $ref: '#/components/schemas/Topic'
         description: Create a new topic
         required: true
       responses:
@@ -51,7 +75,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/addTopic_200_response'
+                $ref: '#/components/schemas/ResponsePostTopic'
           description: Successful operation
         "405":
           description: Invalid input
@@ -65,7 +89,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/getTopics_200_response_inner'
+              $ref: '#/components/schemas/Topic'
         description: Update an existent topic
         required: true
       responses:
@@ -123,7 +147,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getMapById_200_response'
+                $ref: '#/components/schemas/MapData'
           description: successful operation
         "400":
           description: Invalid ID supplied
@@ -176,7 +200,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/getMapById_200_response_edges_inner'
+              $ref: '#/components/schemas/Edge'
         description: Create a new edge
         required: true
       responses:
@@ -241,7 +265,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/addTopic_200_response_nodeData'
+                $ref: '#/components/schemas/NodeData'
           description: Successful operation
         "404":
           description: Topics not found
@@ -255,7 +279,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+              $ref: '#/components/schemas/NodeData'
         description: Create a new node
         required: true
       responses:
@@ -263,7 +287,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/addNode_200_response'
+                $ref: '#/components/schemas/ResponsePostNode'
           description: Successful operation
         "405":
           description: Invalid input
@@ -278,7 +302,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+              $ref: '#/components/schemas/NodeData'
         description: Update an existent node
         required: true
       responses:
@@ -305,7 +329,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+              $ref: '#/components/schemas/NodeData'
         description: Update an existent node
         required: true
       responses:
@@ -334,7 +358,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+              $ref: '#/components/schemas/NodeData'
         description: Update an existent node
         required: true
       responses:
@@ -357,7 +381,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+              $ref: '#/components/schemas/NodeData'
         description: Update an existent node
         required: true
       responses:
@@ -386,7 +410,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+              $ref: '#/components/schemas/NodeData'
         description: Update an existent node
         required: true
       responses:
@@ -415,7 +439,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/addTopic_200_response_nodeData'
+              $ref: '#/components/schemas/NodeData'
         description: Update an existent node
         required: true
       responses:
@@ -439,55 +463,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthUser_200_response'
+                $ref: '#/components/schemas/ResponseAuth2'
           description: students matching criteria
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthUser_404_response'
+                $ref: '#/components/schemas/ResponseAuth4'
           description: No user found with that data
       summary: return authenticated user details
-      tags:
-      - user
-  /user/login:
-    post:
-      description: Login using SSO
-      operationId: loginUser
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/loginUser_request'
-        description: Login request
-        required: true
-      responses:
-        "200":
-          description: Login successful
-          headers:
-            X-Auth-Token:
-              description: Authentication token
-              explode: false
-              schema:
-                type: string
-              style: simple
-        "400":
-          description: SSO provider
-        "401":
-          description: Authentication failed
-      summary: Login to the system or create account
-      tags:
-      - user
-  /user/logout:
-    post:
-      description: Revokes the current user's authentication session.
-      operationId: logoutUser
-      responses:
-        "200":
-          description: User logged out successfully
-        "401":
-          description: Unauthorized access
-      summary: Log the user out of the system
       tags:
       - user
   /user:
@@ -498,7 +482,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/updateUser_request'
+              $ref: '#/components/schemas/User'
         description: Update an existent user in the store
         required: true
       responses:
@@ -549,7 +533,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/updateUser_request'
+                $ref: '#/components/schemas/User'
           description: successful operation
         "400":
           description: Invalid username supplied
@@ -561,325 +545,6 @@ paths:
 components:
   schemas:
     NodeData:
-      properties:
-        id:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        title:
-          example: a ninja attack
-          type: string
-        topic:
-          example: bjj
-          type: string
-        battleTested:
-          example: 44
-          format: int32
-          type: integer
-        fresh:
-          example: 55
-          format: int32
-          type: integer
-        speed:
-          example: 55
-          format: int32
-          type: integer
-        description:
-          example: used to attack ninjas on Friday
-          type: string
-        isFlagged:
-          example: true
-          type: boolean
-        youtubeLinks:
-          items:
-            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
-          type: array
-        createdBy:
-          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
-        editedBy:
-          items:
-            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
-          type: array
-    LinkData:
-      properties:
-        link:
-          example: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
-          format: url
-          type: string
-        votes:
-          example: 21
-          format: int32
-          type: integer
-        addedBy:
-          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
-        dateAdded:
-          example: 2024-08-19T19:25:42.568Z
-          format: date-time
-          type: string
-    Edge:
-      properties:
-        id:
-          example: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
-          type: string
-        source:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        target:
-          example: 2024-12-09T04:10:00.352Z
-          format: date-time
-          type: string
-    FlowNode:
-      properties:
-        id:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        position:
-          $ref: '#/components/schemas/getMapById_200_response_nodes_inner_position'
-        type:
-          example: flowNode
-          type: string
-        targetPosition:
-          example: Position.Left
-          type: string
-        SourcePosition:
-          example: Position.Right
-          type: string
-        data:
-          $ref: '#/components/schemas/getMapById_200_response_nodes_inner_data'
-    User:
-      properties:
-        provider:
-          example: google
-          type: string
-        id:
-          example: 2451632
-          type: string
-        lastLogin:
-          format: date-time
-          type: string
-        updatedAt:
-          format: date-time
-          type: string
-        createdAt:
-          format: date-time
-          type: string
-        username:
-          example: theUser
-          type: string
-        firstName:
-          example: John
-          type: string
-        lastName:
-          example: James
-          type: string
-        email:
-          example: john@email.com
-          type: string
-        role:
-          description: User Status
-          example: 1
-          format: int32
-          type: integer
-        reputation:
-          example: 34
-          type: integer
-        description:
-          example: engineer
-          type: string
-        location:
-          example: Austin TX
-          type: string
-        isFlagged:
-          type: boolean
-        battleTestedUp:
-          items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
-          type: array
-        battleTestedDown:
-          items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
-          type: array
-        freshUp:
-          items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
-          type: array
-        freshDown:
-          items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
-          type: array
-        edited:
-          items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
-          type: array
-        created:
-          items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
-          type: array
-        linked:
-          items:
-            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
-          type: array
-        videoUp:
-          items:
-            example: www.youtube.com
-            type: string
-          type: array
-        videoDown:
-          items:
-            example: www.youtube.com
-            type: string
-          type: array
-    Topic:
-      properties:
-        title:
-          example: bjj
-          type: string
-      required:
-      - title
-    RequestPostNode:
-      properties:
-        source:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        target:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        topic:
-          example: bjj
-          type: string
-      required:
-      - source
-      - target
-      - topic
-    ResponsePostNode:
-      properties:
-        targetId:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        sourceId:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-      required:
-      - sourceId
-      - targetId
-    ResponsePostTopic:
-      properties:
-        topic:
-          $ref: '#/components/schemas/getTopics_200_response_inner'
-        nodeData:
-          $ref: '#/components/schemas/addTopic_200_response_nodeData'
-      required:
-      - nodeData
-      - topic
-    ResponseUserInfo:
-      items:
-        $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
-      type: array
-    ResponseAuth2:
-      properties:
-        isAuth:
-          type: boolean
-        role:
-          example: 0
-          type: integer
-      required:
-      - isAuth
-      - role
-    ResponseAuth4:
-      properties:
-        isAuth:
-          example: "False"
-          type: boolean
-        error:
-          type: boolean
-    ResponseCookie:
-      properties:
-        w_authExp:
-          type: string
-        w_auth:
-          type: string
-    MapData:
-      properties:
-        nodes:
-          items:
-            $ref: '#/components/schemas/getMapById_200_response_nodes_inner'
-          type: array
-        edges:
-          items:
-            $ref: '#/components/schemas/getMapById_200_response_edges_inner'
-          type: array
-      required:
-      - edges
-      - nodes
-    Login:
-      properties:
-        ssoProvider:
-          enum:
-          - google
-          - facebook
-          - microsoft
-          - x
-          - apple
-          - discord
-          type: string
-    UserIdentifier:
-      properties:
-        username:
-          example: super123
-          type: string
-        id:
-          example: dkd94njd
-          type: string
-    getTopics_200_response_inner:
-      example:
-        title: bjj
-      properties:
-        title:
-          example: bjj
-          type: string
-      required:
-      - title
-    addTopic_200_response_nodeData_youtubeLinks_inner_addedBy:
-      example:
-        id: dkd94njd
-        username: super123
-      properties:
-        username:
-          example: super123
-          type: string
-        id:
-          example: dkd94njd
-          type: string
-    addTopic_200_response_nodeData_youtubeLinks_inner:
-      example:
-        addedBy:
-          id: dkd94njd
-          username: super123
-        link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
-        votes: 21
-        dateAdded: 2024-08-19T19:25:42.568Z
-      properties:
-        link:
-          example: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
-          format: url
-          type: string
-        votes:
-          example: 21
-          format: int32
-          type: integer
-        addedBy:
-          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
-        dateAdded:
-          example: 2024-08-19T19:25:42.568Z
-          format: date-time
-          type: string
-    addTopic_200_response_nodeData:
       example:
         editedBy:
         - id: dkd94njd
@@ -941,92 +606,55 @@ components:
           type: boolean
         youtubeLinks:
           items:
-            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
+            $ref: '#/components/schemas/LinkData'
           type: array
         createdBy:
-          $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
+          $ref: '#/components/schemas/UserIdentifier'
         editedBy:
           items:
-            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner_addedBy'
+            $ref: '#/components/schemas/UserIdentifier'
           type: array
-    addTopic_200_response:
+    LinkData:
       example:
-        nodeData:
-          editedBy:
-          - id: dkd94njd
-            username: super123
-          - id: dkd94njd
-            username: super123
-          createdBy:
-            id: dkd94njd
-            username: super123
-          topic: bjj
-          description: used to attack ninjas on Friday
-          battleTested: 44
-          id: 2024-12-09T04:10:00.350Z
-          title: a ninja attack
-          fresh: 55
-          speed: 55
-          isFlagged: true
-          youtubeLinks:
-          - addedBy:
-              id: dkd94njd
-              username: super123
-            link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
-            votes: 21
-            dateAdded: 2024-08-19T19:25:42.568Z
-          - addedBy:
-              id: dkd94njd
-              username: super123
-            link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
-            votes: 21
-            dateAdded: 2024-08-19T19:25:42.568Z
-        topic:
-          title: bjj
+        addedBy:
+          id: dkd94njd
+          username: super123
+        link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+        votes: 21
+        dateAdded: 2024-08-19T19:25:42.568Z
       properties:
-        topic:
-          $ref: '#/components/schemas/getTopics_200_response_inner'
-        nodeData:
-          $ref: '#/components/schemas/addTopic_200_response_nodeData'
-      required:
-      - nodeData
-      - topic
-    getMapById_200_response_nodes_inner_position:
-      example:
-        x: 100
-        "y": 100
-      properties:
-        x:
-          example: 100
-          format: int32
-          type: integer
-        "y":
-          example: 100
-          format: int32
-          type: integer
-    getMapById_200_response_nodes_inner_data:
-      example:
-        battleTested: 200
-        title: arm bar
-        fresh: 200
-        speed: 75
-      properties:
-        title:
-          example: arm bar
+        link:
+          example: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+          format: url
           type: string
-        battleTested:
-          example: 200
+        votes:
+          example: 21
           format: int32
           type: integer
-        fresh:
-          example: 200
-          format: int32
-          type: integer
-        speed:
-          example: 75
-          format: int32
-          type: integer
-    getMapById_200_response_nodes_inner:
+        addedBy:
+          $ref: '#/components/schemas/UserIdentifier'
+        dateAdded:
+          example: 2024-08-19T19:25:42.568Z
+          format: date-time
+          type: string
+    Edge:
+      example:
+        id: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
+        source: 2024-12-09T04:10:00.350Z
+        target: 2024-12-09T04:10:00.352Z
+      properties:
+        id:
+          example: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
+          type: string
+        source:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        target:
+          example: 2024-12-09T04:10:00.352Z
+          format: date-time
+          type: string
+    FlowNode:
       example:
         data:
           battleTested: 200
@@ -1046,7 +674,7 @@ components:
           format: date-time
           type: string
         position:
-          $ref: '#/components/schemas/getMapById_200_response_nodes_inner_position'
+          $ref: '#/components/schemas/FlowNode_position'
         type:
           example: flowNode
           type: string
@@ -1057,138 +685,8 @@ components:
           example: Position.Right
           type: string
         data:
-          $ref: '#/components/schemas/getMapById_200_response_nodes_inner_data'
-    getMapById_200_response_edges_inner:
-      example:
-        id: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
-        source: 2024-12-09T04:10:00.350Z
-        target: 2024-12-09T04:10:00.352Z
-      properties:
-        id:
-          example: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
-          type: string
-        source:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        target:
-          example: 2024-12-09T04:10:00.352Z
-          format: date-time
-          type: string
-    getMapById_200_response:
-      example:
-        nodes:
-        - data:
-            battleTested: 200
-            title: arm bar
-            fresh: 200
-            speed: 75
-          targetPosition: Position.Left
-          SourcePosition: Position.Right
-          id: 2024-12-09T04:10:00.350Z
-          position:
-            x: 100
-            "y": 100
-          type: flowNode
-        - data:
-            battleTested: 200
-            title: arm bar
-            fresh: 200
-            speed: 75
-          targetPosition: Position.Left
-          SourcePosition: Position.Right
-          id: 2024-12-09T04:10:00.350Z
-          position:
-            x: 100
-            "y": 100
-          type: flowNode
-        edges:
-        - id: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
-          source: 2024-12-09T04:10:00.350Z
-          target: 2024-12-09T04:10:00.352Z
-        - id: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
-          source: 2024-12-09T04:10:00.350Z
-          target: 2024-12-09T04:10:00.352Z
-      properties:
-        nodes:
-          items:
-            $ref: '#/components/schemas/getMapById_200_response_nodes_inner'
-          type: array
-        edges:
-          items:
-            $ref: '#/components/schemas/getMapById_200_response_edges_inner'
-          type: array
-      required:
-      - edges
-      - nodes
-    addNode_200_response:
-      example:
-        sourceId: 2024-12-09T04:10:00.350Z
-        targetId: 2024-12-09T04:10:00.350Z
-      properties:
-        targetId:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-        sourceId:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-      required:
-      - sourceId
-      - targetId
-    AuthUser_200_response:
-      example:
-        isAuth: true
-        role: 0
-      properties:
-        isAuth:
-          type: boolean
-        role:
-          example: 0
-          type: integer
-      required:
-      - isAdmin
-      - isAuth
-      - role
-    AuthUser_404_response:
-      example:
-        isAuth: "False"
-        error: true
-      properties:
-        isAuth:
-          example: "False"
-          type: boolean
-        error:
-          type: boolean
-    loginUser_request:
-      properties:
-        ssoProvider:
-          enum:
-          - google
-          - facebook
-          - microsoft
-          - x
-          - apple
-          - discord
-          type: string
-    updateUser_request_battleTestedUp_inner:
-      example:
-        topic: bjj
-        title: armbar
-        nodeId: 2024-12-09T04:10:00.350Z
-      properties:
-        topic:
-          example: bjj
-          type: string
-        title:
-          example: armbar
-          type: string
-        nodeId:
-          example: 2024-12-09T04:10:00.350Z
-          format: date-time
-          type: string
-    updateUser_request:
+          $ref: '#/components/schemas/FlowNode_data'
+    User:
       example:
         freshUp:
         - topic: bjj
@@ -1311,31 +809,31 @@ components:
           type: boolean
         battleTestedUp:
           items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+            $ref: '#/components/schemas/ResponseUserInfo_inner'
           type: array
         battleTestedDown:
           items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+            $ref: '#/components/schemas/ResponseUserInfo_inner'
           type: array
         freshUp:
           items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+            $ref: '#/components/schemas/ResponseUserInfo_inner'
           type: array
         freshDown:
           items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+            $ref: '#/components/schemas/ResponseUserInfo_inner'
           type: array
         edited:
           items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+            $ref: '#/components/schemas/ResponseUserInfo_inner'
           type: array
         created:
           items:
-            $ref: '#/components/schemas/updateUser_request_battleTestedUp_inner'
+            $ref: '#/components/schemas/ResponseUserInfo_inner'
           type: array
         linked:
           items:
-            $ref: '#/components/schemas/addTopic_200_response_nodeData_youtubeLinks_inner'
+            $ref: '#/components/schemas/LinkData'
           type: array
         videoUp:
           items:
@@ -1347,3 +845,239 @@ components:
             example: www.youtube.com
             type: string
           type: array
+    Topic:
+      example:
+        title: bjj
+      properties:
+        title:
+          example: bjj
+          type: string
+      required:
+      - title
+    RequestPostNode:
+      properties:
+        source:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        target:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        topic:
+          example: bjj
+          type: string
+      required:
+      - source
+      - target
+      - topic
+    ResponsePostNode:
+      example:
+        sourceId: 2024-12-09T04:10:00.350Z
+        targetId: 2024-12-09T04:10:00.350Z
+      properties:
+        targetId:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+        sourceId:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string
+      required:
+      - sourceId
+      - targetId
+    ResponsePostTopic:
+      example:
+        nodeData:
+          editedBy:
+          - id: dkd94njd
+            username: super123
+          - id: dkd94njd
+            username: super123
+          createdBy:
+            id: dkd94njd
+            username: super123
+          topic: bjj
+          description: used to attack ninjas on Friday
+          battleTested: 44
+          id: 2024-12-09T04:10:00.350Z
+          title: a ninja attack
+          fresh: 55
+          speed: 55
+          isFlagged: true
+          youtubeLinks:
+          - addedBy:
+              id: dkd94njd
+              username: super123
+            link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+            votes: 21
+            dateAdded: 2024-08-19T19:25:42.568Z
+          - addedBy:
+              id: dkd94njd
+              username: super123
+            link: https://youtu.be/1MKKK94eGUo?si=uRr8UmZ0sgNl4BA0&t=397
+            votes: 21
+            dateAdded: 2024-08-19T19:25:42.568Z
+        topic:
+          title: bjj
+      properties:
+        topic:
+          $ref: '#/components/schemas/Topic'
+        nodeData:
+          $ref: '#/components/schemas/NodeData'
+      required:
+      - nodeData
+      - topic
+    ResponseUserInfo:
+      items:
+        $ref: '#/components/schemas/ResponseUserInfo_inner'
+      type: array
+    ResponseAuth2:
+      example:
+        isAuth: true
+        role: 0
+      properties:
+        isAuth:
+          type: boolean
+        role:
+          example: 0
+          type: integer
+      required:
+      - isAuth
+      - role
+    ResponseAuth4:
+      example:
+        isAuth: false
+        error: true
+      properties:
+        isAuth:
+          example: false
+          type: boolean
+        error:
+          type: boolean
+    ResponseCookie:
+      properties:
+        w_authExp:
+          type: string
+        w_auth:
+          type: string
+    MapData:
+      example:
+        nodes:
+        - data:
+            battleTested: 200
+            title: arm bar
+            fresh: 200
+            speed: 75
+          targetPosition: Position.Left
+          SourcePosition: Position.Right
+          id: 2024-12-09T04:10:00.350Z
+          position:
+            x: 100
+            "y": 100
+          type: flowNode
+        - data:
+            battleTested: 200
+            title: arm bar
+            fresh: 200
+            speed: 75
+          targetPosition: Position.Left
+          SourcePosition: Position.Right
+          id: 2024-12-09T04:10:00.350Z
+          position:
+            x: 100
+            "y": 100
+          type: flowNode
+        edges:
+        - id: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
+          source: 2024-12-09T04:10:00.350Z
+          target: 2024-12-09T04:10:00.352Z
+        - id: 2024-12-09T04:10:00.350Z-2024-12-09T04:10:00.351Z
+          source: 2024-12-09T04:10:00.350Z
+          target: 2024-12-09T04:10:00.352Z
+      properties:
+        nodes:
+          items:
+            $ref: '#/components/schemas/FlowNode'
+          type: array
+        edges:
+          items:
+            $ref: '#/components/schemas/Edge'
+          type: array
+      required:
+      - edges
+      - nodes
+    Login:
+      properties:
+        ssoProvider:
+          enum:
+          - google
+          - facebook
+          - microsoft
+          - x
+          - apple
+          - discord
+          type: string
+    UserIdentifier:
+      example:
+        id: dkd94njd
+        username: super123
+      properties:
+        username:
+          example: super123
+          type: string
+        id:
+          example: dkd94njd
+          type: string
+    FlowNode_position:
+      example:
+        x: 100
+        "y": 100
+      properties:
+        x:
+          example: 100
+          format: int32
+          type: integer
+        "y":
+          example: 100
+          format: int32
+          type: integer
+    FlowNode_data:
+      example:
+        battleTested: 200
+        title: arm bar
+        fresh: 200
+        speed: 75
+      properties:
+        title:
+          example: arm bar
+          type: string
+        battleTested:
+          example: 200
+          format: int32
+          type: integer
+        fresh:
+          example: 200
+          format: int32
+          type: integer
+        speed:
+          example: 75
+          format: int32
+          type: integer
+    ResponseUserInfo_inner:
+      example:
+        topic: bjj
+        title: armbar
+        nodeId: 2024-12-09T04:10:00.350Z
+      properties:
+        topic:
+          example: bjj
+          type: string
+        title:
+          example: armbar
+          type: string
+        nodeId:
+          example: 2024-12-09T04:10:00.350Z
+          format: date-time
+          type: string

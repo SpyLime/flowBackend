@@ -18,6 +18,12 @@ import (
 
 
 
+// AllAPIRouter defines the required methods for binding the api requests to a responses for the AllAPI
+// The AllAPIRouter implementation should parse necessary information from the http request,
+// pass the data to a AllAPIServicer to perform the required actions, then write the service results to the http response.
+type AllAPIRouter interface { 
+	ClipImage(http.ResponseWriter, *http.Request)
+}
 // MapAPIRouter defines the required methods for binding the api requests to a responses for the MapAPI
 // The MapAPIRouter implementation should parse necessary information from the http request,
 // pass the data to a MapAPIServicer to perform the required actions, then write the service results to the http response.
@@ -54,11 +60,18 @@ type TopicAPIRouter interface {
 // pass the data to a UserAPIServicer to perform the required actions, then write the service results to the http response.
 type UserAPIRouter interface { 
 	AuthUser(http.ResponseWriter, *http.Request)
-	LoginUser(http.ResponseWriter, *http.Request)
-	LogoutUser(http.ResponseWriter, *http.Request)
 	UpdateUser(http.ResponseWriter, *http.Request)
 	GetUserByName(http.ResponseWriter, *http.Request)
 	DeleteUser(http.ResponseWriter, *http.Request)
+}
+
+
+// AllAPIServicer defines the api actions for the AllAPI service
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can be ignored with the .openapi-generator-ignore file
+// and updated with the logic required for the API.
+type AllAPIServicer interface { 
+	ClipImage(context.Context, string) (ImplResponse, error)
 }
 
 
@@ -68,7 +81,7 @@ type UserAPIRouter interface {
 // and updated with the logic required for the API.
 type MapAPIServicer interface { 
 	GetMapById(context.Context, string) (ImplResponse, error)
-	AddEdge(context.Context, string, GetMapById200ResponseEdgesInner) (ImplResponse, error)
+	AddEdge(context.Context, string, Edge) (ImplResponse, error)
 	DeleteEdge(context.Context, string, string) (ImplResponse, error)
 }
 
@@ -79,14 +92,14 @@ type MapAPIServicer interface {
 // and updated with the logic required for the API.
 type NodeAPIServicer interface { 
 	GetNode(context.Context, string, string) (ImplResponse, error)
-	AddNode(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	AddNode(context.Context, NodeData) (ImplResponse, error)
 	DeleteNode(context.Context, string, string) (ImplResponse, error)
-	UpdateNodeTitle(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
-	UpdateNodeVideoVote(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
-	UpdateNodeVideoEdit(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
-	UpdateNodeBattleVote(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
-	UpdateNodeFreshVote(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
-	UpdateNodeFlag(context.Context, AddTopic200ResponseNodeData) (ImplResponse, error)
+	UpdateNodeTitle(context.Context, NodeData) (ImplResponse, error)
+	UpdateNodeVideoVote(context.Context, NodeData) (ImplResponse, error)
+	UpdateNodeVideoEdit(context.Context, NodeData) (ImplResponse, error)
+	UpdateNodeBattleVote(context.Context, NodeData) (ImplResponse, error)
+	UpdateNodeFreshVote(context.Context, NodeData) (ImplResponse, error)
+	UpdateNodeFlag(context.Context, NodeData) (ImplResponse, error)
 }
 
 
@@ -96,8 +109,8 @@ type NodeAPIServicer interface {
 // and updated with the logic required for the API.
 type TopicAPIServicer interface { 
 	GetTopics(context.Context) (ImplResponse, error)
-	UpdateTopic(context.Context, GetTopics200ResponseInner) (ImplResponse, error)
-	AddTopic(context.Context, GetTopics200ResponseInner) (ImplResponse, error)
+	UpdateTopic(context.Context, Topic) (ImplResponse, error)
+	AddTopic(context.Context, Topic) (ImplResponse, error)
 	DeleteTopic(context.Context, string) (ImplResponse, error)
 }
 
@@ -108,9 +121,7 @@ type TopicAPIServicer interface {
 // and updated with the logic required for the API.
 type UserAPIServicer interface { 
 	AuthUser(context.Context) (ImplResponse, error)
-	LoginUser(context.Context, LoginUserRequest) (ImplResponse, error)
-	LogoutUser(context.Context) (ImplResponse, error)
-	UpdateUser(context.Context, UpdateUserRequest) (ImplResponse, error)
+	UpdateUser(context.Context, User) (ImplResponse, error)
 	GetUserByName(context.Context, string) (ImplResponse, error)
 	DeleteUser(context.Context, string) (ImplResponse, error)
 }

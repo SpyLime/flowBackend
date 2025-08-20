@@ -34,7 +34,7 @@ func saveOrUpdateSSOUser(db *bbolt.DB, clock Clock, user token.User) error {
 
 		if existingUserBytes != nil {
 			// User exists, update
-			var existingUser openapi.UpdateUserRequest
+			var existingUser openapi.User
 			if err := json.Unmarshal(existingUserBytes, &existingUser); err != nil {
 				return fmt.Errorf("could not unmarshal existing user: %w", err)
 			}
@@ -57,7 +57,7 @@ func saveOrUpdateSSOUser(db *bbolt.DB, clock Clock, user token.User) error {
 		}
 
 		// User doesn't exist, create a new one
-		newUser := openapi.UpdateUserRequest{
+		newUser := openapi.User{
 			Id:        user.ID,
 			Username:  user.Name,
 			Email:     user.Email,

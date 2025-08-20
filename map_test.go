@@ -94,7 +94,7 @@ func TestDeleteEdge(t *testing.T) {
 
 	client := &http.Client{}
 
-	edge := openapi.GetMapById200ResponseEdgesInner{
+	edge := openapi.Edge{
 		Id:     nodesAndEdges[1].TargetId.Format(time.RFC3339Nano) + "-" + nodesAndEdges[2].TargetId.Format(time.RFC3339Nano),
 		Source: nodesAndEdges[1].TargetId,
 		Target: nodesAndEdges[2].TargetId,

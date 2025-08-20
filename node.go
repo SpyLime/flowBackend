@@ -27,7 +27,7 @@ func NewNodeAPIServiceImpl(db *bolt.DB, clock Clock) openapi.NodeAPIServicer {
 }
 
 // UpdateNode - Update an node
-func (s *NodeAPIServiceImpl) UpdateNodeBattleVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+func (s *NodeAPIServiceImpl) UpdateNodeBattleVote(ctx context.Context, updateNodeRequest openapi.NodeData) (openapi.ImplResponse, error) {
 	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
@@ -42,7 +42,7 @@ func (s *NodeAPIServiceImpl) UpdateNodeBattleVote(ctx context.Context, updateNod
 }
 
 // UpdateNode - Update an node
-func (s *NodeAPIServiceImpl) UpdateNodeTitle(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+func (s *NodeAPIServiceImpl) UpdateNodeTitle(ctx context.Context, updateNodeRequest openapi.NodeData) (openapi.ImplResponse, error) {
 	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
@@ -78,7 +78,7 @@ func (s *NodeAPIServiceImpl) UpdateNodeTitle(ctx context.Context, updateNodeRequ
 }
 
 // UpdateNode - Update an node
-func (s *NodeAPIServiceImpl) UpdateNodeVideoEdit(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+func (s *NodeAPIServiceImpl) UpdateNodeVideoEdit(ctx context.Context, updateNodeRequest openapi.NodeData) (openapi.ImplResponse, error) {
 	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
@@ -98,7 +98,7 @@ func (s *NodeAPIServiceImpl) UpdateNodeVideoEdit(ctx context.Context, updateNode
 }
 
 // UpdateNode - Update an node
-func (s *NodeAPIServiceImpl) UpdateNodeVideoVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+func (s *NodeAPIServiceImpl) UpdateNodeVideoVote(ctx context.Context, updateNodeRequest openapi.NodeData) (openapi.ImplResponse, error) {
 	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
@@ -113,7 +113,7 @@ func (s *NodeAPIServiceImpl) UpdateNodeVideoVote(ctx context.Context, updateNode
 }
 
 // UpdateNode - Update an node
-func (s *NodeAPIServiceImpl) UpdateNodeFlag(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+func (s *NodeAPIServiceImpl) UpdateNodeFlag(ctx context.Context, updateNodeRequest openapi.NodeData) (openapi.ImplResponse, error) {
 	_, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
@@ -128,7 +128,7 @@ func (s *NodeAPIServiceImpl) UpdateNodeFlag(ctx context.Context, updateNodeReque
 }
 
 // UpdateNode - Update an node
-func (s *NodeAPIServiceImpl) UpdateNodeFreshVote(ctx context.Context, updateNodeRequest openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+func (s *NodeAPIServiceImpl) UpdateNodeFreshVote(ctx context.Context, updateNodeRequest openapi.NodeData) (openapi.ImplResponse, error) {
 	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
@@ -154,7 +154,7 @@ func (s *NodeAPIServiceImpl) GetNode(ctx context.Context, nodeId string, tid str
 }
 
 // AddNode - Add a new node
-func (s *NodeAPIServiceImpl) AddNode(ctx context.Context, addTopic200ResponseNodeData openapi.AddTopic200ResponseNodeData) (openapi.ImplResponse, error) {
+func (s *NodeAPIServiceImpl) AddNode(ctx context.Context, nodeData openapi.NodeData) (openapi.ImplResponse, error) {
 	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
@@ -168,12 +168,12 @@ func (s *NodeAPIServiceImpl) AddNode(ctx context.Context, addTopic200ResponseNod
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Contributor)")
 	}
 
-	addTopic200ResponseNodeData.CreatedBy = openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+	nodeData.CreatedBy = openapi.UserIdentifier{
 		Id:       user.ID,
 		Username: user.Name,
 	}
 
-	response, err := postNode(s.db, s.clock, addTopic200ResponseNodeData)
+	response, err := postNode(s.db, s.clock, nodeData)
 	if err != nil {
 		return openapi.Response(405, nil), err
 	}

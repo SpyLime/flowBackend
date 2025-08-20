@@ -54,7 +54,7 @@ func (s *UserAPIServiceImpl) LogoutUser(ctx context.Context) (openapi.ImplRespon
 }
 
 // UpdateUser - Update user
-func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest openapi.UpdateUserRequest) (openapi.ImplResponse, error) {
+func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, User openapi.User) (openapi.ImplResponse, error) {
 	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
@@ -66,12 +66,12 @@ func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest o
 	}
 
 	// Check if the user is trying to update their own profile or is an admin
-	if userDetails.Role != KeyAdmin && updateUserRequest.Id != user.ID {
+	if userDetails.Role != KeyAdmin && User.Id != user.ID {
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or trying to update others")
 	}
 
 	// If the user is not an admin, they can't modify certain fields
-	if userDetails.Role != KeyAdmin && updateUserRequest.Id == user.ID {
+	if userDetails.Role != KeyAdmin && User.Id == user.ID {
 		// Get the current user data to preserve restricted fields
 		currentUser, err := getUser(s.db, user.ID)
 		if err != nil {
@@ -79,16 +79,16 @@ func (s *UserAPIServiceImpl) UpdateUser(ctx context.Context, updateUserRequest o
 		}
 
 		// Preserve fields that regular users shouldn't modify
-		updateUserRequest.Role = currentUser.Role
-		updateUserRequest.Reputation = currentUser.Reputation
+		User.Role = currentUser.Role
+		User.Reputation = currentUser.Reputation
 
 		// If the user is trying to unflag themselves, prevent it
-		if currentUser.IsFlagged && !updateUserRequest.IsFlagged {
-			updateUserRequest.IsFlagged = true
+		if currentUser.IsFlagged && !User.IsFlagged {
+			User.IsFlagged = true
 		}
 	}
 
-	err = updateUser(s.db, s.clock, updateUserRequest)
+	err = updateUser(s.db, s.clock, User)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}

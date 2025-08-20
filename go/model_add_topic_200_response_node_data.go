@@ -11,15 +11,11 @@
 
 package openapi
 
-
 import (
 	"time"
 )
 
-
-
 type AddTopic200ResponseNodeData struct {
-
 	Id time.Time `json:"id,omitempty"`
 
 	Title string `json:"title,omitempty"`

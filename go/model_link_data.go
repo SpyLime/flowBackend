@@ -24,14 +24,14 @@ type LinkData struct {
 
 	Votes int32 `json:"votes,omitempty"`
 
-	AddedBy AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy `json:"addedBy,omitempty"`
+	AddedBy UserIdentifier `json:"addedBy,omitempty"`
 
 	DateAdded time.Time `json:"dateAdded,omitempty"`
 }
 
 // AssertLinkDataRequired checks if the required fields are not zero-ed
 func AssertLinkDataRequired(obj LinkData) error {
-	if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByRequired(obj.AddedBy); err != nil {
+	if err := AssertUserIdentifierRequired(obj.AddedBy); err != nil {
 		return err
 	}
 	return nil
@@ -39,7 +39,7 @@ func AssertLinkDataRequired(obj LinkData) error {
 
 // AssertLinkDataConstraints checks if the values respects the defined constraints
 func AssertLinkDataConstraints(obj LinkData) error {
-	if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerAddedByConstraints(obj.AddedBy); err != nil {
+	if err := AssertUserIdentifierConstraints(obj.AddedBy); err != nil {
 		return err
 	}
 	return nil

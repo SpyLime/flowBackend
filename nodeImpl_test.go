@@ -20,8 +20,8 @@ func TestPostGetNode(t *testing.T) {
 	users, topics, _, err := CreateTestData(db, &clock, 1, 1, 0)
 	require.Nil(t, err)
 
-	node := openapi.AddTopic200ResponseNodeData{
-		CreatedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+	node := openapi.NodeData{
+		CreatedBy: openapi.UserIdentifier{
 			Id: users[0],
 		},
 		Title: "turbo",
@@ -52,10 +52,10 @@ func TestDeleteNodeImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	data := openapi.AddTopic200ResponseNodeData{
+	data := openapi.NodeData{
 		Topic: topics[0],
 		Title: "tester",
-		CreatedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+		CreatedBy: openapi.UserIdentifier{
 			Id: users[0],
 		},
 		Id: nodesAndEdges[0].SourceId,
@@ -126,7 +126,7 @@ func TestUpdateBattleVoteUpImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	battleUp := openapi.AddTopic200ResponseNodeData{
+	battleUp := openapi.NodeData{
 		Topic:        topics[0],
 		Id:           nodesAndEdges[0].SourceId,
 		BattleTested: 1,
@@ -169,7 +169,7 @@ func TestUpdateBattleVoteDownImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	battleDown := openapi.AddTopic200ResponseNodeData{
+	battleDown := openapi.NodeData{
 		Topic:        topics[0],
 		Id:           nodesAndEdges[0].SourceId,
 		BattleTested: -1,
@@ -212,7 +212,7 @@ func TestUpdateBattleVoteUpDownImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	battleUp := openapi.AddTopic200ResponseNodeData{
+	battleUp := openapi.NodeData{
 		Topic:        topics[0],
 		Id:           nodesAndEdges[0].SourceId,
 		BattleTested: 1,
@@ -231,7 +231,7 @@ func TestUpdateBattleVoteUpDownImpl(t *testing.T) {
 
 	require.Equal(t, len(DownUser.BattleTestedUp), 1)
 
-	battleDown := openapi.AddTopic200ResponseNodeData{
+	battleDown := openapi.NodeData{
 		Topic:        topics[0],
 		Id:           nodesAndEdges[0].SourceId,
 		BattleTested: -1,
@@ -262,7 +262,7 @@ func TestUpdateBattleVoteDownUpImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	battleUp := openapi.AddTopic200ResponseNodeData{
+	battleUp := openapi.NodeData{
 		Topic:        topics[0],
 		Id:           nodesAndEdges[0].SourceId,
 		BattleTested: -1,
@@ -281,7 +281,7 @@ func TestUpdateBattleVoteDownUpImpl(t *testing.T) {
 
 	require.Equal(t, len(DownUser.BattleTestedDown), 1)
 
-	battleDown := openapi.AddTopic200ResponseNodeData{
+	battleDown := openapi.NodeData{
 		Topic:        topics[0],
 		Id:           nodesAndEdges[0].SourceId,
 		BattleTested: 1,
@@ -312,7 +312,7 @@ func TestUpdateFreshVoteUpImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	freshUp := openapi.AddTopic200ResponseNodeData{
+	freshUp := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
 		Fresh: 1,
@@ -355,7 +355,7 @@ func TestUpdateFreshVoteDownImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	freshDown := openapi.AddTopic200ResponseNodeData{
+	freshDown := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
 		Fresh: -1,
@@ -398,7 +398,7 @@ func TestUpdateFreshVoteUpDownImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	freshUp := openapi.AddTopic200ResponseNodeData{
+	freshUp := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
 		Fresh: 1,
@@ -417,7 +417,7 @@ func TestUpdateFreshVoteUpDownImpl(t *testing.T) {
 
 	require.Equal(t, len(DownUser.FreshUp), 1)
 
-	freshDown := openapi.AddTopic200ResponseNodeData{
+	freshDown := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
 		Fresh: -1,
@@ -448,7 +448,7 @@ func TestUpdateFreshVoteDownUpImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	freshUp := openapi.AddTopic200ResponseNodeData{
+	freshUp := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
 		Fresh: -1,
@@ -467,7 +467,7 @@ func TestUpdateFreshVoteDownUpImpl(t *testing.T) {
 
 	require.Equal(t, len(DownUser.FreshDown), 1)
 
-	freshDown := openapi.AddTopic200ResponseNodeData{
+	freshDown := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
 		Fresh: 1,
@@ -498,10 +498,10 @@ func TestUpdateNodeVideoVoteUpImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	vidUp := openapi.AddTopic200ResponseNodeData{
+	vidUp := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "www.youtube.com",
 			Votes: 1,
 		}},
@@ -550,10 +550,10 @@ func TestUpdateNodeVideoVoteDownImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	vidUp := openapi.AddTopic200ResponseNodeData{
+	vidUp := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "www.youtube.com",
 			Votes: 1,
 		}},
@@ -565,10 +565,10 @@ func TestUpdateNodeVideoVoteDownImpl(t *testing.T) {
 	err = updateNodeVideoEdit(db, &clock, vidUp, user)
 	require.Nil(t, err)
 
-	vidDown := openapi.AddTopic200ResponseNodeData{
+	vidDown := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "www.youtube.com",
 			Votes: -1,
 		}},
@@ -611,10 +611,10 @@ func TestUpdateNodeVideoVoteUpDownImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	vidUp := openapi.AddTopic200ResponseNodeData{
+	vidUp := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "www.youtube.com",
 			Votes: 1,
 		}},
@@ -626,10 +626,10 @@ func TestUpdateNodeVideoVoteUpDownImpl(t *testing.T) {
 	err = updateNodeVideoEdit(db, &clock, vidUp, user)
 	require.Nil(t, err)
 
-	vidDown := openapi.AddTopic200ResponseNodeData{
+	vidDown := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "www.youtube.com",
 			Votes: -1,
 		}},
@@ -673,10 +673,10 @@ func TestUpdateNodeVideoVoteDownUpImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	vidUp := openapi.AddTopic200ResponseNodeData{
+	vidUp := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "www.youtube.com",
 			Votes: 1,
 		}},
@@ -688,10 +688,10 @@ func TestUpdateNodeVideoVoteDownUpImpl(t *testing.T) {
 	err = updateNodeVideoEdit(db, &clock, vidUp, user)
 	require.Nil(t, err)
 
-	vidDown := openapi.AddTopic200ResponseNodeData{
+	vidDown := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "www.youtube.com",
 			Votes: -1,
 		}},
@@ -735,7 +735,7 @@ func TestUpdateNodeFlagImpl(t *testing.T) {
 	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	vidUp := openapi.AddTopic200ResponseNodeData{
+	vidUp := openapi.NodeData{
 		Topic:     topics[0],
 		Id:        nodesAndEdges[0].SourceId,
 		IsFlagged: true,
@@ -768,10 +768,10 @@ func TestUpdateNodeVideoEditImpl(t *testing.T) {
 	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
 	require.Nil(t, err)
 
-	vidAdd := openapi.AddTopic200ResponseNodeData{
+	vidAdd := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "www.youtube.com",
 			Votes: 1,
 		}},
@@ -796,10 +796,10 @@ func TestUpdateNodeVideoEditImpl(t *testing.T) {
 
 	require.Equal(t, upUser.Linked[0].Link, vidAdd.YoutubeLinks[0].Link)
 
-	vidSub := openapi.AddTopic200ResponseNodeData{
+	vidSub := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "www.youtube.com",
 			Votes: -1,
 		}},
@@ -845,10 +845,10 @@ func TestVideoDeletedFromAnotherUser(t *testing.T) {
 	require.Nil(t, err)
 
 	// User B adds a video to the node
-	addVideo := openapi.AddTopic200ResponseNodeData{
+	addVideo := openapi.NodeData{
 		Topic: topic,
 		Id:    nodeId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "https://www.youtube.com/watch?v=abc123",
 			Votes: 1,
 		}},
@@ -865,10 +865,10 @@ func TestVideoDeletedFromAnotherUser(t *testing.T) {
 
 	// User A upvotes the video
 
-	upvoteVideo := openapi.AddTopic200ResponseNodeData{
+	upvoteVideo := openapi.NodeData{
 		Topic: topic,
 		Id:    nodeId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "https://www.youtube.com/watch?v=abc123",
 			Votes: 1,
 		}},
@@ -878,10 +878,10 @@ func TestVideoDeletedFromAnotherUser(t *testing.T) {
 	require.Nil(t, err)
 
 	// User A deletes the video
-	deleteVideo := openapi.AddTopic200ResponseNodeData{
+	deleteVideo := openapi.NodeData{
 		Topic: topic,
 		Id:    nodeId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "https://www.youtube.com/watch?v=abc123",
 			Votes: -1,
 		}},
@@ -915,10 +915,10 @@ func TestUpdateNodeVideoVoteReputationImpl(t *testing.T) {
 	require.Nil(t, err)
 
 	// First user adds a video
-	vidUp := openapi.AddTopic200ResponseNodeData{
+	vidUp := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "www.youtube.com/test-reputation",
 			Votes: 1,
 		}},
@@ -953,10 +953,10 @@ func TestUpdateNodeVideoVoteReputationImpl(t *testing.T) {
 	require.Equal(t, initialReputation, updatedUser1Again.Reputation, "Reputation should decrease back after removing upvote")
 
 	// User2 downvotes the video
-	vidDown := openapi.AddTopic200ResponseNodeData{
+	vidDown := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{{
+		YoutubeLinks: []openapi.LinkData{{
 			Link:  "www.youtube.com/test-reputation",
 			Votes: -1,
 		}},
@@ -1038,7 +1038,7 @@ func TestUserNodeEdited(t *testing.T) {
 		"User should have one more edited node")
 
 	// Find the edited node
-	var editedNode *openapi.UpdateUserRequestBattleTestedUpInner
+	var editedNode *openapi.ResponseUserInfoInner
 	for i := range updatedUser.Edited {
 		if updatedUser.Edited[i].Topic == topics[0] &&
 			updatedUser.Edited[i].Title == originalNode.Title {

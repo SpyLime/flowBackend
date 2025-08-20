@@ -57,16 +57,6 @@ func (c *UserAPIController) Routes() Routes {
 			"/api/v1/users/auth",
 			c.AuthUser,
 		},
-		"LoginUser": Route{
-			strings.ToUpper("Post"),
-			"/api/v1/user/login",
-			c.LoginUser,
-		},
-		"LogoutUser": Route{
-			strings.ToUpper("Post"),
-			"/api/v1/user/logout",
-			c.LogoutUser,
-		},
 		"UpdateUser": Route{
 			strings.ToUpper("Put"),
 			"/api/v1/user",
@@ -97,63 +87,24 @@ func (c *UserAPIController) AuthUser(w http.ResponseWriter, r *http.Request) {
 	_ = EncodeJSONResponse(result.Body, &result.Code, w)
 }
 
-// LoginUser - Login to the system or create account
-func (c *UserAPIController) LoginUser(w http.ResponseWriter, r *http.Request) {
-	loginUserRequestParam := LoginUserRequest{}
-	d := json.NewDecoder(r.Body)
-	d.DisallowUnknownFields()
-	if err := d.Decode(&loginUserRequestParam); err != nil {
-		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
-		return
-	}
-	if err := AssertLoginUserRequestRequired(loginUserRequestParam); err != nil {
-		c.errorHandler(w, r, err, nil)
-		return
-	}
-	if err := AssertLoginUserRequestConstraints(loginUserRequestParam); err != nil {
-		c.errorHandler(w, r, err, nil)
-		return
-	}
-	result, err := c.service.LoginUser(r.Context(), loginUserRequestParam)
-	// If an error occurred, encode the error with the status code
-	if err != nil {
-		c.errorHandler(w, r, err, &result)
-		return
-	}
-	// If no error, encode the body and the result code
-	_ = EncodeJSONResponse(result.Body, &result.Code, w)
-}
-
-// LogoutUser - Log the user out of the system
-func (c *UserAPIController) LogoutUser(w http.ResponseWriter, r *http.Request) {
-	result, err := c.service.LogoutUser(r.Context())
-	// If an error occurred, encode the error with the status code
-	if err != nil {
-		c.errorHandler(w, r, err, &result)
-		return
-	}
-	// If no error, encode the body and the result code
-	_ = EncodeJSONResponse(result.Body, &result.Code, w)
-}
-
 // UpdateUser - Update user
 func (c *UserAPIController) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	updateUserRequestParam := UpdateUserRequest{}
+	userParam := User{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&updateUserRequestParam); err != nil {
+	if err := d.Decode(&userParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertUpdateUserRequestRequired(updateUserRequestParam); err != nil {
+	if err := AssertUserRequired(userParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertUpdateUserRequestConstraints(updateUserRequestParam); err != nil {
+	if err := AssertUserConstraints(userParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.UpdateUser(r.Context(), updateUserRequestParam)
+	result, err := c.service.UpdateUser(r.Context(), userParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

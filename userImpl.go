@@ -8,7 +8,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-func updateUser(db *bolt.DB, clock Clock, request openapi.UpdateUserRequest) (err error) {
+func updateUser(db *bolt.DB, clock Clock, request openapi.User) (err error) {
 	// Add logging to help debug
 	fmt.Printf("Updating user with ID: %s\n", request.Id)
 
@@ -21,7 +21,7 @@ func updateUser(db *bolt.DB, clock Clock, request openapi.UpdateUserRequest) (er
 	return
 }
 
-func updateUserTx(tx *bolt.Tx, clock Clock, request openapi.UpdateUserRequest) (err error) {
+func updateUserTx(tx *bolt.Tx, clock Clock, request openapi.User) (err error) {
 	// Use the Id field for lookup
 	usersBucket, user, err := getUserAndBucketRx(tx, request.Id)
 	if err != nil {
@@ -41,7 +41,7 @@ func updateUserTx(tx *bolt.Tx, clock Clock, request openapi.UpdateUserRequest) (
 	return
 }
 
-func getUserAndBucketRx(tx *bolt.Tx, userId string) (usersBucket *bolt.Bucket, user openapi.UpdateUserRequest, err error) {
+func getUserAndBucketRx(tx *bolt.Tx, userId string) (usersBucket *bolt.Bucket, user openapi.User, err error) {
 	usersBucket = tx.Bucket([]byte(KeyUsers))
 	if usersBucket == nil {
 		return nil, user, fmt.Errorf("can't find users bucket")
@@ -65,7 +65,7 @@ func getUserAndBucketRx(tx *bolt.Tx, userId string) (usersBucket *bolt.Bucket, u
 	return
 }
 
-func updateUserHelper(clock Clock, user *openapi.UpdateUserRequest, request openapi.UpdateUserRequest) {
+func updateUserHelper(clock Clock, user *openapi.User, request openapi.User) {
 	if request.FirstName != "" {
 		user.FirstName = request.FirstName
 	}
@@ -108,7 +108,7 @@ func getUserRx(tx *bolt.Tx, userId string) (response openapi.User, err error) {
 		return response, fmt.Errorf("can't find user")
 	}
 
-	var user openapi.UpdateUserRequest
+	var user openapi.User
 	err = json.Unmarshal(userData, &user)
 	if err != nil {
 		return
@@ -129,36 +129,12 @@ func getUserRx(tx *bolt.Tx, userId string) (response openapi.User, err error) {
 		}
 	}
 
-	// Convert UpdateUserRequest to User
-	response = openapi.User{
-		Id:               userId,
-		Username:         user.Username,
-		FirstName:        user.FirstName,
-		LastName:         user.LastName,
-		Email:            user.Email,
-		Description:      user.Description,
-		Location:         user.Location,
-		Created:          user.Created,
-		Edited:           user.Edited,
-		BattleTestedUp:   user.BattleTestedUp,
-		BattleTestedDown: user.BattleTestedDown,
-		FreshUp:          user.FreshUp,
-		FreshDown:        user.FreshDown,
-		VideoUp:          user.VideoUp,
-		VideoDown:        user.VideoDown,
-		Linked:           user.Linked,
-		Role:             user.Role,
-		Reputation:       user.Reputation,
-		IsFlagged:        user.IsFlagged,
-		CreatedAt:        user.CreatedAt,
-		UpdatedAt:        user.UpdatedAt,
-		LastLogin:        user.LastLogin,
-	}
+	response = user
 
 	return
 }
 
-func postUser(db *bolt.DB, user openapi.UpdateUserRequest) (userId string, err error) {
+func postUser(db *bolt.DB, user openapi.User) (userId string, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		userId, err = postUserTx(tx, user)
 		return err
@@ -167,7 +143,7 @@ func postUser(db *bolt.DB, user openapi.UpdateUserRequest) (userId string, err e
 	return
 }
 
-func postUserTx(tx *bolt.Tx, user openapi.UpdateUserRequest) (userId string, err error) {
+func postUserTx(tx *bolt.Tx, user openapi.User) (userId string, err error) {
 
 	usersBucket, err := tx.CreateBucketIfNotExists([]byte(KeyUsers))
 	if err != nil {
@@ -182,6 +158,7 @@ func postUserTx(tx *bolt.Tx, user openapi.UpdateUserRequest) (userId string, err
 	}
 
 	user.Username = userId
+	user.Id = userId
 
 	marshal, err := json.Marshal(user)
 	if err != nil {

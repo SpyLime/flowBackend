@@ -43,7 +43,7 @@ func TestPostEdge(t *testing.T) {
 
 	require.Equal(t, 3, len(oldMap.Edges))
 
-	edge := openapi.GetMapById200ResponseEdgesInner{
+	edge := openapi.Edge{
 		Id:     nodesAndEdges[1].TargetId.Format(time.RFC3339Nano) + "-" + nodesAndEdges[3].TargetId.Format(time.RFC3339Nano),
 		Source: nodesAndEdges[1].TargetId,
 		Target: nodesAndEdges[3].TargetId,
@@ -70,7 +70,7 @@ func TestDeleteEdgeImpl(t *testing.T) {
 	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 2)
 	require.Nil(t, err)
 
-	edge := openapi.GetMapById200ResponseEdgesInner{
+	edge := openapi.Edge{
 		Id:     nodesAndEdges[1].TargetId.Format(time.RFC3339Nano) + "-" + nodesAndEdges[2].TargetId.Format(time.RFC3339Nano),
 		Source: nodesAndEdges[1].TargetId,
 		Target: nodesAndEdges[2].TargetId,

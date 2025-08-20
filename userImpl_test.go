@@ -15,7 +15,7 @@ func TestPostGetUser(t *testing.T) {
 	db, dbTearDown := OpenTestDB("PostGetUser")
 	defer dbTearDown()
 
-	user := openapi.UpdateUserRequest{
+	user := openapi.User{
 		Username: "tommy",
 	}
 
@@ -42,7 +42,7 @@ func TestUpdateUserImpl(t *testing.T) {
 	originalUser, err := getUser(db, users[0])
 	require.Nil(t, err)
 
-	modUser := openapi.UpdateUserRequest{
+	modUser := openapi.User{
 		Id:       users[0],
 		LastName: "Reno",
 		Username: users[0],

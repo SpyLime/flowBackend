@@ -16,9 +16,9 @@ package openapi
 
 type ResponsePostTopic struct {
 
-	Topic GetTopics200ResponseInner `json:"topic"`
+	Topic Topic `json:"topic"`
 
-	NodeData AddTopic200ResponseNodeData `json:"nodeData"`
+	NodeData NodeData `json:"nodeData"`
 }
 
 // AssertResponsePostTopicRequired checks if the required fields are not zero-ed
@@ -33,22 +33,10 @@ func AssertResponsePostTopicRequired(obj ResponsePostTopic) error {
 		}
 	}
 
-	if err := AssertGetTopics200ResponseInnerRequired(obj.Topic); err != nil {
-		return err
-	}
-	if err := AssertAddTopic200ResponseNodeDataRequired(obj.NodeData); err != nil {
-		return err
-	}
 	return nil
 }
 
 // AssertResponsePostTopicConstraints checks if the values respects the defined constraints
 func AssertResponsePostTopicConstraints(obj ResponsePostTopic) error {
-	if err := AssertGetTopics200ResponseInnerConstraints(obj.Topic); err != nil {
-		return err
-	}
-	if err := AssertAddTopic200ResponseNodeDataConstraints(obj.NodeData); err != nil {
-		return err
-	}
 	return nil
 }

@@ -19,7 +19,7 @@ func TestPostGetTopic(t *testing.T) {
 	users, _, _, err := CreateTestData(db, &clock, 1, 2, 0)
 	require.Nil(t, err)
 
-	topic := openapi.GetTopics200ResponseInner{
+	topic := openapi.Topic{
 		Title: "zzz",
 	}
 
