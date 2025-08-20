@@ -13,9 +13,9 @@ func TestFetchClipThumbnail(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if info.ThumbnailURL != expected {
-		t.Fatalf("got %q, want %q", info.ThumbnailURL, expected)
+	if info != expected {
+		t.Fatalf("got %q, want %q", info, expected)
 	}
 
-	t.Logf("Thumbnail URL: %s", info.ThumbnailURL)
+	t.Logf("Thumbnail URL: %s", info)
 }
