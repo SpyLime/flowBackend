@@ -22,7 +22,17 @@ func fetchClipThumbnail(encodedClipURL string) (ClipInfo string, err error) {
 
 // fetchClipThumbnailFromURL fetches thumbnail from the actual clip URL
 func fetchClipThumbnailFromURL(clipURL string) (ClipInfo string, err error) {
-	resp, err := http.Get(clipURL)
+	req, err := http.NewRequest("GET", clipURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Pretend to be a normal browser so YouTube gives the full HTML
+	req.Header.Set("User-Agent",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "+
+			"(KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch clip page: %w", err)
 	}
@@ -62,13 +72,13 @@ func fetchClipThumbnailFromURL(clipURL string) (ClipInfo string, err error) {
 	}
 
 	info := thumbs[len(thumbs)-1].URL // pick highest resolution
-
 	return info, nil
 }
 
 // extractYTInitialPlayerResponse extracts the ytInitialPlayerResponse JSON from the HTML
 func extractYTInitialPlayerResponse(body []byte) ([]byte, error) {
-	re := regexp.MustCompile(`var ytInitialPlayerResponse\s*=\s*(\{.*?\});`)
+	// Match even if there's whitespace or semicolon after the JSON
+	re := regexp.MustCompile(`var ytInitialPlayerResponse\s*=\s*(\{.*?\})\s*;`)
 	matches := re.FindSubmatch(body)
 	if len(matches) < 2 {
 		return nil, fmt.Errorf("could not find ytInitialPlayerResponse")
