@@ -4,18 +4,22 @@ import (
 	"testing"
 )
 
-// this test only works locally so comment it out when you commit
-func TestFetchClipThumbnail(t *testing.T) {
+// only run locally
+func TestFetchClipTitle(t *testing.T) {
 	// clipURL := "https://youtube.com/clip/UgkxbG8R2t72qb0l7FWcaBW9r-hU3kGPf-ms"
 
-	// info, err := fetchClipThumbnail(clipURL)
+	// title, err := fetchClipTitle(clipURL)
 	// if err != nil {
 	// 	t.Fatalf("unexpected error: %v", err)
 	// }
 
-	// if !strings.Contains(info, "tX6yZBJ1n0M") || !(strings.HasSuffix(info, ".jpg") || strings.HasSuffix(info, ".webp")) {
-	// 	t.Fatalf("got %q, want a thumbnail URL containing the video ID", info)
+	// // Simple validation: title should not be empty and should contain a known part of the clip ID
+	// if title == "" {
+	// 	t.Fatalf("got empty title, expected non-empty")
+	// }
+	// if !strings.Contains(title, "clip") && !strings.Contains(title, "Clip") {
+	// 	t.Logf("Note: title does not contain 'clip'; actual title: %q", title)
 	// }
 
-	// t.Logf("Thumbnail URL: %s", info)
+	// t.Logf("Clip title: %s", title)
 }

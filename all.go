@@ -20,7 +20,7 @@ func NewAllAPIServiceImpl(db *bolt.DB, clock Clock) openapi.AllAPIServicer {
 }
 
 func (s *AllAPIServiceImpl) ClipImage(ctx context.Context, clipUrl string) (openapi.ImplResponse, error) {
-	info, err := fetchClipThumbnail(clipUrl)
+	info, err := fetchClipTitle(clipUrl)
 	if err != nil {
 		return openapi.Response(400, nil), err
 	}
