@@ -9,7 +9,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-func getMapById(db *bolt.DB, topicId string) (response openapi.GetMapById200Response, err error) {
+func getMapById(db *bolt.DB, topicId string) (response openapi.MapData, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		response, err = getMapByIdRx(tx, topicId)
 		return err
@@ -18,7 +18,7 @@ func getMapById(db *bolt.DB, topicId string) (response openapi.GetMapById200Resp
 	return
 }
 
-func getMapByIdRx(tx *bolt.Tx, topicId string) (response openapi.GetMapById200Response, err error) {
+func getMapByIdRx(tx *bolt.Tx, topicId string) (response openapi.MapData, err error) {
 	topicsBucket := tx.Bucket([]byte(KeyTopics))
 	if topicsBucket == nil {
 		return response, fmt.Errorf("can't find topics bucket")
@@ -39,14 +39,14 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response openapi.GetMapById200Re
 		return response, fmt.Errorf("can't find edges bucket")
 	}
 
-	nodes := make([]openapi.GetMapById200ResponseNodesInner, 0)
+	nodes := make([]openapi.FlowNode, 0)
 	c := nodesBucket.Cursor()
 	for k, v := c.First(); k != nil; k, v = c.Next() {
 		if v == nil {
 			continue
 		}
 
-		var retrievedNode openapi.AddTopic200ResponseNodeData
+		var retrievedNode openapi.NodeData
 		err = json.Unmarshal(v, &retrievedNode)
 		if err != nil {
 			return
@@ -58,9 +58,9 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response openapi.GetMapById200Re
 			return
 		}
 
-		newNode := openapi.GetMapById200ResponseNodesInner{
+		newNode := openapi.FlowNode{
 			Id: id,
-			Data: openapi.GetMapById200ResponseNodesInnerData{
+			Data: openapi.FlowNodeData{
 				Title:        retrievedNode.Title,
 				BattleTested: retrievedNode.BattleTested,
 				Fresh:        retrievedNode.Fresh,
@@ -71,14 +71,14 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response openapi.GetMapById200Re
 		nodes = append(nodes, newNode)
 	}
 
-	edges := make([]openapi.GetMapById200ResponseEdgesInner, 0)
+	edges := make([]openapi.Edge, 0)
 	c = edgesBucket.Cursor()
 	for k, v := c.First(); k != nil; k, v = c.Next() {
 		if v == nil {
 			continue
 		}
 
-		var newEdge openapi.GetMapById200ResponseEdgesInner
+		var newEdge openapi.Edge
 		err = json.Unmarshal(v, &newEdge)
 		if err != nil {
 			return
@@ -95,7 +95,7 @@ func getMapByIdRx(tx *bolt.Tx, topicId string) (response openapi.GetMapById200Re
 	return
 }
 
-func postEdge(db *bolt.DB, topic string, edge openapi.GetMapById200ResponseEdgesInner) (newId string, err error) {
+func postEdge(db *bolt.DB, topic string, edge openapi.Edge) (newId string, err error) {
 	if edge.Source == edge.Target {
 		return newId, fmt.Errorf("your trying to connect a node to itself")
 	}
@@ -121,7 +121,7 @@ func postEdge(db *bolt.DB, topic string, edge openapi.GetMapById200ResponseEdges
 	return
 }
 
-func postEdgeTx(topicBucket *bolt.Bucket, edge openapi.GetMapById200ResponseEdgesInner) (newId string, err error) {
+func postEdgeTx(topicBucket *bolt.Bucket, edge openapi.Edge) (newId string, err error) {
 	edgesBucket, err := topicBucket.CreateBucketIfNotExists([]byte(KeyEdges))
 	if err != nil {
 		return

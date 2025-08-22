@@ -22,7 +22,7 @@ type FlowNode struct {
 
 	Id time.Time `json:"id,omitempty"`
 
-	Position GetMapById200ResponseNodesInnerPosition `json:"position,omitempty"`
+	Position FlowNodePosition `json:"position,omitempty"`
 
 	Type string `json:"type,omitempty"`
 
@@ -30,15 +30,15 @@ type FlowNode struct {
 
 	SourcePosition string `json:"SourcePosition,omitempty"`
 
-	Data GetMapById200ResponseNodesInnerData `json:"data,omitempty"`
+	Data FlowNodeData `json:"data,omitempty"`
 }
 
 // AssertFlowNodeRequired checks if the required fields are not zero-ed
 func AssertFlowNodeRequired(obj FlowNode) error {
-	if err := AssertGetMapById200ResponseNodesInnerPositionRequired(obj.Position); err != nil {
+	if err := AssertFlowNodePositionRequired(obj.Position); err != nil {
 		return err
 	}
-	if err := AssertGetMapById200ResponseNodesInnerDataRequired(obj.Data); err != nil {
+	if err := AssertFlowNodeDataRequired(obj.Data); err != nil {
 		return err
 	}
 	return nil
@@ -46,10 +46,10 @@ func AssertFlowNodeRequired(obj FlowNode) error {
 
 // AssertFlowNodeConstraints checks if the values respects the defined constraints
 func AssertFlowNodeConstraints(obj FlowNode) error {
-	if err := AssertGetMapById200ResponseNodesInnerPositionConstraints(obj.Position); err != nil {
+	if err := AssertFlowNodePositionConstraints(obj.Position); err != nil {
 		return err
 	}
-	if err := AssertGetMapById200ResponseNodesInnerDataConstraints(obj.Data); err != nil {
+	if err := AssertFlowNodeDataConstraints(obj.Data); err != nil {
 		return err
 	}
 	return nil

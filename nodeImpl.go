@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
+	"log"
 	"strings"
 	"time"
 
@@ -13,34 +13,10 @@ import (
 
 // areSameYouTubeVideo returns true if two YouTube URLs point to the same video.
 func areSameYouTubeVideo(link1, link2 string) bool {
-	return extractYouTubeID(link1) == extractYouTubeID(link2)
+	return link1 == link2
 }
 
-// extractYouTubeID extracts the video ID from a YouTube URL (short or full).
-func extractYouTubeID(link string) string {
-	u, err := url.Parse(link)
-	if err != nil {
-		return ""
-	}
-
-	host := strings.TrimPrefix(u.Host, "www.") // normalize
-	switch host {
-	case "youtu.be":
-		// Short URL: video ID is the path without leading '/'
-		return strings.TrimPrefix(u.Path, "/")
-	case "youtube.com", "m.youtube.com":
-		// Shorts URL: video ID is path segment after /shorts/
-		if strings.HasPrefix(u.Path, "/shorts/") {
-			return strings.TrimPrefix(u.Path, "/shorts/")
-		}
-		// Full URL: video ID is in 'v' query parameter
-		return u.Query().Get("v")
-	}
-
-	return ""
-}
-
-func getNode(db *bolt.DB, nodeId, topicId string) (response openapi.AddTopic200ResponseNodeData, err error) {
+func getNode(db *bolt.DB, nodeId, topicId string) (response openapi.NodeData, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		response, err = getNodeRx(tx, nodeId, topicId)
 		return err
@@ -49,7 +25,7 @@ func getNode(db *bolt.DB, nodeId, topicId string) (response openapi.AddTopic200R
 	return
 }
 
-func getNodeRx(tx *bolt.Tx, nodeId, topicId string) (response openapi.AddTopic200ResponseNodeData, err error) {
+func getNodeRx(tx *bolt.Tx, nodeId, topicId string) (response openapi.NodeData, err error) {
 	_, nodeData, err := nodeDataFinderTx(tx, topicId, nodeId)
 	if err != nil {
 		return
@@ -75,7 +51,7 @@ func getNodeRx(tx *bolt.Tx, nodeId, topicId string) (response openapi.AddTopic20
 // do not supply a target id
 //
 // supply topic, title, createdBy, ID which is the source ID
-func postNode(db *bolt.DB, clock Clock, node openapi.AddTopic200ResponseNodeData) (response openapi.ResponsePostNode, err error) {
+func postNode(db *bolt.DB, clock Clock, node openapi.NodeData) (response openapi.ResponsePostNode, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		response, err = postNodeTx(tx, clock, node)
 		return err
@@ -87,7 +63,7 @@ func postNode(db *bolt.DB, clock Clock, node openapi.AddTopic200ResponseNodeData
 // do not supply a target id
 //
 // supply topic, title, createdBy, ID which is the source ID
-func postNodeTx(tx *bolt.Tx, clock Clock, node openapi.AddTopic200ResponseNodeData) (response openapi.ResponsePostNode, err error) {
+func postNodeTx(tx *bolt.Tx, clock Clock, node openapi.NodeData) (response openapi.ResponsePostNode, err error) {
 
 	topicsBucket := tx.Bucket([]byte(KeyTopics))
 	if topicsBucket == nil {
@@ -140,7 +116,7 @@ func postNodeTx(tx *bolt.Tx, clock Clock, node openapi.AddTopic200ResponseNodeDa
 	response.SourceId = node.Id
 	response.TargetId = id
 
-	edge := openapi.GetMapById200ResponseEdgesInner{
+	edge := openapi.Edge{
 		Id:     response.SourceId.Format(time.RFC3339Nano) + "-" + response.TargetId.Format(time.RFC3339Nano),
 		Source: response.SourceId,
 		Target: response.TargetId,
@@ -170,7 +146,7 @@ func userNodeCreatedTx(tx *bolt.Tx, userId string, node openapi.NodeData) error 
 	}
 
 	if !isDuplicate {
-		user.Created = append(user.Created, openapi.UpdateUserRequestBattleTestedUpInner{
+		user.Created = append(user.Created, openapi.ResponseUserInfoInner{
 			Topic:  node.Topic,
 			Title:  node.Title,
 			NodeId: node.Id,
@@ -229,7 +205,7 @@ func removeNodeFromAllUsersTx(tx *bolt.Tx, nodeId string, topicId string) error 
 
 	c := usersBucket.Cursor()
 	for k, v := c.First(); k != nil && v != nil; k, v = c.Next() {
-		var user openapi.UpdateUserRequest
+		var user openapi.User
 		if err := json.Unmarshal(v, &user); err != nil {
 			continue // Skip this user if we can't unmarshal
 		}
@@ -303,7 +279,7 @@ func removeNodeFromAllUsersTx(tx *bolt.Tx, nodeId string, topicId string) error 
 }
 
 // Helper function to remove a node from a specific user's data
-func removeNodeFromUserTx(tx *bolt.Tx, userId string, nodeId string, topicId string, topic string, videos []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner) error {
+func removeNodeFromUserTx(tx *bolt.Tx, userId string, nodeId string, topicId string, topic string, videos []openapi.LinkData) error {
 	usersBucket, user, err := getUserAndBucketRx(tx, userId)
 	if err != nil {
 		return err
@@ -448,7 +424,7 @@ func deleteNodeTx(tx *bolt.Tx, nodeId, topicId string) (err error) {
 	return
 }
 
-func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, editor openapi.User) (editorAdded bool, err error) {
+func updateNodeTitle(db *bolt.DB, request openapi.NodeData, editor openapi.User) (editorAdded bool, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		editorAdded, err = updateNodeTitleTx(tx, request, editor)
 		return err
@@ -458,7 +434,7 @@ func updateNodeTitle(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, e
 }
 
 // updates the title and description
-func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, editor openapi.User) (editorAdded bool, err error) {
+func updateNodeTitleTx(tx *bolt.Tx, request openapi.NodeData, editor openapi.User) (editorAdded bool, err error) {
 	fmt.Printf(request.Id.Format(time.RFC3339Nano))
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
@@ -504,7 +480,7 @@ func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData,
 
 	// Only append if the editor doesn't already exist
 	if !editorExists {
-		node.EditedBy = append(node.EditedBy, openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+		node.EditedBy = append(node.EditedBy, openapi.UserIdentifier{
 			Id:       editor.Id,
 			Username: editor.Username,
 		})
@@ -536,9 +512,9 @@ func updateNodeTitleTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData,
 }
 
 // Wrapper function that opens a transaction
-func updateUserNodeEdited(db *bolt.DB, userId string, node openapi.AddTopic200ResponseNodeData) error {
+func updateUserNodeEdited(db *bolt.DB, userId string, node openapi.NodeData) error {
 	return db.Update(func(tx *bolt.Tx) error {
-		return userNodeEditedTx(tx, userId, openapi.NodeData(node))
+		return userNodeEditedTx(tx, userId, node)
 	})
 }
 
@@ -561,7 +537,7 @@ func userNodeEditedTx(tx *bolt.Tx, userId string, node openapi.NodeData) error {
 	}
 
 	if !isDuplicate {
-		user.Edited = append(user.Edited, openapi.UpdateUserRequestBattleTestedUpInner{
+		user.Edited = append(user.Edited, openapi.ResponseUserInfoInner{
 			Topic:  node.Topic,
 			Title:  node.Title,
 			NodeId: node.Id,
@@ -608,7 +584,7 @@ func nodeDataFinderTx(tx *bolt.Tx, TopicId, NodeId string) (nodesBucket *bolt.Bu
 	return
 }
 
-func updateNodeBattleVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
+func updateNodeBattleVote(db *bolt.DB, request openapi.NodeData, userId string) (vote int32, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		vote, err = updateNodeBattleVoteTx(tx, request, userId)
 		return err
@@ -617,7 +593,7 @@ func updateNodeBattleVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeDa
 	return
 }
 
-func updateNodeBattleVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
+func updateNodeBattleVoteTx(tx *bolt.Tx, request openapi.NodeData, userId string) (vote int32, err error) {
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
 		return
@@ -641,7 +617,10 @@ func updateNodeBattleVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNode
 		if vote != 0 && node.CreatedBy.Id != "" {
 			// Only update reputation if the voter is not the creator
 			if node.CreatedBy.Id != userId {
-				updateCreatorReputation(tx, node.CreatedBy.Id, vote)
+				err = updateCreatorReputation(tx, node.CreatedBy.Id, vote)
+				if err != nil {
+					return vote, err
+				}
 			}
 		}
 	}
@@ -657,107 +636,145 @@ func updateNodeBattleVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNode
 	return
 }
 
-func userBattleVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200ResponseNodeData) (vote int32, err error) {
+func userBattleVoteTx(tx *bolt.Tx, userId string, request openapi.NodeData) (int32, error) {
 	usersBucket, user, err := getUserAndBucketRx(tx, userId)
 	if err != nil {
-		return
+		return 0, err
 	}
 
-	// Get the node to retrieve its title if not provided
-	var nodeTitle string
-	if request.Title == "" {
-		// Fetch the node to get its title
-		_, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
-		if err == nil {
+	// Resolve title if needed
+	nodeTitle := request.Title
+	if nodeTitle == "" {
+		if _, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano)); err == nil {
 			var node openapi.NodeData
-			if err = json.Unmarshal(nodeData, &node); err == nil {
+			if json.Unmarshal(nodeData, &node) == nil {
 				nodeTitle = node.Title
 			}
 		}
-	} else {
-		nodeTitle = request.Title
 	}
 
+	// --- Normalize current state (no duplicates, and not present in both lists) ---
+	hadUp := containsNode(user.BattleTestedUp, request.Id)
+	hadDown := containsNode(user.BattleTestedDown, request.Id)
+
+	// If inconsistent (both present), clean to neutral as a defensive fix.
+	if hadUp && hadDown {
+		user.BattleTestedUp = removeNodeAll(user.BattleTestedUp, request.Id)
+		user.BattleTestedDown = removeNodeAll(user.BattleTestedDown, request.Id)
+		hadUp, hadDown = false, false
+	}
+
+	// Old state
+	var oldVote int32
+	switch {
+	case hadUp:
+		oldVote = +1
+	case hadDown:
+		oldVote = -1
+	default:
+		oldVote = 0
+	}
+
+	// Requested direction (only sign matters)
+	reqDir := int32(0)
 	if request.BattleTested > 0 {
-		for i, item := range user.BattleTestedUp {
-			if item.NodeId.Equal(request.Id) { // Check if ID matches
-				user.BattleTestedUp = append(user.BattleTestedUp[:i], user.BattleTestedUp[i+1:]...) //already voted up so subtract 1 to unvote
-				vote--
-				marshal, err := json.Marshal(user)
-				if err != nil {
-					return vote, err
-				}
-
-				err = usersBucket.Put([]byte(userId), marshal)
-
-				return vote, err
-			}
-		}
-
-		user.BattleTestedUp = append(user.BattleTestedUp, openapi.UpdateUserRequestBattleTestedUpInner{
-			Topic:  request.Topic,
-			Title:  nodeTitle,
-			NodeId: request.Id,
-		})
-
-		vote++
-
-		for i, item := range user.BattleTestedDown {
-			if item.NodeId.Equal(request.Id) { // Check if ID matches
-				user.BattleTestedDown = append(user.BattleTestedDown[:i], user.BattleTestedDown[i+1:]...) //already voted down so add 1 to unvote
-				vote++
-				break
-			}
-		}
-
+		reqDir = +1
+	} else if request.BattleTested < 0 {
+		reqDir = -1
 	} else {
-		for i, item := range user.BattleTestedDown {
-			if item.NodeId.Equal(request.Id) { // Check if ID matches
-				user.BattleTestedDown = append(user.BattleTestedDown[:i], user.BattleTestedDown[i+1:]...)
-				vote++
-				marshal, err := json.Marshal(user)
-				if err != nil {
-					return vote, err
-				}
+		// If you ever send 0, treat as no-op to avoid accidental 0 deltas.
+		// You could also choose to "unvote" here if that's desired.
+		return 0, fmt.Errorf("invalid request: BattleTested must be +/-1")
+	}
 
-				err = usersBucket.Put([]byte(userId), marshal)
+	// --- State machine producing ONLY {-2,-1,+1,+2} ---
+	var delta int32
+	switch {
+	// Request UP
+	case reqDir == +1 && oldVote == +1:
+		// up -> unvote
+		delta = -1
+		user.BattleTestedUp = removeNodeAll(user.BattleTestedUp, request.Id)
 
-				return vote, err
-			}
-		}
-
-		user.BattleTestedDown = append(user.BattleTestedDown, openapi.UpdateUserRequestBattleTestedUpInner{
+	case reqDir == +1 && oldVote == 0:
+		// none -> up
+		delta = +1
+		user.BattleTestedUp = append(user.BattleTestedUp, openapi.ResponseUserInfoInner{
 			Topic:  request.Topic,
 			Title:  nodeTitle,
 			NodeId: request.Id,
 		})
 
-		vote--
+	case reqDir == +1 && oldVote == -1:
+		// down -> up (unvote down, then up)
+		delta = +2
+		user.BattleTestedDown = removeNodeAll(user.BattleTestedDown, request.Id)
+		user.BattleTestedUp = append(user.BattleTestedUp, openapi.ResponseUserInfoInner{
+			Topic:  request.Topic,
+			Title:  nodeTitle,
+			NodeId: request.Id,
+		})
 
-		for i, item := range user.BattleTestedUp {
-			if item.NodeId.Equal(request.Id) { // Check if ID matches
-				user.BattleTestedUp = append(user.BattleTestedUp[:i], user.BattleTestedUp[i+1:]...) //already voted down so add 1 to unvote
-				vote--
-				break
-			}
-		}
+	// Request DOWN
+	case reqDir == -1 && oldVote == -1:
+		// down -> unvote
+		delta = +1
+		user.BattleTestedDown = removeNodeAll(user.BattleTestedDown, request.Id)
 
+	case reqDir == -1 && oldVote == 0:
+		// none -> down
+		delta = -1
+		user.BattleTestedDown = append(user.BattleTestedDown, openapi.ResponseUserInfoInner{
+			Topic:  request.Topic,
+			Title:  nodeTitle,
+			NodeId: request.Id,
+		})
+
+	case reqDir == -1 && oldVote == +1:
+		// up -> down (unvote up, then down)
+		delta = -2
+		user.BattleTestedUp = removeNodeAll(user.BattleTestedUp, request.Id)
+		user.BattleTestedDown = append(user.BattleTestedDown, openapi.ResponseUserInfoInner{
+			Topic:  request.Topic,
+			Title:  nodeTitle,
+			NodeId: request.Id,
+		})
 	}
 
-	marshal, err := json.Marshal(user)
+	// Persist user
+	b, err := json.Marshal(user)
 	if err != nil {
-		return vote, err
+		return delta, err
 	}
+	if err := usersBucket.Put([]byte(userId), b); err != nil {
+		return delta, err
+	}
+	return delta, nil
+}
 
-	err = usersBucket.Put([]byte(userId), marshal)
+func containsNode(list []openapi.ResponseUserInfoInner, id time.Time) bool {
+	for _, item := range list {
+		if item.NodeId.Equal(id) {
+			return true
+		}
+	}
+	return false
+}
 
-	return
+func removeNodeAll(list []openapi.ResponseUserInfoInner, id time.Time) []openapi.ResponseUserInfoInner {
+	out := list[:0]
+	for _, item := range list {
+		if !item.NodeId.Equal(id) {
+			out = append(out, item)
+		}
+	}
+	return out
 }
 
 // want to add a video to a node
 //
 // if votes are greater than zero then trying to add a video
-func updateNodeVideoEdit(db *bolt.DB, clock Clock, request openapi.AddTopic200ResponseNodeData, user openapi.User) (err error) {
+func updateNodeVideoEdit(db *bolt.DB, clock Clock, request openapi.NodeData, user openapi.User) (err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		err = updateNodeVideoEditTx(tx, clock, request, user)
 		return err
@@ -766,7 +783,7 @@ func updateNodeVideoEdit(db *bolt.DB, clock Clock, request openapi.AddTopic200Re
 	return
 }
 
-func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200ResponseNodeData, user openapi.User) (err error) {
+func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.NodeData, user openapi.User) (err error) {
 
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
@@ -814,10 +831,10 @@ func updateNodeVideoEditTx(tx *bolt.Tx, clock Clock, request openapi.AddTopic200
 	}
 
 	if request.YoutubeLinks[0].Votes > 0 { //video was not found and you want to add
-		node.YoutubeLinks = append(node.YoutubeLinks, openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{
+		node.YoutubeLinks = append(node.YoutubeLinks, openapi.LinkData{
 			Link:  request.YoutubeLinks[0].Link,
 			Votes: 0,
-			AddedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+			AddedBy: openapi.UserIdentifier{
 				Id:       user.Id,
 				Username: user.Username,
 			},
@@ -850,7 +867,7 @@ func removeVideoFromUsersVotersTx(tx *bolt.Tx, videoLink string) (err error) {
 
 	c := usersBucket.Cursor()
 	for k, v := c.First(); k != nil; k, v = c.Next() {
-		var user openapi.UpdateUserRequest
+		var user openapi.User
 
 		// Unmarshal the user JSON
 		if err := json.Unmarshal(v, &user); err != nil {
@@ -888,7 +905,7 @@ func removeVideoFromUsersVotersTx(tx *bolt.Tx, videoLink string) (err error) {
 	return
 }
 
-func userVideoEditTx(tx *bolt.Tx, clock Clock, userId string, request openapi.AddTopic200ResponseNodeData) (err error) {
+func userVideoEditTx(tx *bolt.Tx, clock Clock, userId string, request openapi.NodeData) (err error) {
 	usersBucket, user, err := getUserAndBucketRx(tx, userId)
 	if err != nil {
 		return
@@ -916,10 +933,10 @@ func userVideoEditTx(tx *bolt.Tx, clock Clock, userId string, request openapi.Ad
 	}
 
 	if request.YoutubeLinks[0].Votes > 0 {
-		user.Linked = append(user.Linked, openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{
+		user.Linked = append(user.Linked, openapi.LinkData{
 			Link:  request.YoutubeLinks[0].Link,
 			Votes: 0,
-			AddedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+			AddedBy: openapi.UserIdentifier{
 				Id:       user.Id,
 				Username: user.Username,
 			},
@@ -943,7 +960,7 @@ func userVideoEditTx(tx *bolt.Tx, clock Clock, userId string, request openapi.Ad
 // vote on a video
 //
 // if votes are greater than zero then trying to add a vote
-func updateNodeVideoVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
+func updateNodeVideoVote(db *bolt.DB, request openapi.NodeData, userId string) (vote int32, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		vote, err = updateNodeVideoVoteTx(tx, request, userId)
 		return err
@@ -952,7 +969,7 @@ func updateNodeVideoVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeDat
 	return
 }
 
-func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
+func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.NodeData, userId string) (vote int32, err error) {
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
 		return
@@ -1180,7 +1197,7 @@ func updateNodeVideoVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 	return
 }
 
-func userVideoVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200ResponseNodeData) (vote int32, err error) {
+func userVideoVoteTx(tx *bolt.Tx, userId string, request openapi.NodeData) (vote int32, err error) {
 	usersBucket, user, err := getUserAndBucketRx(tx, userId)
 	if err != nil {
 		return
@@ -1254,7 +1271,7 @@ func userVideoVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Resp
 	return
 }
 
-func updateNodeFlag(db *bolt.DB, request openapi.AddTopic200ResponseNodeData) (err error) {
+func updateNodeFlag(db *bolt.DB, request openapi.NodeData) (err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		err = updateNodeFlagTx(tx, request)
 		return err
@@ -1264,7 +1281,7 @@ func updateNodeFlag(db *bolt.DB, request openapi.AddTopic200ResponseNodeData) (e
 }
 
 // updates the title and description
-func updateNodeFlagTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData) (err error) {
+func updateNodeFlagTx(tx *bolt.Tx, request openapi.NodeData) (err error) {
 
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
@@ -1291,7 +1308,7 @@ func updateNodeFlagTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData) 
 	return
 }
 
-func updateNodeFreshVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
+func updateNodeFreshVote(db *bolt.DB, request openapi.NodeData, userId string) (vote int32, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		vote, err = updateNodeFreshVoteTx(tx, request, userId)
 		return err
@@ -1301,7 +1318,7 @@ func updateNodeFreshVote(db *bolt.DB, request openapi.AddTopic200ResponseNodeDat
 }
 
 // updates the title and description
-func updateNodeFreshVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeData, userId string) (vote int32, err error) {
+func updateNodeFreshVoteTx(tx *bolt.Tx, request openapi.NodeData, userId string) (vote int32, err error) {
 	nodesBucket, nodeData, err := nodeDataFinderTx(tx, request.Topic, request.Id.Format(time.RFC3339Nano))
 	if err != nil {
 		return
@@ -1341,7 +1358,7 @@ func updateNodeFreshVoteTx(tx *bolt.Tx, request openapi.AddTopic200ResponseNodeD
 	return
 }
 
-func userFreshVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200ResponseNodeData) (vote int32, err error) {
+func userFreshVoteTx(tx *bolt.Tx, userId string, request openapi.NodeData) (vote int32, err error) {
 	usersBucket, user, err := getUserAndBucketRx(tx, userId)
 	if err != nil {
 		return
@@ -1378,7 +1395,7 @@ func userFreshVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Resp
 			}
 		}
 
-		user.FreshUp = append(user.FreshUp, openapi.UpdateUserRequestBattleTestedUpInner{
+		user.FreshUp = append(user.FreshUp, openapi.ResponseUserInfoInner{
 			Topic:  request.Topic,
 			Title:  nodeTitle,
 			NodeId: request.Id,
@@ -1410,7 +1427,7 @@ func userFreshVoteTx(tx *bolt.Tx, userId string, request openapi.AddTopic200Resp
 			}
 		}
 
-		user.FreshDown = append(user.FreshDown, openapi.UpdateUserRequestBattleTestedUpInner{
+		user.FreshDown = append(user.FreshDown, openapi.ResponseUserInfoInner{
 			Topic:  request.Topic,
 			Title:  nodeTitle,
 			NodeId: request.Id,
@@ -1448,7 +1465,7 @@ func updateUserNodeTitleTx(tx *bolt.Tx, nodeId time.Time, topic string, newTitle
 
 	c := usersBucket.Cursor()
 	for k, v := c.First(); k != nil; k, v = c.Next() {
-		var user openapi.UpdateUserRequest
+		var user openapi.User
 		if err := json.Unmarshal(v, &user); err != nil {
 			continue // Skip this user if we can't unmarshal
 		}
@@ -1537,5 +1554,19 @@ func updateCreatorReputation(tx *bolt.Tx, creatorId string, voteValue int32) err
 		return err
 	}
 
-	return usersBucket.Put([]byte(creatorId), marshal)
+	err = usersBucket.Put([]byte(creatorId), marshal)
+	if err != nil {
+		return err
+	}
+
+	// Debugging re-read
+	saved := usersBucket.Get([]byte(creatorId))
+	var savedUser openapi.User
+	if err := json.Unmarshal(saved, &savedUser); err == nil {
+		log.Printf("Reputation persisted for %s: %d", creatorId, savedUser.Reputation)
+	} else {
+		log.Printf("Failed to re-unmarshal user after save: %v", err)
+	}
+
+	return nil
 }

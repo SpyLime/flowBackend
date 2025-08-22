@@ -96,22 +96,22 @@ func (c *MapAPIController) AddEdge(w http.ResponseWriter, r *http.Request) {
 		c.errorHandler(w, r, &RequiredError{"topicId"}, nil)
 		return
 	}
-	getMapById200ResponseEdgesInnerParam := GetMapById200ResponseEdgesInner{}
+	edgeParam := Edge{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&getMapById200ResponseEdgesInnerParam); err != nil {
+	if err := d.Decode(&edgeParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertGetMapById200ResponseEdgesInnerRequired(getMapById200ResponseEdgesInnerParam); err != nil {
+	if err := AssertEdgeRequired(edgeParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertGetMapById200ResponseEdgesInnerConstraints(getMapById200ResponseEdgesInnerParam); err != nil {
+	if err := AssertEdgeConstraints(edgeParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.AddEdge(r.Context(), topicIdParam, getMapById200ResponseEdgesInnerParam)
+	result, err := c.service.AddEdge(r.Context(), topicIdParam, edgeParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

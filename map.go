@@ -33,7 +33,7 @@ func (s *MapAPIServiceImpl) GetMapById(ctx context.Context, topicId string) (ope
 }
 
 // AddEdge - Add a new edge
-func (s *MapAPIServiceImpl) AddEdge(ctx context.Context, topicId string, getMapById200ResponseEdgesInner openapi.GetMapById200ResponseEdgesInner) (openapi.ImplResponse, error) {
+func (s *MapAPIServiceImpl) AddEdge(ctx context.Context, topicId string, edge openapi.Edge) (openapi.ImplResponse, error) {
 	user, ok := ctx.Value(userInfoKey).(token.User)
 	if !ok {
 		return openapi.Response(401, nil), errors.New("unauthorized: user not found in context")
@@ -47,7 +47,7 @@ func (s *MapAPIServiceImpl) AddEdge(ctx context.Context, topicId string, getMapB
 		return openapi.Response(401, nil), errors.New("unauthorized: user is not an admin or has low reputation(Contributor)")
 	}
 
-	_, err = postEdge(s.db, topicId, getMapById200ResponseEdgesInner)
+	_, err = postEdge(s.db, topicId, edge)
 	if err != nil {
 		return openapi.Response(405, nil), err
 	}

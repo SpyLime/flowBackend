@@ -404,7 +404,7 @@ func TestSSOUserTimestamps(t *testing.T) {
 	err = saveOrUpdateSSOUser(db, &clock, tokenUser)
 	require.NoError(t, err, "Should be able to update user in database")
 
-	err = updateUser(db, &clock, openapi.UpdateUserRequest{
+	err = updateUser(db, &clock, openapi.User{
 		Location: "UpdatedUser",
 		Id:       userID,
 	})

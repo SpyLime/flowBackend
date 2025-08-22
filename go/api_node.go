@@ -135,22 +135,22 @@ func (c *NodeAPIController) GetNode(w http.ResponseWriter, r *http.Request) {
 
 // AddNode - Add a new node
 func (c *NodeAPIController) AddNode(w http.ResponseWriter, r *http.Request) {
-	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	nodeDataParam := NodeData{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+	if err := d.Decode(&nodeDataParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataRequired(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataConstraints(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.AddNode(r.Context(), addTopic200ResponseNodeDataParam)
+	result, err := c.service.AddNode(r.Context(), nodeDataParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -197,22 +197,22 @@ func (c *NodeAPIController) DeleteNode(w http.ResponseWriter, r *http.Request) {
 
 // UpdateNodeTitle - Update a nodes title and description
 func (c *NodeAPIController) UpdateNodeTitle(w http.ResponseWriter, r *http.Request) {
-	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	nodeDataParam := NodeData{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+	if err := d.Decode(&nodeDataParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataRequired(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataConstraints(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.UpdateNodeTitle(r.Context(), addTopic200ResponseNodeDataParam)
+	result, err := c.service.UpdateNodeTitle(r.Context(), nodeDataParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -224,22 +224,22 @@ func (c *NodeAPIController) UpdateNodeTitle(w http.ResponseWriter, r *http.Reque
 
 // UpdateNodeVideoVote - Update a nodes video votes
 func (c *NodeAPIController) UpdateNodeVideoVote(w http.ResponseWriter, r *http.Request) {
-	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	nodeDataParam := NodeData{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+	if err := d.Decode(&nodeDataParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataRequired(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataConstraints(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.UpdateNodeVideoVote(r.Context(), addTopic200ResponseNodeDataParam)
+	result, err := c.service.UpdateNodeVideoVote(r.Context(), nodeDataParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -251,22 +251,22 @@ func (c *NodeAPIController) UpdateNodeVideoVote(w http.ResponseWriter, r *http.R
 
 // UpdateNodeVideoEdit - add or remove videos from a node
 func (c *NodeAPIController) UpdateNodeVideoEdit(w http.ResponseWriter, r *http.Request) {
-	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	nodeDataParam := NodeData{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+	if err := d.Decode(&nodeDataParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataRequired(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataConstraints(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.UpdateNodeVideoEdit(r.Context(), addTopic200ResponseNodeDataParam)
+	result, err := c.service.UpdateNodeVideoEdit(r.Context(), nodeDataParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -278,22 +278,22 @@ func (c *NodeAPIController) UpdateNodeVideoEdit(w http.ResponseWriter, r *http.R
 
 // UpdateNodeBattleVote - battle vote a node
 func (c *NodeAPIController) UpdateNodeBattleVote(w http.ResponseWriter, r *http.Request) {
-	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	nodeDataParam := NodeData{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+	if err := d.Decode(&nodeDataParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataRequired(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataConstraints(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.UpdateNodeBattleVote(r.Context(), addTopic200ResponseNodeDataParam)
+	result, err := c.service.UpdateNodeBattleVote(r.Context(), nodeDataParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -305,22 +305,22 @@ func (c *NodeAPIController) UpdateNodeBattleVote(w http.ResponseWriter, r *http.
 
 // UpdateNodeFreshVote - fresh vote a node
 func (c *NodeAPIController) UpdateNodeFreshVote(w http.ResponseWriter, r *http.Request) {
-	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	nodeDataParam := NodeData{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+	if err := d.Decode(&nodeDataParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataRequired(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataConstraints(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.UpdateNodeFreshVote(r.Context(), addTopic200ResponseNodeDataParam)
+	result, err := c.service.UpdateNodeFreshVote(r.Context(), nodeDataParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -332,22 +332,22 @@ func (c *NodeAPIController) UpdateNodeFreshVote(w http.ResponseWriter, r *http.R
 
 // UpdateNodeFlag - fresh vote a node
 func (c *NodeAPIController) UpdateNodeFlag(w http.ResponseWriter, r *http.Request) {
-	addTopic200ResponseNodeDataParam := AddTopic200ResponseNodeData{}
+	nodeDataParam := NodeData{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&addTopic200ResponseNodeDataParam); err != nil {
+	if err := d.Decode(&nodeDataParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataRequired(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataRequired(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertAddTopic200ResponseNodeDataConstraints(addTopic200ResponseNodeDataParam); err != nil {
+	if err := AssertNodeDataConstraints(nodeDataParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.UpdateNodeFlag(r.Context(), addTopic200ResponseNodeDataParam)
+	result, err := c.service.UpdateNodeFlag(r.Context(), nodeDataParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

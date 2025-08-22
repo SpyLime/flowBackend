@@ -34,7 +34,7 @@ func getTopicsRx(tx *bolt.Tx) (response []openapi.GetTopics200ResponseInner, err
 	return
 }
 
-func postTopic(db *bolt.DB, clock Clock, topic openapi.GetTopics200ResponseInner, user openapi.User) (response openapi.ResponsePostTopic, err error) {
+func postTopic(db *bolt.DB, clock Clock, topic openapi.Topic, user openapi.User) (response openapi.ResponsePostTopic, err error) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		response, err = postTopicTx(tx, clock, topic, user)
 		return err
@@ -43,7 +43,7 @@ func postTopic(db *bolt.DB, clock Clock, topic openapi.GetTopics200ResponseInner
 	return
 }
 
-func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInner, user openapi.User) (response openapi.ResponsePostTopic, err error) {
+func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.Topic, user openapi.User) (response openapi.ResponsePostTopic, err error) {
 
 	topicsBucket, err := tx.CreateBucketIfNotExists([]byte(KeyTopics))
 	if err != nil {
@@ -69,7 +69,7 @@ func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInn
 
 	newNode := openapi.NodeData{
 		Topic: topic.Title,
-		CreatedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+		CreatedBy: openapi.UserIdentifier{
 			Id:       user.Id,
 			Username: user.Username,
 		},
@@ -83,7 +83,7 @@ func postTopicTx(tx *bolt.Tx, clock Clock, topic openapi.GetTopics200ResponseInn
 		return
 	}
 
-	response.NodeData = openapi.AddTopic200ResponseNodeData(newNode)
+	response.NodeData = newNode
 
 	idB, err := id.MarshalText()
 	if err != nil {

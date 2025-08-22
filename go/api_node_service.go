@@ -33,8 +33,8 @@ func (s *NodeAPIService) GetNode(ctx context.Context, nodeId string, tid string)
 	// TODO - update GetNode with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// TODO: Uncomment the next line to return response Response(200, AddTopic200ResponseNodeData{}) or use other options such as http.Ok ...
-	// return Response(200, AddTopic200ResponseNodeData{}), nil
+	// TODO: Uncomment the next line to return response Response(200, NodeData{}) or use other options such as http.Ok ...
+	// return Response(200, NodeData{}), nil
 
 	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
 	// return Response(404, nil),nil
@@ -43,12 +43,12 @@ func (s *NodeAPIService) GetNode(ctx context.Context, nodeId string, tid string)
 }
 
 // AddNode - Add a new node
-func (s *NodeAPIService) AddNode(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+func (s *NodeAPIService) AddNode(ctx context.Context, nodeData NodeData) (ImplResponse, error) {
 	// TODO - update AddNode with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// TODO: Uncomment the next line to return response Response(200, AddNode200Response{}) or use other options such as http.Ok ...
-	// return Response(200, AddNode200Response{}), nil
+	// TODO: Uncomment the next line to return response Response(200, ResponsePostNode{}) or use other options such as http.Ok ...
+	// return Response(200, ResponsePostNode{}), nil
 
 	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
 	// return Response(405, nil),nil
@@ -77,7 +77,7 @@ func (s *NodeAPIService) DeleteNode(ctx context.Context, nodeId string, tid stri
 }
 
 // UpdateNodeTitle - Update a nodes title and description
-func (s *NodeAPIService) UpdateNodeTitle(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+func (s *NodeAPIService) UpdateNodeTitle(ctx context.Context, nodeData NodeData) (ImplResponse, error) {
 	// TODO - update UpdateNodeTitle with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -97,7 +97,7 @@ func (s *NodeAPIService) UpdateNodeTitle(ctx context.Context, addTopic200Respons
 }
 
 // UpdateNodeVideoVote - Update a nodes video votes
-func (s *NodeAPIService) UpdateNodeVideoVote(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+func (s *NodeAPIService) UpdateNodeVideoVote(ctx context.Context, nodeData NodeData) (ImplResponse, error) {
 	// TODO - update UpdateNodeVideoVote with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -117,7 +117,7 @@ func (s *NodeAPIService) UpdateNodeVideoVote(ctx context.Context, addTopic200Res
 }
 
 // UpdateNodeVideoEdit - add or remove videos from a node
-func (s *NodeAPIService) UpdateNodeVideoEdit(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+func (s *NodeAPIService) UpdateNodeVideoEdit(ctx context.Context, nodeData NodeData) (ImplResponse, error) {
 	// TODO - update UpdateNodeVideoEdit with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -137,7 +137,7 @@ func (s *NodeAPIService) UpdateNodeVideoEdit(ctx context.Context, addTopic200Res
 }
 
 // UpdateNodeBattleVote - battle vote a node
-func (s *NodeAPIService) UpdateNodeBattleVote(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+func (s *NodeAPIService) UpdateNodeBattleVote(ctx context.Context, nodeData NodeData) (ImplResponse, error) {
 	// TODO - update UpdateNodeBattleVote with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -157,7 +157,7 @@ func (s *NodeAPIService) UpdateNodeBattleVote(ctx context.Context, addTopic200Re
 }
 
 // UpdateNodeFreshVote - fresh vote a node
-func (s *NodeAPIService) UpdateNodeFreshVote(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+func (s *NodeAPIService) UpdateNodeFreshVote(ctx context.Context, nodeData NodeData) (ImplResponse, error) {
 	// TODO - update UpdateNodeFreshVote with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -177,7 +177,7 @@ func (s *NodeAPIService) UpdateNodeFreshVote(ctx context.Context, addTopic200Res
 }
 
 // UpdateNodeFlag - fresh vote a node
-func (s *NodeAPIService) UpdateNodeFlag(ctx context.Context, addTopic200ResponseNodeData AddTopic200ResponseNodeData) (ImplResponse, error) {
+func (s *NodeAPIService) UpdateNodeFlag(ctx context.Context, nodeData NodeData) (ImplResponse, error) {
 	// TODO - update UpdateNodeFlag with the required logic for this service method.
 	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 

@@ -79,7 +79,8 @@ func TestAddTopic(t *testing.T) {
 	users, _, _, err := CreateTestData(db, &clock, 1, 0, 0)
 	require.Nil(t, err)
 
-	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	err = UpdateUserRoleAndReputation(db, users[0], true, 0)
+	require.Nil(t, err)
 	SetTestLoginUser(users[0])
 
 	emptyTopics, err := getTopics(db)
