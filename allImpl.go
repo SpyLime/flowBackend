@@ -11,12 +11,10 @@ import (
 
 // fetchClipThumbnail fetches the thumbnail for a YouTube clip
 func fetchClipThumbnail(encodedClipURL string) (ClipInfo string, err error) {
-	// Decode the path-encoded clip URL
 	clipURL, err := url.PathUnescape(encodedClipURL)
 	if err != nil {
 		return "", fmt.Errorf("invalid clip URL: %w", err)
 	}
-
 	return fetchClipThumbnailFromURL(clipURL)
 }
 
@@ -29,21 +27,19 @@ func fetchClipThumbnailFromURL(clipURL string) (ClipInfo string, err error) {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Headers to mimic a real browser
+	// Browser-like headers
 	req.Header.Set("User-Agent",
 		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "+
 			"(KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
 	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
 
-	client := http.DefaultClient
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch clip page: %w", err)
 	}
 	defer resp.Body.Close()
 
-	fmt.Printf("HTTP Status: %d\n", resp.StatusCode)
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("YouTube returned status %d", resp.StatusCode)
 	}
@@ -57,42 +53,67 @@ func fetchClipThumbnailFromURL(clipURL string) (ClipInfo string, err error) {
 	playerRespJSON, err := extractYTInitialPlayerResponse(body)
 	if err != nil {
 		fmt.Println("Failed to extract ytInitialPlayerResponse")
-		// log first 1000 bytes for debugging
 		fmt.Println("Page snippet:\n", string(body[:1000]))
 		return "", err
 	}
-	fmt.Println("Successfully extracted ytInitialPlayerResponse JSON")
 
-	var playerResp struct {
-		VideoDetails struct {
-			Thumbnail struct {
-				Thumbnails []struct {
-					URL string `json:"url"`
-				} `json:"thumbnails"`
-			} `json:"thumbnail"`
-		} `json:"videoDetails"`
-	}
-
+	var playerResp map[string]interface{}
 	if err := json.Unmarshal(playerRespJSON, &playerResp); err != nil {
-		return "", fmt.Errorf("failed to parse player response JSON: %w", err)
+		return "", fmt.Errorf("failed to parse JSON: %w", err)
 	}
 
-	thumbs := playerResp.VideoDetails.Thumbnail.Thumbnails
-	if len(thumbs) == 0 {
-		fmt.Println("No thumbnails found in JSON")
-		return "", fmt.Errorf("no thumbnails found")
+	// Try videoDetails.thumbnail
+	if thumbs := getThumbnailsFromMap(playerResp, "videoDetails", "thumbnail", "thumbnails"); len(thumbs) > 0 {
+		info := thumbs[len(thumbs)-1]["url"].(string)
+		fmt.Printf("Thumbnail found in videoDetails: %s\n", info)
+		return info, nil
 	}
 
-	info := thumbs[len(thumbs)-1].URL
-	fmt.Printf("Thumbnail URL found: %s\n", info)
+	// Try microformat.playerMicroformatRenderer.thumbnail
+	if thumbs := getThumbnailsFromMap(playerResp, "microformat", "playerMicroformatRenderer", "thumbnail", "thumbnails"); len(thumbs) > 0 {
+		info := thumbs[len(thumbs)-1]["url"].(string)
+		fmt.Printf("Thumbnail found in microformat: %s\n", info)
+		return info, nil
+	}
 
-	return info, nil
+	// Log full JSON for debugging if nothing found
+	fmt.Println("No thumbnails found in JSON, logging JSON for debugging")
+	fmt.Printf("%s\n", string(playerRespJSON))
+
+	return "", fmt.Errorf("no thumbnails found")
+}
+
+// getThumbnailsFromMap safely navigates nested maps and returns []interface{} for "thumbnails" if found
+func getThumbnailsFromMap(m map[string]interface{}, keys ...string) []map[string]interface{} {
+	current := m
+	for i, k := range keys {
+		if val, ok := current[k]; ok {
+			if i == len(keys)-1 {
+				// Final key should be []interface{} of thumbnails
+				if arr, ok := val.([]interface{}); ok {
+					result := make([]map[string]interface{}, 0, len(arr))
+					for _, item := range arr {
+						if mitem, ok := item.(map[string]interface{}); ok {
+							result = append(result, mitem)
+						}
+					}
+					return result
+				}
+			} else if next, ok := val.(map[string]interface{}); ok {
+				current = next
+			} else {
+				return nil
+			}
+		} else {
+			return nil
+		}
+	}
+	return nil
 }
 
 // extractYTInitialPlayerResponse extracts the ytInitialPlayerResponse JSON from the HTML
 func extractYTInitialPlayerResponse(body []byte) ([]byte, error) {
-	// Match even if there's whitespace or semicolon after the JSON
-	re := regexp.MustCompile(`var ytInitialPlayerResponse\s*=\s*(\{.*?\})\s*;`)
+	re := regexp.MustCompile(`var ytInitialPlayerResponse\s*=\s*(\{.*\})\s*;</script>`)
 	matches := re.FindSubmatch(body)
 	if len(matches) < 2 {
 		return nil, fmt.Errorf("could not find ytInitialPlayerResponse")
