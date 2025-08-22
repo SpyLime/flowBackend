@@ -89,22 +89,22 @@ func (c *TopicAPIController) GetTopics(w http.ResponseWriter, r *http.Request) {
 
 // UpdateTopic - Update an existing topic
 func (c *TopicAPIController) UpdateTopic(w http.ResponseWriter, r *http.Request) {
-	getTopics200ResponseInnerParam := GetTopics200ResponseInner{}
+	topicParam := Topic{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&getTopics200ResponseInnerParam); err != nil {
+	if err := d.Decode(&topicParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertGetTopics200ResponseInnerRequired(getTopics200ResponseInnerParam); err != nil {
+	if err := AssertTopicRequired(topicParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertGetTopics200ResponseInnerConstraints(getTopics200ResponseInnerParam); err != nil {
+	if err := AssertTopicConstraints(topicParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.UpdateTopic(r.Context(), getTopics200ResponseInnerParam)
+	result, err := c.service.UpdateTopic(r.Context(), topicParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -116,22 +116,22 @@ func (c *TopicAPIController) UpdateTopic(w http.ResponseWriter, r *http.Request)
 
 // AddTopic - Add a new topic
 func (c *TopicAPIController) AddTopic(w http.ResponseWriter, r *http.Request) {
-	getTopics200ResponseInnerParam := GetTopics200ResponseInner{}
+	topicParam := Topic{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&getTopics200ResponseInnerParam); err != nil {
+	if err := d.Decode(&topicParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertGetTopics200ResponseInnerRequired(getTopics200ResponseInnerParam); err != nil {
+	if err := AssertTopicRequired(topicParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	if err := AssertGetTopics200ResponseInnerConstraints(getTopics200ResponseInnerParam); err != nil {
+	if err := AssertTopicConstraints(topicParam); err != nil {
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.AddTopic(r.Context(), getTopics200ResponseInnerParam)
+	result, err := c.service.AddTopic(r.Context(), topicParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

@@ -11,6 +11,7 @@ import (
 
 	openapi "github.com/SpyLime/flowBackend/go"
 	"github.com/stretchr/testify/require"
+	"go.etcd.io/bbolt"
 )
 
 func TestGetNode(t *testing.T) {
@@ -65,7 +66,7 @@ func TestPostNode(t *testing.T) {
 		Id:    nodesAndEdges[0].TargetId,
 		Topic: topics[0],
 		Title: "turbo",
-		CreatedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+		CreatedBy: openapi.UserIdentifier{
 			Id:       users[0],
 			Username: users[0],
 		},
@@ -166,6 +167,19 @@ func TestUpdateNode(t *testing.T) {
 	require.NotEqual(t, originalNode.Description, updatedNode.Description)
 }
 
+func waitForReputation(t *testing.T, db *bbolt.DB, userId string, expected int32, timeout time.Duration) {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		user, err := getUser(db, userId)
+		require.Nil(t, err)
+		if user.Reputation == expected {
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	t.Fatalf("timed out waiting for reputation %d", expected)
+}
+
 func TestUpdateNodeBattleVote(t *testing.T) {
 	clock := TestClock{}
 	db, tearDown := FullStartTestServer("updateNodeBattleVote", 8088, "")
@@ -221,7 +235,6 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 		"http://127.0.0.1:8088/api/v1/node/battleVote",
 		bytes.NewBuffer(marshal))
 
-	time.Sleep(35 * time.Millisecond)
 	resp, err = client.Do(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
@@ -256,7 +269,6 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 		"http://127.0.0.1:8088/api/v1/node/battleVote",
 		bytes.NewBuffer(marshal))
 
-	time.Sleep(35 * time.Millisecond)
 	resp, err = client.Do(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
@@ -286,7 +298,6 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 		"http://127.0.0.1:8088/api/v1/node/battleVote",
 		bytes.NewBuffer(marshal))
 
-	time.Sleep(35 * time.Millisecond)
 	resp, err = client.Do(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
@@ -315,20 +326,31 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 	require.Nil(t, err)
 	initialReputation := nodeCreator.Reputation
 
-	// Log in as the second user
-	SetTestLoginUser(users[2])
+	firstVoter := users[1] // you logged this in at the start
+	creatorId := updatedNode.CreatedBy.Id
+
+	var secondVoter string
+	for i := 0; i < len(users); i++ {
+		if users[i] != creatorId && users[i] != firstVoter {
+			secondVoter = users[i]
+			break
+		}
+	}
+	require.NotEmpty(t, secondVoter, "need a second voter distinct from creator and first voter")
+
+	SetTestLoginUser(secondVoter)
 
 	// Second user upvotes
 	req, _ = http.NewRequest(http.MethodPut,
 		"http://127.0.0.1:8088/api/v1/node/battleVote",
 		bytes.NewBuffer(marshal))
 
-	time.Sleep(35 * time.Millisecond)
 	resp, err = client.Do(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, 200, resp.StatusCode)
 	resp.Body.Close()
+	waitForReputation(t, db, updatedNode.CreatedBy.Id, initialReputation+1, 10*time.Second)
 
 	// Verify the node creator's reputation increased
 	nodeCreator, err = getUser(db, updatedNode.CreatedBy.Id)
@@ -343,13 +365,13 @@ func TestUpdateNodeBattleVote(t *testing.T) {
 		"http://127.0.0.1:8088/api/v1/node/battleVote",
 		bytes.NewBuffer(marshal))
 
-	time.Sleep(35 * time.Millisecond)
 	resp, err = client.Do(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, 200, resp.StatusCode)
 	resp.Body.Close()
 
+	waitForReputation(t, db, updatedNode.CreatedBy.Id, initialReputation-1, 10*time.Second)
 	// Verify the node creator's reputation decreased
 	nodeCreator, err = getUser(db, updatedNode.CreatedBy.Id)
 	require.Nil(t, err)
@@ -373,14 +395,14 @@ func TestUpdateNodeVideoVote(t *testing.T) {
 	user, err := getUser(db, users[0])
 	require.Nil(t, err)
 
-	nodeWithVideo := openapi.AddTopic200ResponseNodeData{
+	nodeWithVideo := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{
+		YoutubeLinks: []openapi.LinkData{
 			{
 				Link:  videoLink,
 				Votes: 1,
-				AddedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+				AddedBy: openapi.UserIdentifier{
 					Id:       users[0],
 					Username: "tester",
 				},
@@ -398,7 +420,7 @@ func TestUpdateNodeVideoVote(t *testing.T) {
 	upvoteVideo := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{
+		YoutubeLinks: []openapi.LinkData{
 			{
 				Link:  videoLink,
 				Votes: 1,
@@ -464,7 +486,7 @@ func TestUpdateNodeVideoVote(t *testing.T) {
 	downvoteVideo := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{
+		YoutubeLinks: []openapi.LinkData{
 			{
 				Link:  videoLink,
 				Votes: -1,
@@ -797,14 +819,14 @@ func TestUpdateNodeVideoEdit(t *testing.T) {
 
 	// Test adding a video
 	videoLink := "https://www.youtube.com/watch?v=testVideo"
-	nodeWithVideo := openapi.AddTopic200ResponseNodeData{
+	nodeWithVideo := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{
+		YoutubeLinks: []openapi.LinkData{
 			{
 				Link:  videoLink,
 				Votes: 1,
-				AddedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+				AddedBy: openapi.UserIdentifier{
 					Id:       users[0],
 					Username: "tester",
 				},
@@ -840,10 +862,10 @@ func TestUpdateNodeVideoEdit(t *testing.T) {
 	require.Equal(t, videoLink, user.Linked[0].Link)
 
 	// Test removing a video (by setting votes to -1)
-	removeVideo := openapi.AddTopic200ResponseNodeData{
+	removeVideo := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{
+		YoutubeLinks: []openapi.LinkData{
 			{
 				Link:  videoLink,
 				Votes: -1,
@@ -871,14 +893,14 @@ func TestUpdateNodeVideoEdit(t *testing.T) {
 
 	// Test adding a second video
 	secondVideoLink := "https://www.youtube.com/watch?v=anotherVideo"
-	nodeWithSecondVideo := openapi.AddTopic200ResponseNodeData{
+	nodeWithSecondVideo := openapi.NodeData{
 		Topic: topics[0],
 		Id:    nodesAndEdges[0].SourceId,
-		YoutubeLinks: []openapi.AddTopic200ResponseNodeDataYoutubeLinksInner{
+		YoutubeLinks: []openapi.LinkData{
 			{
 				Link:  secondVideoLink,
 				Votes: 1,
-				AddedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+				AddedBy: openapi.UserIdentifier{
 					Id:       users[0],
 					Username: "tester",
 				},

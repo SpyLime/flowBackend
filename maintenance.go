@@ -63,7 +63,7 @@ func UpdateUserRoleAndReputation(db *bolt.DB, userId string, isAdmin bool, reput
 			return fmt.Errorf("user %s not found", userId)
 		}
 
-		var user openapi.UpdateUserRequest
+		var user openapi.User
 		if err := json.Unmarshal(userData, &user); err != nil {
 			return fmt.Errorf("failed to unmarshal user data: %v", err)
 		}
@@ -105,7 +105,7 @@ func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int)
 
 		for i := 0; i < numUsers; i++ {
 			rep, _ := strconv.Atoi(RandomString(3))
-			user := openapi.UpdateUserRequest{
+			user := openapi.User{
 				Username:    RandomString(2),
 				FirstName:   "d",
 				LastName:    "d",
@@ -122,7 +122,7 @@ func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int)
 		}
 
 		for i := 0; i < numTopics; i++ {
-			topic := openapi.GetTopics200ResponseInner{
+			topic := openapi.Topic{
 				Title: RandomString(6),
 			}
 
@@ -141,10 +141,10 @@ func CreateTestData(db *bolt.DB, clock Clock, numUsers, numTopics, numNodes int)
 			topics = append(topics, response.Topic.Title)
 
 			for j := 0; j < numNodes; j++ {
-				node := openapi.AddTopic200ResponseNodeData{
+				node := openapi.NodeData{
 					Id:    response.NodeData.Id,
 					Topic: topic.Title,
-					CreatedBy: openapi.AddTopic200ResponseNodeDataYoutubeLinksInnerAddedBy{
+					CreatedBy: openapi.UserIdentifier{
 						Id:       users[0],
 						Username: "tester",
 					},

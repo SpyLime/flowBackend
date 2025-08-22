@@ -480,10 +480,14 @@ func createRouterClock(db *bolt.DB, clock Clock) *mux.Router {
 	UserAPIServiceImpl := NewUserAPIServiceImpl(db, clock)
 	UserAPIController := openapi.NewUserAPIController(UserAPIServiceImpl)
 
+	AllAPIServiceImpl := NewAllAPIServiceImpl(db, clock)
+	AllAPIController := openapi.NewAllAPIController(AllAPIServiceImpl)
+
 	return openapi.NewRouter(MapAPIController,
 		NodeAPIController,
 		TopicAPIController,
-		UserAPIController)
+		UserAPIController,
+		AllAPIController)
 
 }
 

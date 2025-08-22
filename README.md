@@ -8,7 +8,8 @@ go test -coverprofile cover.out
 go tool cover -html cover.out
 
 # to run spec 
-java -jar .\Downloads\openapi-generator-cli-7.9.0.jar generate -i .\Downloads\flow.json -g go-server -o .\Documents\flow\flowBackend
+java -jar .\Downloads\openapi-generator-cli-7.9.0.jar generate -i ./Downloads/flow.json -g go-server -o ./Documents/flow/flowBackend
+
 
 api for flow learning
 

@@ -16,9 +16,9 @@ package openapi
 
 type MapData struct {
 
-	Nodes []GetMapById200ResponseNodesInner `json:"nodes"`
+	Nodes []FlowNode `json:"nodes"`
 
-	Edges []GetMapById200ResponseEdgesInner `json:"edges"`
+	Edges []Edge `json:"edges"`
 }
 
 // AssertMapDataRequired checks if the required fields are not zero-ed
@@ -34,12 +34,12 @@ func AssertMapDataRequired(obj MapData) error {
 	}
 
 	for _, el := range obj.Nodes {
-		if err := AssertGetMapById200ResponseNodesInnerRequired(el); err != nil {
+		if err := AssertFlowNodeRequired(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.Edges {
-		if err := AssertGetMapById200ResponseEdgesInnerRequired(el); err != nil {
+		if err := AssertEdgeRequired(el); err != nil {
 			return err
 		}
 	}
@@ -49,12 +49,12 @@ func AssertMapDataRequired(obj MapData) error {
 // AssertMapDataConstraints checks if the values respects the defined constraints
 func AssertMapDataConstraints(obj MapData) error {
 	for _, el := range obj.Nodes {
-		if err := AssertGetMapById200ResponseNodesInnerConstraints(el); err != nil {
+		if err := AssertFlowNodeConstraints(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.Edges {
-		if err := AssertGetMapById200ResponseEdgesInnerConstraints(el); err != nil {
+		if err := AssertEdgeConstraints(el); err != nil {
 			return err
 		}
 	}

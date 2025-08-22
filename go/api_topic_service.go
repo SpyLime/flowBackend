@@ -33,8 +33,8 @@ func (s *TopicAPIService) GetTopics(ctx context.Context) (ImplResponse, error) {
 	// TODO - update GetTopics with the required logic for this service method.
 	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// TODO: Uncomment the next line to return response Response(200, []GetTopics200ResponseInner{}) or use other options such as http.Ok ...
-	// return Response(200, []GetTopics200ResponseInner{}), nil
+	// TODO: Uncomment the next line to return response Response(200, []Topic{}) or use other options such as http.Ok ...
+	// return Response(200, []Topic{}), nil
 
 	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
 	// return Response(404, nil),nil
@@ -43,7 +43,7 @@ func (s *TopicAPIService) GetTopics(ctx context.Context) (ImplResponse, error) {
 }
 
 // UpdateTopic - Update an existing topic
-func (s *TopicAPIService) UpdateTopic(ctx context.Context, getTopics200ResponseInner GetTopics200ResponseInner) (ImplResponse, error) {
+func (s *TopicAPIService) UpdateTopic(ctx context.Context, topic Topic) (ImplResponse, error) {
 	// TODO - update UpdateTopic with the required logic for this service method.
 	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
@@ -63,12 +63,12 @@ func (s *TopicAPIService) UpdateTopic(ctx context.Context, getTopics200ResponseI
 }
 
 // AddTopic - Add a new topic
-func (s *TopicAPIService) AddTopic(ctx context.Context, getTopics200ResponseInner GetTopics200ResponseInner) (ImplResponse, error) {
+func (s *TopicAPIService) AddTopic(ctx context.Context, topic Topic) (ImplResponse, error) {
 	// TODO - update AddTopic with the required logic for this service method.
 	// Add api_topic_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// TODO: Uncomment the next line to return response Response(200, AddTopic200Response{}) or use other options such as http.Ok ...
-	// return Response(200, AddTopic200Response{}), nil
+	// TODO: Uncomment the next line to return response Response(200, ResponsePostTopic{}) or use other options such as http.Ok ...
+	// return Response(200, ResponsePostTopic{}), nil
 
 	// TODO: Uncomment the next line to return response Response(405, {}) or use other options such as http.Ok ...
 	// return Response(405, nil),nil

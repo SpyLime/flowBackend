@@ -49,19 +49,19 @@ type User struct {
 
 	IsFlagged bool `json:"isFlagged,omitempty"`
 
-	BattleTestedUp []UpdateUserRequestBattleTestedUpInner `json:"battleTestedUp,omitempty"`
+	BattleTestedUp []ResponseUserInfoInner `json:"battleTestedUp,omitempty"`
 
-	BattleTestedDown []UpdateUserRequestBattleTestedUpInner `json:"battleTestedDown,omitempty"`
+	BattleTestedDown []ResponseUserInfoInner `json:"battleTestedDown,omitempty"`
 
-	FreshUp []UpdateUserRequestBattleTestedUpInner `json:"freshUp,omitempty"`
+	FreshUp []ResponseUserInfoInner `json:"freshUp,omitempty"`
 
-	FreshDown []UpdateUserRequestBattleTestedUpInner `json:"freshDown,omitempty"`
+	FreshDown []ResponseUserInfoInner `json:"freshDown,omitempty"`
 
-	Edited []UpdateUserRequestBattleTestedUpInner `json:"edited,omitempty"`
+	Edited []ResponseUserInfoInner `json:"edited,omitempty"`
 
-	Created []UpdateUserRequestBattleTestedUpInner `json:"created,omitempty"`
+	Created []ResponseUserInfoInner `json:"created,omitempty"`
 
-	Linked []AddTopic200ResponseNodeDataYoutubeLinksInner `json:"linked,omitempty"`
+	Linked []LinkData `json:"linked,omitempty"`
 
 	VideoUp []string `json:"videoUp,omitempty"`
 
@@ -71,37 +71,37 @@ type User struct {
 // AssertUserRequired checks if the required fields are not zero-ed
 func AssertUserRequired(obj User) error {
 	for _, el := range obj.BattleTestedUp {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerRequired(el); err != nil {
+		if err := AssertResponseUserInfoInnerRequired(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.BattleTestedDown {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerRequired(el); err != nil {
+		if err := AssertResponseUserInfoInnerRequired(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.FreshUp {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerRequired(el); err != nil {
+		if err := AssertResponseUserInfoInnerRequired(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.FreshDown {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerRequired(el); err != nil {
+		if err := AssertResponseUserInfoInnerRequired(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.Edited {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerRequired(el); err != nil {
+		if err := AssertResponseUserInfoInnerRequired(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.Created {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerRequired(el); err != nil {
+		if err := AssertResponseUserInfoInnerRequired(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.Linked {
-		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerRequired(el); err != nil {
+		if err := AssertLinkDataRequired(el); err != nil {
 			return err
 		}
 	}
@@ -111,37 +111,37 @@ func AssertUserRequired(obj User) error {
 // AssertUserConstraints checks if the values respects the defined constraints
 func AssertUserConstraints(obj User) error {
 	for _, el := range obj.BattleTestedUp {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerConstraints(el); err != nil {
+		if err := AssertResponseUserInfoInnerConstraints(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.BattleTestedDown {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerConstraints(el); err != nil {
+		if err := AssertResponseUserInfoInnerConstraints(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.FreshUp {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerConstraints(el); err != nil {
+		if err := AssertResponseUserInfoInnerConstraints(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.FreshDown {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerConstraints(el); err != nil {
+		if err := AssertResponseUserInfoInnerConstraints(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.Edited {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerConstraints(el); err != nil {
+		if err := AssertResponseUserInfoInnerConstraints(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.Created {
-		if err := AssertUpdateUserRequestBattleTestedUpInnerConstraints(el); err != nil {
+		if err := AssertResponseUserInfoInnerConstraints(el); err != nil {
 			return err
 		}
 	}
 	for _, el := range obj.Linked {
-		if err := AssertAddTopic200ResponseNodeDataYoutubeLinksInnerConstraints(el); err != nil {
+		if err := AssertLinkDataConstraints(el); err != nil {
 			return err
 		}
 	}
