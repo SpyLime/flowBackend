@@ -294,6 +294,72 @@ paths:
       summary: Add a new node
       tags:
       - node
+  /node/nextBattleTested:
+    get:
+      description: get next top battle tested ID
+      operationId: getNodeNextBattleTested
+      parameters:
+      - explode: true
+        in: query
+        name: nodeId
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: tid
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: ID of next node
+                example: 11214
+                type: string
+          description: Successful operation
+        "404":
+          description: next battle tested node not found
+      summary: get next top battle tested ID
+      tags:
+      - node
+  /node/nextFresh:
+    get:
+      description: get next top fresh ID
+      operationId: getNodeNextFresh
+      parameters:
+      - explode: true
+        in: query
+        name: nodeId
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: tid
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: ID of next node
+                example: 11214
+                type: string
+          description: Successful operation
+        "404":
+          description: next fresh node not found
+      summary: get next top fresh ID
+      tags:
+      - node
   /node/title:
     put:
       description: Update an existing node
