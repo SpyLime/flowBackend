@@ -928,3 +928,66 @@ func TestUpdateNodeVideoEdit(t *testing.T) {
 	require.Equal(t, 1, len(updatedNode.YoutubeLinks))
 	require.Equal(t, secondVideoLink, updatedNode.YoutubeLinks[0].Link)
 }
+
+// test GetNodeNextBattleTested
+func TestGetNodeNextBattleTested(t *testing.T) {
+	clock := TestClock{}
+	db, tearDown := FullStartTestServer("GetNodeNextBattleTested", 8088, "")
+	defer tearDown()
+
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
+	require.Nil(t, err)
+
+	// Set up the first user as logged in
+	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	SetTestLoginUser(users[0])
+
+	client := &http.Client{}
+
+	baseURL := "http://127.0.0.1:8088/api/v1/node/nextBattleTested"
+	params := url.Values{}
+	params.Add("nodeId", nodesAndEdges[0].SourceId.Format(time.RFC3339Nano))
+	params.Add("tid", topics[0])
+
+	url := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+
+	resp, err := client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.NotNil(t, resp)
+	require.Equal(t, 200, resp.StatusCode)
+
+}
+
+func TestGetNodeNextFresh(t *testing.T) {
+	clock := TestClock{}
+	db, tearDown := FullStartTestServer("GetNodeNextFresh", 8088, "")
+	defer tearDown()
+
+	users, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 1)
+	require.Nil(t, err)
+
+	// Set up the first user as logged in
+	UpdateUserRoleAndReputation(db, users[0], true, 0)
+	SetTestLoginUser(users[0])
+
+	client := &http.Client{}
+
+	baseURL := "http://127.0.0.1:8088/api/v1/node/nextFresh"
+	params := url.Values{}
+	params.Add("nodeId", nodesAndEdges[0].SourceId.Format(time.RFC3339Nano))
+	params.Add("tid", topics[0])
+
+	url := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+
+	resp, err := client.Do(req)
+	require.Nil(t, err)
+	defer resp.Body.Close()
+	require.NotNil(t, resp)
+	require.Equal(t, 200, resp.StatusCode)
+
+}

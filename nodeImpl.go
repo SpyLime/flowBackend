@@ -25,6 +25,63 @@ func getNode(db *bolt.DB, nodeId, topicId string) (response openapi.NodeData, er
 	return
 }
 
+// getNextNode returns the ID of the next node
+func getNextNode(db *bolt.DB, nodeId, topicId, search string) (Id string, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
+		Id, err = getNextNodeTx(tx, nodeId, topicId, search)
+		return err
+	})
+
+	return
+}
+
+func getNextNodeTx(tx *bolt.Tx, nodeId, topicId, search string) (Id string, err error) {
+	// go through every edge and select any edge that has the current node as the source save a list of all the targets
+	var targetIds []string
+	edgesBucket := tx.Bucket([]byte(KeyTopics)).Bucket([]byte(topicId)).Bucket([]byte(KeyEdges))
+	c := edgesBucket.Cursor()
+	for k, v := c.First(); k != nil; k, v = c.Next() {
+		if v == nil {
+			continue
+		}
+
+		var edge openapi.Edge
+		err = json.Unmarshal(v, &edge)
+		if err != nil {
+			return
+		}
+
+		if edge.Source.Format(time.RFC3339Nano) == nodeId {
+			targetIds = append(targetIds, edge.Target.Format(time.RFC3339Nano))
+		}
+	}
+
+	// go through each target and find the one with the highest battle tested score
+	var highestScore int32 = -1000000
+	for _, targetId := range targetIds {
+		node, err := getNodeRx(tx, targetId, topicId)
+		if err != nil {
+			return Id, err
+		}
+
+		if search == "battleTested" {
+			if node.BattleTested > highestScore {
+				highestScore = node.BattleTested
+				Id = targetId
+			}
+		}
+		if search == "fresh" {
+			if node.Fresh > highestScore {
+				highestScore = node.Fresh
+				Id = targetId
+			}
+		}
+	}
+
+	return
+
+}
+
 func getNodeRx(tx *bolt.Tx, nodeId, topicId string) (response openapi.NodeData, err error) {
 	_, nodeData, err := nodeDataFinderTx(tx, topicId, nodeId)
 	if err != nil {

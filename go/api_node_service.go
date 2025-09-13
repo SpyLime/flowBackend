@@ -76,6 +76,34 @@ func (s *NodeAPIService) DeleteNode(ctx context.Context, nodeId string, tid stri
 	return Response(http.StatusNotImplemented, nil), errors.New("DeleteNode method not implemented")
 }
 
+// GetNodeNextBattleTested - get next top battle tested ID
+func (s *NodeAPIService) GetNodeNextBattleTested(ctx context.Context, nodeId string, tid string) (ImplResponse, error) {
+	// TODO - update GetNodeNextBattleTested with the required logic for this service method.
+	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(200, string{}) or use other options such as http.Ok ...
+	// return Response(200, string{}), nil
+
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("GetNodeNextBattleTested method not implemented")
+}
+
+// GetNodeNextFresh - get next top fresh ID
+func (s *NodeAPIService) GetNodeNextFresh(ctx context.Context, nodeId string, tid string) (ImplResponse, error) {
+	// TODO - update GetNodeNextFresh with the required logic for this service method.
+	// Add api_node_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(200, string{}) or use other options such as http.Ok ...
+	// return Response(200, string{}), nil
+
+	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	// return Response(404, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("GetNodeNextFresh method not implemented")
+}
+
 // UpdateNodeTitle - Update a nodes title and description
 func (s *NodeAPIService) UpdateNodeTitle(ctx context.Context, nodeData NodeData) (ImplResponse, error) {
 	// TODO - update UpdateNodeTitle with the required logic for this service method.

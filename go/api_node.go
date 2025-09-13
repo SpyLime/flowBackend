@@ -65,6 +65,16 @@ func (c *NodeAPIController) Routes() Routes {
 			"/api/v1/node",
 			c.DeleteNode,
 		},
+		"GetNodeNextBattleTested": Route{
+			strings.ToUpper("Get"),
+			"/api/v1/node/nextBattleTested",
+			c.GetNodeNextBattleTested,
+		},
+		"GetNodeNextFresh": Route{
+			strings.ToUpper("Get"),
+			"/api/v1/node/nextFresh",
+			c.GetNodeNextFresh,
+		},
 		"UpdateNodeTitle": Route{
 			strings.ToUpper("Put"),
 			"/api/v1/node/title",
@@ -186,6 +196,76 @@ func (c *NodeAPIController) DeleteNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	result, err := c.service.DeleteNode(r.Context(), nodeIdParam, tidParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// GetNodeNextBattleTested - get next top battle tested ID
+func (c *NodeAPIController) GetNodeNextBattleTested(w http.ResponseWriter, r *http.Request) {
+	query, err := parseQuery(r.URL.RawQuery)
+	if err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	var nodeIdParam string
+	if query.Has("nodeId") {
+		param := query.Get("nodeId")
+
+		nodeIdParam = param
+	} else {
+		c.errorHandler(w, r, &RequiredError{Field: "nodeId"}, nil)
+		return
+	}
+	var tidParam string
+	if query.Has("tid") {
+		param := query.Get("tid")
+
+		tidParam = param
+	} else {
+		c.errorHandler(w, r, &RequiredError{Field: "tid"}, nil)
+		return
+	}
+	result, err := c.service.GetNodeNextBattleTested(r.Context(), nodeIdParam, tidParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// GetNodeNextFresh - get next top fresh ID
+func (c *NodeAPIController) GetNodeNextFresh(w http.ResponseWriter, r *http.Request) {
+	query, err := parseQuery(r.URL.RawQuery)
+	if err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	var nodeIdParam string
+	if query.Has("nodeId") {
+		param := query.Get("nodeId")
+
+		nodeIdParam = param
+	} else {
+		c.errorHandler(w, r, &RequiredError{Field: "nodeId"}, nil)
+		return
+	}
+	var tidParam string
+	if query.Has("tid") {
+		param := query.Get("tid")
+
+		tidParam = param
+	} else {
+		c.errorHandler(w, r, &RequiredError{Field: "tid"}, nil)
+		return
+	}
+	result, err := c.service.GetNodeNextFresh(r.Context(), nodeIdParam, tidParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

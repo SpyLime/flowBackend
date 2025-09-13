@@ -153,6 +153,26 @@ func (s *NodeAPIServiceImpl) GetNode(ctx context.Context, nodeId string, tid str
 
 }
 
+// GetNodeNextBattleTested - get next top battle tested ID
+func (s *NodeAPIServiceImpl) GetNodeNextBattleTested(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
+	nodeId, err := getNextNode(s.db, nodeId, tid, "battleTested")
+	if err != nil {
+		return openapi.Response(404, nil), err
+	}
+
+	return openapi.Response(200, nodeId), nil
+}
+
+// GetNodeNextFresh - get next top fresh ID
+func (s *NodeAPIServiceImpl) GetNodeNextFresh(ctx context.Context, nodeId string, tid string) (openapi.ImplResponse, error) {
+	nodeId, err := getNextNode(s.db, nodeId, tid, "fresh")
+	if err != nil {
+		return openapi.Response(404, nil), err
+	}
+
+	return openapi.Response(200, nodeId), nil
+}
+
 // AddNode - Add a new node
 func (s *NodeAPIServiceImpl) AddNode(ctx context.Context, nodeData openapi.NodeData) (openapi.ImplResponse, error) {
 	user, ok := ctx.Value(userInfoKey).(token.User)
