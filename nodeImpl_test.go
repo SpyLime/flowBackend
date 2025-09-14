@@ -1066,3 +1066,22 @@ func TestUserNodeEdited(t *testing.T) {
 	require.Equal(t, len(updatedUser.Edited), len(updatedUserAgain.Edited),
 		"No duplicate edited node should be added")
 }
+
+// test getNextNode
+func TestGetNextNode(t *testing.T) {
+	clock := TestClock{}
+	db, dbTearDown := OpenTestDB("GetNextNode")
+	defer dbTearDown()
+
+	_, topics, nodesAndEdges, err := CreateTestData(db, &clock, 1, 1, 5)
+	require.Nil(t, err)
+
+	// Test battle tested
+	nextNode, err := getNextNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0], "battleTested")
+	require.Nil(t, err)
+	require.Equal(t, nodesAndEdges[1].TargetId.Format(time.RFC3339Nano), nextNode)
+	// Test fresh
+	nextNode, err = getNextNode(db, nodesAndEdges[0].SourceId.Format(time.RFC3339Nano), topics[0], "fresh")
+	require.Nil(t, err)
+	require.Equal(t, nodesAndEdges[1].TargetId.Format(time.RFC3339Nano), nextNode)
+}
